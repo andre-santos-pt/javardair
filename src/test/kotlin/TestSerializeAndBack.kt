@@ -54,8 +54,8 @@ class TestSerializeAndBack {
             class Test {
 
                 //d0779f95-d537-4501-b708-fc50747e6616
-                void newName(int param) {
-
+                String methodo(String parama) {
+                    return parama;
                 }
 
                 //83dba2c8-a01d-4352-b8df-794ab8b44e3a
@@ -66,14 +66,16 @@ class TestSerializeAndBack {
         """.trimIndent()
         )
 
-        val projBase = Project("base/")
-        val projBranch = Project("branch/")
+        val projBase = Project("temp/base/")
+        val projBranch = Project("temp/branch/")
 
         val factoryOfTransformations = FactoryOfTransformations(projBase, projBranch)
         val listOfTransformations = factoryOfTransformations.getListOfAllTransformations()
+        println(factoryOfTransformations)
 
         val serializedTransformations = listOfTransformations.map { it.toJson().toString() }
         serializedTransformations.forEach { println(it)}
+
         val deserializedTransformations = serializedTransformations.map { json ->
             (Json.parseToJsonElement(json) as JsonObject).toTransformation(projBase)
         }.toSet()
@@ -84,6 +86,10 @@ class TestSerializeAndBack {
 
         val baseMethods = projBase.methods()
         val branchMethods = projBranch.methods()
+
+        //println(baseMethods)
+        //println(branchMethods)
         assertTrue(baseMethods == branchMethods)
+
     }
 }
