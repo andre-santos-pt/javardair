@@ -6,21 +6,28 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeS
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
 import model.FactoryOfTransformations
 import model.Project
+import model.transformations.Transformation
+import pt.iscte.javardise.Command
+import pt.iscte.javardise.CommandStack
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor
 import java.io.File
+import kotlin.concurrent.thread
 import kotlin.io.path.Path
 
 class ListTransformations : Action {
     override val name: String
-        get() = "Transformations"
+        get() = "Push Transformations"
 
     private lateinit var projBase: Project
     private lateinit var projBranch: Project
 
+    val transformations: MutableSet<Transformation> = mutableSetOf()
+
     override fun init(editor: CodeEditor) {
         val memoryTypeSolver = MemoryTypeSolver()
-        projBase = Project(
+        projBase = Project(File(editor.folder, ".base").absolutePath.toString())
+        projBranch = Project(
             editor.folder.absolutePath.toString(),
             SymbolSolverCollectionStrategy().collect(
                 Path(editor.folder.absolutePath)
@@ -30,13 +37,30 @@ class ListTransformations : Action {
             CombinedTypeSolver(ReflectionTypeSolver(false), memoryTypeSolver),
             memoryTypeSolver,
             true,
-            true)
-        projBranch = Project(File(editor.folder,".base").absolutePath.toString())
+            true
+        )
+
+        updateTransformations()
+        // fires event at every editing command
+        val commandObserver = { _: Command?, _: Boolean?, _: CommandStack? ->
+            updateTransformations()
+        }
+        editor.addCommandObserver(commandObserver)
+    }
+
+    private fun updateTransformations() {
+        thread {
+            synchronized(transformations) {
+                transformations.clear()
+                val factoryOfTransformations = FactoryOfTransformations(projBase, projBranch)
+                transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
+                println("transformations: $transformations")
+            }
+        }
     }
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
-        val factoryOfTransformations = FactoryOfTransformations(projBase, projBranch)
-        val listOfTransformations = factoryOfTransformations.getListOfAllTransformations()
-        println(listOfTransformations)
+        println("propagate transformations... TODO")
+        transformations.map { it.toJson() }.forEach { println(it) }
     }
 }
