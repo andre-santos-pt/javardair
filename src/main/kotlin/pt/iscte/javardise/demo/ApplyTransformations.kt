@@ -15,11 +15,11 @@ class ApplyTransformations : Action {
     override val name: String
         get() = "Modify"
 
-    private lateinit var projBase: Project
+    private lateinit var projBranch: Project
 
     override fun init(editor: CodeEditor) {
         val memoryTypeSolver = MemoryTypeSolver()
-        projBase = Project(
+        projBranch = Project(
             editor.folder.absolutePath.toString(),
             SymbolSolverCollectionStrategy().collect(
                 Path(editor.folder.absolutePath)
@@ -29,7 +29,8 @@ class ApplyTransformations : Action {
             CombinedTypeSolver(ReflectionTypeSolver(false), memoryTypeSolver),
             memoryTypeSolver,
             true,
-            true)
+            true
+        )
     }
 
 
@@ -38,9 +39,9 @@ class ApplyTransformations : Action {
             {"code":"SignatureChanged","uuid":"d0779f95-d537-4501-b708-fc50747e6616","new-name":"newName","parameters":[{"type":"int","name":"param"}]}
         """)
         json.map {
-            (Json.parseToJsonElement(it) as JsonObject).toTransformation(projBase)
+            (Json.parseToJsonElement(it) as JsonObject).toTransformation(projBranch)
         }.forEach {
-            it.applyTransformation(projBase)
+            it.applyTransformation(projBranch)
         }
     }
 }

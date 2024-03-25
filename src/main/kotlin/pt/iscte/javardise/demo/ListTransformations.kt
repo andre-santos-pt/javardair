@@ -17,7 +17,7 @@ import kotlin.io.path.Path
 
 class ListTransformations : Action {
     override val name: String
-        get() = "Push Transformations"
+        get() = "Submit"
 
     private lateinit var projBase: Project
     private lateinit var projBranch: Project
@@ -33,7 +33,7 @@ class ListTransformations : Action {
                 Path(editor.folder.absolutePath)
             ),
             null,
-            editor.allClasses().map { it.findCompilationUnit().get() }.toMutableList(),
+            editor.allClasses().map { it.findCompilationUnit().get() }.toMutableList(), // TODO new classes
             CombinedTypeSolver(ReflectionTypeSolver(false), memoryTypeSolver),
             memoryTypeSolver,
             true,
