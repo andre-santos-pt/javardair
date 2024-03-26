@@ -25,7 +25,7 @@ class ApplyTransformations : Action {
                 Path(editor.folder.absolutePath)
             ),
             null,
-            editor.allClasses().map { it.findCompilationUnit().get() }.toMutableList(),
+            editor.allCompilationUnits().toMutableList(),
             CombinedTypeSolver(ReflectionTypeSolver(false), memoryTypeSolver),
             memoryTypeSolver,
             true,

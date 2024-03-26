@@ -14,3 +14,6 @@ When running, a prompt for the workspace folder will popup.
 Select *testWorkspace* from the repo. It contains a *.base* folder with the purpose of holding a base copy of the project.
 
 
+## About Jaid
+
+> transformation extractions do not work well with files without package declaration
