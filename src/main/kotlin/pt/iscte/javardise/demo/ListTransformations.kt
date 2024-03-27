@@ -9,8 +9,11 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.MemoryTypeSolver
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import model.FactoryOfTransformations
 import model.Project
+import model.applyTransformationsTo
 import model.transformations.Transformation
 import pt.iscte.javardise.Command
 import pt.iscte.javardise.CommandKind
@@ -34,7 +37,7 @@ class ListTransformations : Action {
 
     override fun init(editor: CodeEditor) {
         val memoryTypeSolver = MemoryTypeSolver()
-        projBase = Project(File(editor.folder, ".base").absolutePath.toString())
+        projBase = Project(File(editor.folder, "base").absolutePath.toString())
         projBranch = Project(
             editor.folder.absolutePath.toString(),
             SymbolSolverCollectionStrategy().collect(
@@ -94,7 +97,21 @@ class ListTransformations : Action {
     }
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
+
         println("propagate transformations... TODO")
-        transformations.map { it.toJson() }.forEach { println(it) }
+
+        val serializedTransformations = transformations.map { it.toJson().toString() }
+        serializedTransformations.forEach { println(it) }
+
+        serializedTransformations.map { json ->
+            (Json.parseToJsonElement(json) as JsonObject).toTransformation(projBase)
+        }.forEach {
+            it.applyTransformation(projBase)
+        }
+
+        projBase.getSetOfCompilationUnit().forEach { println(it) }
+
+        // TODO está a aplicar bem as mudanças mas o ficheiro nao mostra as mudanças
+
     }
 }

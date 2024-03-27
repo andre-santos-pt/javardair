@@ -17,12 +17,12 @@ fun Transformation.toJson(): JsonObject {
     when (this) {
         is SignatureChanged -> {
             fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
-            fields["new-name"] = JsonPrimitive(getNewName().toString()) // vai dizer new name mesmo que nao tenha sido a coisa q mudou is that okay?
-            fields["new-parameters"] = JsonArray(getNode().parameters.map {
+            fields["name"] = JsonPrimitive(getNewName().toString()) // vai dizer new name mesmo que nao tenha sido a coisa q mudou is that okay?
+            fields["parameters"] = JsonArray(getNode().parameters.map {
                 JsonObject(
                     mapOf<String, JsonElement>(
-                        "new-type" to JsonPrimitive(getNewParameters()[0].type.toString()),
-                        "new-name" to JsonPrimitive(getNewParameters()[0].name.toString())
+                        "type" to JsonPrimitive(getNewParameters()[0].type.toString()),
+                        "name" to JsonPrimitive(getNewParameters()[0].name.toString())
                     )
                 )
             })
@@ -36,12 +36,12 @@ fun Transformation.toJson(): JsonObject {
 
         is ReturnTypeChangedMethod -> {
             fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
-            fields["new-returnType"] = JsonPrimitive(getNewReturnType().toString())
+            fields["returnType"] = JsonPrimitive(getNewReturnType().toString())
         }
 
         is BodyChangedCallable -> {
             fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
-            fields["new-body"] = JsonPrimitive(getNewBody().toString())
+            fields["body"] = JsonPrimitive(getNewBody().toString())
         }
     }
     return JsonObject(fields)
@@ -58,11 +58,11 @@ fun JsonObject.toTransformation(project: Project): Transformation {
             SignatureChanged(
                 project,
                 project.getMethodByUUID(UUID(field("uuid")))!!,
-                NodeList<Parameter>(this["new-parameters"]?.jsonArray?.map {
+                NodeList<Parameter>(this["parameters"]?.jsonArray?.map {
                     it as JsonObject
-                    Parameter(StaticJavaParser.parseType(it.field("new-type")), it.field("new-name"))
+                    Parameter(StaticJavaParser.parseType(it.field("type")), it.field("name"))
                 }),
-                SimpleName(field("new-name"))
+                SimpleName(field("name"))
             )
 
         AddCallable::class.java.simpleName ->
@@ -76,14 +76,14 @@ fun JsonObject.toTransformation(project: Project): Transformation {
             ReturnTypeChangedMethod(
                 project,
                 project.getMethodByUUID(UUID(field("uuid")))!!,
-                StaticJavaParser.parseType(field("new-returnType"))
+                StaticJavaParser.parseType(field("returnType"))
 
             )
         BodyChangedCallable::class.java.simpleName ->
             BodyChangedCallable(
                 project,
                 project.getMethodByUUID(UUID(field("uuid")))!!,
-                StaticJavaParser.parseBlock(field("new-body"))
+                StaticJavaParser.parseBlock(field("body"))
             )
 
         else -> throw Exception("Transformation not found $code")

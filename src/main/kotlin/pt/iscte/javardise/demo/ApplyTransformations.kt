@@ -36,7 +36,7 @@ class ApplyTransformations : Action {
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
         val json = listOf("""
-            {"code":"SignatureChanged","uuid":"d0779f95-d537-4501-b708-fc50747e6616","new-name":"newName","parameters":[{"type":"int","name":"param"}]}
+            {"code":"SignatureChanged","uuid":"d0779f95-d537-4501-b708-fc50747e6616","name":"newName","parameters":[{"type":"int","name":"param"}]}
         """)
         json.map {
             (Json.parseToJsonElement(it) as JsonObject).toTransformation(projBranch)
