@@ -1,5 +1,6 @@
 package pt.iscte.javardise.demo
 
+import Client
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.FieldDeclaration
@@ -96,22 +97,26 @@ class ListTransformations : Action {
         }
     }
 
+    // TODO so pode fazer isto se estiver ligado, proteger
     override fun run(editor: CodeEditor, toggle: Boolean) {
 
-        println("propagate transformations... TODO")
-
         val serializedTransformations = transformations.map { it.toJson().toString() }
-        serializedTransformations.forEach { println(it) }
+        try {
+            Client.write(serializedTransformations)
+        } catch (ex: Exception) {
+            println("erro aconteceu no submit")
+        }
+        Client.write(serializedTransformations)
 
-        serializedTransformations.map { json ->
+        /**serializedTransformations.map { json ->
             (Json.parseToJsonElement(json) as JsonObject).toTransformation(projBase)
         }.forEach {
             it.applyTransformation(projBase)
-        }
+        } **/
 
-        projBase.getSetOfCompilationUnit().forEach { println(it) }
+        //projBase.getSetOfCompilationUnit().forEach { println(it) }
 
-        // TODO está a aplicar bem as mudanças mas o ficheiro nao mostra as mudanças
+        //Client.write(serializedTransformations) // ele aqui so faz a ligaçao uma vez? ou sempre que chamar o run ele tenta criar uma socket nova?
 
     }
 }

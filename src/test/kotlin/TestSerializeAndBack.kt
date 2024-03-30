@@ -69,6 +69,7 @@ class TestSerializeAndBack {
         val projBase = Project("temp/base/")
         val projBranch = Project("temp/branch/")
 
+
         val factoryOfTransformations = FactoryOfTransformations(projBase, projBranch)
         val listOfTransformations = factoryOfTransformations.getListOfAllTransformations()
         println(factoryOfTransformations)
