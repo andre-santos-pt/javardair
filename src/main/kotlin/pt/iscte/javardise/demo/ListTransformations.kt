@@ -102,7 +102,7 @@ class ListTransformations : Action {
 
         val serializedTransformations = transformations.map { it.toJson().toString() }
         try {
-            Client.writeMessage(serializedTransformations)
+            Client.writeMessage(serializedTransformations.toString())
         } catch (ex: Exception) {
             println("Could not send message to Server")
         }
