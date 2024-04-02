@@ -1,12 +1,13 @@
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import model.Project
-import java.io.File
-import java.io.OutputStream
-import java.io.PrintWriter
+import pt.iscte.javardise.demo.toTransformation
+import pt.iscte.javardise.editor.CodeEditor
+import java.io.*
 import java.net.ServerSocket
 import java.net.Socket
 import java.nio.charset.Charset
 import java.nio.file.Files
-import java.util.ArrayList
 import java.util.Scanner
 import kotlin.concurrent.thread
 
@@ -16,6 +17,7 @@ fun main() {
 class Server(port: Int) {
     lateinit var clientList: ArrayList<ClientHandler>
     //val projBase = Project(File(editor.folder, "base").absolutePath.toString())
+    private lateinit var project: Project
     inner class ClientHandler(clientSocket: Socket) {
         private val clientSocket: Socket = clientSocket
         private val writer: OutputStream = clientSocket.getOutputStream()
@@ -39,8 +41,16 @@ class Server(port: Int) {
         private fun serve() {
             while(true) {
                 val text = reader.nextLine()
+                println(" Received changes from $clientSocket: $text")
+                applyChanges(text)
+                project.getSetOfCompilationUnit().forEach { println(it) }
                 // TODO fazer as mudanças e propagar - fase 1
-                clientList.forEach { if(it.clientSocket != clientSocket) it.write("from ${it}: $text") }
+                try {
+                    clientList.forEach { if(it.clientSocket != clientSocket) it.write("from ${it}: $text") }
+
+                } catch (ex: Exception) {
+                    println("Could not send message to other clients $ex")
+                }
             }
         }
         private fun write(message: String) {
@@ -60,11 +70,11 @@ class Server(port: Int) {
         PrintWriter(file).use { out ->
             out.println(src)
         }
+        project = Project(file.parentFile.path)
     }
 
     private fun loadFiles() {
-        // branch version
-        writeFile("temp/base/Test.java", """
+        writeFile("server/Test.java", """
                 //9e30e98a-36db-47f4-836c-16c390a1d2d7
                 package test;
 
@@ -79,10 +89,22 @@ class Server(port: Int) {
         """.trimIndent())
     }
 
+    private fun applyChanges(serializedTransformations: String) {
+        try {
+            serializedTransformations.map { json ->
+                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
+            }.forEach {
+                it.applyTransformation(project)
+            }
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
+
+    }
+
     init {
-        //clientList.forEach{ println(it) }
-        //loadFiles()
-        clientList = ArrayList<ClientHandler>()
+        loadFiles()
+        clientList = ArrayList()
         val serverSocket = ServerSocket(port)
         println("Server started on port $port")
         while (true) {
@@ -91,7 +113,6 @@ class Server(port: Int) {
             val client = ClientHandler(clientSocket)
             clientList.add(client) // considera sempre que os clients sao novos, a lista esta em memoria neste momento
             thread { client.run() }
-            //clientList.forEach { println(it) }
         }
     }
 

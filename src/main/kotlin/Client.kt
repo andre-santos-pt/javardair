@@ -1,5 +1,8 @@
+import pt.iscte.javardise.editor.CodeEditor
+import java.io.ObjectOutputStream
 import java.io.OutputStream
 import java.net.Socket
+import java.nio.charset.Charset
 import java.util.Scanner
 import kotlin.concurrent.thread
 
@@ -18,7 +21,7 @@ object Client {
         try {
             connectToServer()
         } catch (ex: Exception) {
-            println("Disconnected from server")
+            println("Cannot connect to the server ${ex.printStackTrace()}")
         }
     }
 
@@ -35,9 +38,12 @@ object Client {
         isConnected = false
     }
 
-    fun write(message: List<String>) {
-        if(isConnected) message.forEach{ writer.write(it.encodeToByteArray())}
+    fun writeMessage(message: String) {
+        if(isConnected) {
+            writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
+        }
     }
+
 
     // é okay lidar assim? ou devo criar uma inner classe que seja uma thread dps?
     private fun dealWithServer() {
@@ -46,11 +52,8 @@ object Client {
             while (isConnected)
                 println(reader.nextLine())
         } catch (ex: Exception) {
-            println("Disconnected from server")
+            println("Disconnected from server: $ex")
         }
-
-
-
     }
 }
 
