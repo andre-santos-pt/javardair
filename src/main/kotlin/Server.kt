@@ -91,11 +91,12 @@ class Server(port: Int) {
 
     private fun applyChanges(serializedTransformations: String) {
         try {
-            serializedTransformations.map { json ->
+            /**serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
             }.forEach {
                 it.applyTransformation(project)
-            }
+            }**/
+            (Json.parseToJsonElement(serializedTransformations) as JsonObject).toTransformation(project).applyTransformation(project)
         } catch (ex: Exception) {
             ex.printStackTrace()
         }

@@ -102,21 +102,28 @@ class ListTransformations : Action {
 
         val serializedTransformations = transformations.map { it.toJson().toString() }
         try {
-            Client.writeMessage(serializedTransformations.toString())
+            //Client.writeMessage(serializedTransformations.toString())
+            serializedTransformations.forEach { Client.writeMessage(it) }
         } catch (ex: Exception) {
             println("Could not send message to Server")
         }
         //Client.write(serializedTransformations)
 
-        /**try {
-            serializedTransformations.map { json ->
+       /** try {
+            serializedTransformations.forEach { println(it) }
+            println(serializedTransformations.toString())
+
+            (Json.parseToJsonElement(serializedTransformations[0]) as JsonObject).toTransformation(projBase)
+
+           /** serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json) as JsonObject).toTransformation(projBase)
             }.forEach {
                 it.applyTransformation(projBase)
-            }
+            }**/
         } catch (ex: Exception) {
             ex.printStackTrace()
-        }**/
+        }
+       **/
 
 
         //projBase.getSetOfCompilationUnit().forEach { println(it) }
