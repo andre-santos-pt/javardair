@@ -5,6 +5,8 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.MemoryTypeSolver
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import model.Project
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor
@@ -35,6 +37,16 @@ class ApplyTransformation : Action {
 
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
+        val json = listOf("""
+            {"code":"SignatureChanged","uuid":"d0779f95-d537-4501-b708-fc50747e6616","name":"newName","parameters":[{"type":"int","name":"param"}]}
+        """)
+        var test = json.map {
+            (Json.parseToJsonElement(it) as JsonObject).toTransformation(projBranch)
+        }
+        test.forEach { println(it) }
 
+        test.forEach {
+            it.applyTransformation(projBranch)
+        }
     }
 }

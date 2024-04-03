@@ -1,6 +1,6 @@
 package pt.iscte.javardise.demo
 
-import Client
+import Request
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.FieldDeclaration
@@ -10,11 +10,10 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.MemoryTypeSolver
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonObject
 import model.FactoryOfTransformations
 import model.Project
-import model.applyTransformationsTo
 import model.transformations.Transformation
 import pt.iscte.javardise.Command
 import pt.iscte.javardise.CommandKind
@@ -99,36 +98,18 @@ class ListTransformations : Action {
 
     // TODO so pode fazer isto se estiver ligado, proteger
     override fun run(editor: CodeEditor, toggle: Boolean) {
-
         val serializedTransformations = transformations.map { it.toJson().toString() }
         try {
-            //Client.writeMessage(serializedTransformations.toString())
-            serializedTransformations.forEach { Client.writeMessage(it) }
+            serializedTransformations.forEach {
+                val req = Request(Operations.PUSH, File(editor.folder, "base").absolutePath.toString(), it)
+                val reqString = Json.encodeToString(req)
+                println(reqString)
+                val reqObj = Json.decodeFromString<Request>(reqString)
+                println("${reqObj.op} , ${reqObj.trans} , ${reqObj.projectName}")
+                //Client.writeMessage(it) }
+            }
         } catch (ex: Exception) {
-            println("Could not send message to Server")
+            println("Could not send message to Server ${ex.printStackTrace()}")
         }
-        //Client.write(serializedTransformations)
-
-       /** try {
-            serializedTransformations.forEach { println(it) }
-            println(serializedTransformations.toString())
-
-            (Json.parseToJsonElement(serializedTransformations[0]) as JsonObject).toTransformation(projBase)
-
-           /** serializedTransformations.map { json ->
-                (Json.parseToJsonElement(json) as JsonObject).toTransformation(projBase)
-            }.forEach {
-                it.applyTransformation(projBase)
-            }**/
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
-       **/
-
-
-        //projBase.getSetOfCompilationUnit().forEach { println(it) }
-
-        //Client.write(serializedTransformations) // ele aqui so faz a ligaçao uma vez? ou sempre que chamar o run ele tenta criar uma socket nova?
-
     }
 }

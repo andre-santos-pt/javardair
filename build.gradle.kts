@@ -1,6 +1,7 @@
 plugins {
     kotlin("jvm") version "1.9.22"
     application
+    kotlin("plugin.serialization") version "1.9.22"
 }
 
 group = "pt.iscte"

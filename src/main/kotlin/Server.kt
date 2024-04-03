@@ -16,10 +16,8 @@ fun main() {
 }
 class Server(port: Int) {
     lateinit var clientList: ArrayList<ClientHandler>
-    //val projBase = Project(File(editor.folder, "base").absolutePath.toString())
     private lateinit var project: Project
-    inner class ClientHandler(clientSocket: Socket) {
-        private val clientSocket: Socket = clientSocket
+    inner class ClientHandler(private val clientSocket: Socket) {
         private val writer: OutputStream = clientSocket.getOutputStream()
         private val reader: Scanner = Scanner(clientSocket.getInputStream())
 
@@ -40,14 +38,13 @@ class Server(port: Int) {
 
         private fun serve() {
             while(true) {
+                // TODO fazer as mudanças e propagar
                 val text = reader.nextLine()
                 println(" Received changes from $clientSocket: $text")
                 applyChanges(text)
-                project.getSetOfCompilationUnit().forEach { println(it) }
-                // TODO fazer as mudanças e propagar - fase 1
+                //project.getSetOfCompilationUnit().forEach { println(it) }
                 try {
-                    clientList.forEach { if(it.clientSocket != clientSocket) it.write("from ${it}: $text") }
-
+                    clientList.forEach { if(it.clientSocket != clientSocket) it.write(text) }
                 } catch (ex: Exception) {
                     println("Could not send message to other clients $ex")
                 }
@@ -56,9 +53,6 @@ class Server(port: Int) {
         private fun write(message: String) {
             writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
         }
-
-
-
     }
 
     private fun writeFile(path: String, src:String) {
@@ -91,16 +85,10 @@ class Server(port: Int) {
 
     private fun applyChanges(serializedTransformations: String) {
         try {
-            /**serializedTransformations.map { json ->
-                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
-            }.forEach {
-                it.applyTransformation(project)
-            }**/
             (Json.parseToJsonElement(serializedTransformations) as JsonObject).toTransformation(project).applyTransformation(project)
         } catch (ex: Exception) {
             ex.printStackTrace()
         }
-
     }
 
     init {
