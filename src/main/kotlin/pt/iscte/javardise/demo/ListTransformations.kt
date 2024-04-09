@@ -1,6 +1,8 @@
 package pt.iscte.javardise.demo
 
-import Request
+import Client
+import Operations
+import Response
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.FieldDeclaration
@@ -10,8 +12,10 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.MemoryTypeSolver
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
+import com.github.javaparser.utils.SourceRoot
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
 import model.FactoryOfTransformations
 import model.Project
 import model.transformations.Transformation
@@ -36,7 +40,8 @@ class ListTransformations : Action {
     val transformations: MutableSet<Transformation> = mutableSetOf()
 
     override fun init(editor: CodeEditor) {
-        val memoryTypeSolver = MemoryTypeSolver()
+        //val memoryTypeSolver_base = MemoryTypeSolver()
+        val memoryTypeSolver_branch = MemoryTypeSolver()
         projBase = Project(File(editor.folder, "base").absolutePath.toString())
         projBranch = Project(
             editor.folder.absolutePath.toString(),
@@ -45,8 +50,8 @@ class ListTransformations : Action {
             ),
             null,
             editor.allCompilationUnits().toMutableList(), // TODO new classes
-            CombinedTypeSolver(ReflectionTypeSolver(false), memoryTypeSolver),
-            memoryTypeSolver,
+            CombinedTypeSolver(ReflectionTypeSolver(false), memoryTypeSolver_branch),
+            memoryTypeSolver_branch,
             true,
             true
         )
@@ -99,14 +104,19 @@ class ListTransformations : Action {
     // TODO so pode fazer isto se estiver ligado, proteger
     override fun run(editor: CodeEditor, toggle: Boolean) {
         val serializedTransformations = transformations.map { it.toJson().toString() }
+        transformations.clear()
+        println(transformations)
         try {
             serializedTransformations.forEach {
-                val req = Request(Operations.PUSH, File(editor.folder, "base").absolutePath.toString(), it)
-                val reqString = Json.encodeToString(req)
-                println(reqString)
-                val reqObj = Json.decodeFromString<Request>(reqString)
-                println("${reqObj.op} , ${reqObj.trans} , ${reqObj.projectName}")
-                //Client.writeMessage(it) }
+                val resp = Response(Operations.PUSH, it)
+                Client.write(Json.encodeToString(resp))
+            }
+
+            // update projBase
+            serializedTransformations.map { json ->
+                (Json.parseToJsonElement(json) as JsonObject).toTransformation(projBase)
+            }.forEach {
+                it.applyTransformation(projBase)
             }
         } catch (ex: Exception) {
             println("Could not send message to Server ${ex.printStackTrace()}")

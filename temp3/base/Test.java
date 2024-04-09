@@ -4,17 +4,8 @@ package test;
 //13c9f311-0d07-46aa-8591-ef22c6ab8e49
 class Test {
 
-    //d22058d5-fdc3-4cd2-98f4-c5fd4c688c89
-    String test() {
-        return "hello world";
-    }
-
     //d0779f95-d537-4501-b708-fc50747e6616
     void method(int param) {
-    }
 
-    void x() {
-        ;
     }
 }
-

@@ -1,8 +1,8 @@
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import model.Project
 import pt.iscte.javardise.demo.toTransformation
-import pt.iscte.javardise.editor.CodeEditor
 import java.io.*
 import java.net.ServerSocket
 import java.net.Socket
@@ -22,7 +22,6 @@ class Server(port: Int) {
         private val reader: Scanner = Scanner(clientSocket.getInputStream())
 
         fun run() {
-            write("Welcome to the server")
             try {
                 serve()
             } catch (ex: Exception) {
@@ -38,20 +37,30 @@ class Server(port: Int) {
 
         private fun serve() {
             while(true) {
-                // TODO fazer as mudanças e propagar
-                val text = reader.nextLine()
-                println(" Received changes from $clientSocket: $text")
-                applyChanges(text)
-                //project.getSetOfCompilationUnit().forEach { println(it) }
-                try {
-                    clientList.forEach { if(it.clientSocket != clientSocket) it.write(text) }
-                } catch (ex: Exception) {
-                    println("Could not send message to other clients $ex")
+                val message = reader.nextLine()
+                val resp = Json.decodeFromString<Response>(message)
+                println(" Received changes from $clientSocket: $resp")
+                if(resp.op == Operations.PUSH) {
+                    applyChanges(resp.trans)
+                    propagateChanges(resp.trans, clientList)
                 }
             }
         }
         private fun write(message: String) {
             writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
+        }
+
+        private fun propagateChanges(serializedTransformations: String, clientList: ArrayList<ClientHandler>) {
+            try {
+                clientList.forEach {
+                    if(it.clientSocket != clientSocket) {
+                        val resp = Response(Operations.PUSH, serializedTransformations)
+                        it.write(Json.encodeToString(resp))
+                    }
+                }
+            } catch (ex: Exception) {
+                println("Could not send message to other clients $ex")
+            }
         }
     }
 

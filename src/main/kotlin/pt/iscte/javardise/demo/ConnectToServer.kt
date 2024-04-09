@@ -18,7 +18,6 @@ class ConnectToServer : Action {
     private lateinit var projBranch: Project
     private lateinit var projBase: Project
 
-
     override fun init(editor: CodeEditor) {
         val memoryTypeSolver = MemoryTypeSolver()
         projBase = Project(File(editor.folder, "base").absolutePath.toString())

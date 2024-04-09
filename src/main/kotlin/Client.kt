@@ -3,8 +3,6 @@ import kotlinx.serialization.json.JsonObject
 import model.Project
 import org.eclipse.swt.widgets.Display
 import pt.iscte.javardise.demo.toTransformation
-import pt.iscte.javardise.editor.CodeEditor
-import java.io.ObjectOutputStream
 import java.io.OutputStream
 import java.net.Socket
 import java.nio.charset.Charset
@@ -47,7 +45,7 @@ object Client {
         isConnected = false
     }
 
-    fun writeMessage(message: String) {
+    fun write(message: String) {
         if(isConnected) {
             writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
         }
@@ -55,23 +53,25 @@ object Client {
 
     private fun applyChanges(serializedTransformations: String) {
         try {
-            val test = (Json.parseToJsonElement(serializedTransformations) as JsonObject).toTransformation(projectBranch)
-            Display.getDefault().syncExec { test.applyTransformation(projectBranch) }
+            val trans = (Json.parseToJsonElement(serializedTransformations) as JsonObject).toTransformation(projectBranch)
+            trans.applyTransformation(projectBase)
+            Display.getDefault().syncExec { trans.applyTransformation(projectBranch) }
+            projectBase.getSetOfCompilationUnit().forEach { println(it) }
         } catch (ex: Exception) {
             ex.printStackTrace()
         }
 
     }
 
-
-    // é okay lidar assim? ou devo criar uma inner classe que seja uma thread dps?
     private fun dealWithServer() {
-        // TODO lidar com as mensagens que vai receber do servidor para fazer mudanças ao ficheiro
         try {
             while (isConnected) {
-                val text = reader.nextLine()
-                println(text)
-                if (text != "Welcome to the server") applyChanges(text)
+                val message = reader.nextLine()
+                val resp = Json.decodeFromString<Response>(message)
+                println("Received changes: $resp")
+                if(resp.op == Operations.PUSH) {
+                    applyChanges(resp.trans)
+                }
             }
 
         } catch (ex: Exception) {
