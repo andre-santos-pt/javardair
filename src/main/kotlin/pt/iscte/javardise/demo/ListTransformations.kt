@@ -95,6 +95,7 @@ class ListTransformations : Action {
             synchronized(transformations) {
                 transformations.clear()
                 val factoryOfTransformations = FactoryOfTransformations(projBase, projBranch)
+                //println(factoryOfTransformations)
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
                 println("transformations: $transformations")
             }
@@ -103,6 +104,7 @@ class ListTransformations : Action {
 
     // TODO so pode fazer isto se estiver ligado, proteger
     override fun run(editor: CodeEditor, toggle: Boolean) {
+        //transformations.forEach { println(it.toString()) }
         val serializedTransformations = transformations.map { it.toJson().toString() }
         transformations.clear()
         println(transformations)

@@ -1,7 +1,9 @@
 package pt.iscte.javardise.demo
 
+import com.github.javaparser.JavaParser
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.NodeList
+import com.github.javaparser.ast.body.FieldDeclaration
 import com.github.javaparser.ast.body.Parameter
 import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.type.Type
@@ -43,6 +45,50 @@ fun Transformation.toJson(): JsonObject {
             fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
             fields["body"] = JsonPrimitive(getNewBody().toString())
         }
+
+        is RemoveCallable -> {
+            fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
+            fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
+        }
+
+        /**
+        is AddField -> {
+            fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
+            fields["body"] = JsonPrimitive(getNode().toString())
+        }
+        **/
+
+        is RemoveField -> {
+            fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
+            fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
+        }
+
+        is RenameField -> {
+            fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
+            fields["name"] = JsonPrimitive(getNewName().toString())
+        }
+
+        is TypeChangedField -> {
+            fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
+            fields["type"] = JsonPrimitive(getNewType().toString())
+        }
+
+        is InitializerChangedField -> {
+            fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
+            fields["initializer"] = JsonPrimitive(getNewInitializer().toString())
+        }
+
+
+
+
+
+        // moveCallableIntraType - o q é este?
+
+        // addField
+
+        // type changed field
+
+
     }
     return JsonObject(fields)
 }
@@ -84,6 +130,41 @@ fun JsonObject.toTransformation(project: Project): Transformation {
                 project,
                 project.getMethodByUUID(UUID(field("uuid")))!!,
                 StaticJavaParser.parseBlock(field("body"))
+            )
+        RemoveCallable::class.java.simpleName ->
+            RemoveCallable(
+                project.getTypeByUUID(UUID(field("owner-uuid")))!!,
+                project.getMethodByUUID(UUID(field("uuid")))!!,
+            )
+        /**
+        AddField::class.java.simpleName ->
+            AddField(
+                project,
+                project.getTypeByUUID(UUID(field("owner-uuid")))!!,
+                StaticJavaParser.parseExpression(field("body"))
+            )
+        **/
+        RemoveField::class.java.simpleName ->
+            RemoveField(
+                project.getTypeByUUID(UUID(field("owner-uuid")))!!,
+                project.getFieldByUUID(UUID(field("uuid")))!!
+            )
+        RenameField::class.java.simpleName ->
+            RenameField(
+                project.getFieldByUUID(UUID(field("uuid")))!!,
+                SimpleName(field("name"))
+            )
+        TypeChangedField::class.java.simpleName ->
+            TypeChangedField(
+                project,
+                project.getFieldByUUID(UUID(field("uuid")))!!,
+                StaticJavaParser.parseType(field("type"))
+            )
+        InitializerChangedField::class.java.simpleName ->
+            InitializerChangedField(
+                project,
+                project.getFieldByUUID(UUID(field("uuid")))!!,
+                StaticJavaParser.parseExpression(field("initializer"))
             )
 
         else -> throw Exception("Transformation not found $code")
