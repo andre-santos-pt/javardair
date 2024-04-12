@@ -1,6 +1,7 @@
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import model.Project
+import model.rootPath
 import org.eclipse.swt.widgets.Display
 import pt.iscte.javardise.demo.toTransformation
 import java.io.OutputStream
@@ -8,6 +9,8 @@ import java.net.Socket
 import java.nio.charset.Charset
 import java.util.Scanner
 import kotlin.concurrent.thread
+import kotlin.io.path.Path
+import kotlin.reflect.jvm.isAccessible
 
 object Client {
     private const val address: String = "localhost" // mudar
@@ -15,16 +18,15 @@ object Client {
     private lateinit var socket: Socket
     private lateinit var reader: Scanner
     private lateinit var writer: OutputStream
-    private lateinit var projectBranch: Project
-    private lateinit var projectBase: Project
+    internal lateinit var projectBranch: Project
+    internal lateinit var projectBase: Project
     var isConnected = false
 
-    fun open(projectBranch: Project, projectBase: Project) {
+    fun open() {
         isConnected = true
-        this.projectBranch = projectBranch
-        this.projectBase = projectBase
         runClient()
     }
+
     private fun runClient() {
         try {
             connectToServer()
@@ -51,10 +53,18 @@ object Client {
         }
     }
 
+    // temp hack
+    fun Project.getPrivatePath(): String {
+        val f = this::class.members.find { it.name == "path" }
+        f!!.isAccessible = true
+        return f.call(this).toString()
+    }
+
     private fun applyChanges(serializedTransformations: String) {
         try {
             val trans = (Json.parseToJsonElement(serializedTransformations) as JsonObject).toTransformation(projectBranch)
             trans.applyTransformation(projectBase)
+            projectBase.saveProjectTo(Path(projectBase.getPrivatePath()))
             Display.getDefault().syncExec { trans.applyTransformation(projectBranch) }
             projectBase.getSetOfCompilationUnit().forEach { println(it) }
         } catch (ex: Exception) {

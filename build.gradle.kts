@@ -17,11 +17,12 @@ repositories {
 dependencies {
     testImplementation(kotlin("test"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    implementation(kotlin("reflect"))
     if(win)
         implementation(files("libs/javardise-win.jar"))
     else
-        implementation(files("libs/javardise-macos.jar"))
-    implementation(files("libs/compilation.jar"))
+        implementation(files("libs/javardise-mac.jar"))
+    //implementation(files("libs/compilation.jar"))
     implementation(files("libs/jaid.jar"))
 }
 

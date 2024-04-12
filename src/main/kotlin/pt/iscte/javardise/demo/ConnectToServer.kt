@@ -15,13 +15,10 @@ class ConnectToServer : Action {
     override val name: String
         get() = "Connect"
 
-    private lateinit var projBranch: Project
-    private lateinit var projBase: Project
-
     override fun init(editor: CodeEditor) {
         val memoryTypeSolver = MemoryTypeSolver()
-        projBase = Project(File(editor.folder, "base").absolutePath.toString())
-        projBranch = Project(
+        Client.projectBase = Project(File(editor.folder, "base").absolutePath.toString())
+        Client.projectBranch = Project(
             editor.folder.absolutePath.toString(),
             SymbolSolverCollectionStrategy().collect(
                 Path(editor.folder.absolutePath)
@@ -35,11 +32,9 @@ class ConnectToServer : Action {
         )
     }
 
-
-
     override fun run(editor: CodeEditor, toggle: Boolean) {
         if(!Client.isConnected) {
-            Client.open(projBranch, projBase)
+            Client.open()
         } else { Client.close() }
 
     }

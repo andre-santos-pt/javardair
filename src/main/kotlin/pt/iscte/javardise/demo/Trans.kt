@@ -14,7 +14,7 @@ import model.transformations.*
 import model.uuid
 
 // map a transformation to a json object
-fun Transformation.toJson(): JsonObject {
+    fun Transformation.toJson(): JsonObject {
     val fields = mutableMapOf<String, JsonElement>("code" to JsonPrimitive(this::class.java.simpleName))
     when (this) {
         is SignatureChanged -> {
