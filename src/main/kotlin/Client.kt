@@ -1,7 +1,7 @@
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import model.Project
-import model.rootPath
+import model.applyTransformationsTo
 import org.eclipse.swt.widgets.Display
 import pt.iscte.javardise.demo.toTransformation
 import java.io.OutputStream
@@ -62,11 +62,13 @@ object Client {
 
     private fun applyChanges(serializedTransformations: String) {
         try {
-            val trans = (Json.parseToJsonElement(serializedTransformations) as JsonObject).toTransformation(projectBranch)
-            trans.applyTransformation(projectBase)
+            val trans = (Json.parseToJsonElement(serializedTransformations) as JsonObject)
+            val transBranch = trans.toTransformation(projectBranch)
+            val transBase = trans.toTransformation(projectBase)
+            transBase.applyTransformation(projectBase)
             projectBase.saveProjectTo(Path(projectBase.getPrivatePath()))
-            Display.getDefault().syncExec { trans.applyTransformation(projectBranch) }
-            projectBase.getSetOfCompilationUnit().forEach { println(it) }
+            Display.getDefault().syncExec { transBranch.applyTransformation(projectBranch) }
+
         } catch (ex: Exception) {
             ex.printStackTrace()
         }
@@ -77,7 +79,7 @@ object Client {
         try {
             while (isConnected) {
                 val message = reader.nextLine()
-                val resp = Json.decodeFromString<Response>(message)
+                val resp = Json.decodeFromString<Message>(message)
                 println("Received changes: $resp")
                 if(resp.op == Operations.PUSH) {
                     applyChanges(resp.trans)

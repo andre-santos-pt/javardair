@@ -17,7 +17,7 @@ class ConnectToServer : Action {
 
     override fun init(editor: CodeEditor) {
         val memoryTypeSolver = MemoryTypeSolver()
-        Client.projectBase = Project(File(editor.folder, "base").absolutePath.toString())
+        Client.projectBase = Project(File(editor.folder, "root").absolutePath.toString())
         Client.projectBranch = Project(
             editor.folder.absolutePath.toString(),
             SymbolSolverCollectionStrategy().collect(

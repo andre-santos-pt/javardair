@@ -1,3 +1,4 @@
+import Client.getPrivatePath
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -10,6 +11,7 @@ import java.nio.charset.Charset
 import java.nio.file.Files
 import java.util.Scanner
 import kotlin.concurrent.thread
+import kotlin.io.path.Path
 
 fun main() {
     Server(8080)
@@ -38,7 +40,7 @@ class Server(port: Int) {
         private fun serve() {
             while(true) {
                 val message = reader.nextLine()
-                val resp = Json.decodeFromString<Response>(message)
+                val resp = Json.decodeFromString<Message>(message)
                 println(" Received changes from $clientSocket: $resp")
                 if(resp.op == Operations.PUSH) {
                     applyChanges(resp.trans)
@@ -54,7 +56,7 @@ class Server(port: Int) {
             try {
                 clientList.forEach {
                     if(it.clientSocket != clientSocket) {
-                        val resp = Response(Operations.PUSH, serializedTransformations)
+                        val resp = Message(Operations.PUSH, serializedTransformations)
                         it.write(Json.encodeToString(resp))
                     }
                 }
@@ -67,11 +69,12 @@ class Server(port: Int) {
     private fun writeFile(path: String, src:String) {
         // everytime the server is initiated it loads a new set of files - TESTING PURPOSES
         val file = File(path)
-        Files.deleteIfExists(file.toPath())
-        if(!Files.exists(file.toPath()))
+        //Files.deleteIfExists(file.toPath())
+        if(!Files.exists(file.toPath())) {
             Files.createDirectories(file.parentFile.toPath());
-        PrintWriter(file).use { out ->
-            out.println(src)
+            PrintWriter(file).use { out ->
+                out.println(src)
+            }
         }
         project = Project(file.parentFile.path)
     }
@@ -95,6 +98,8 @@ class Server(port: Int) {
     private fun applyChanges(serializedTransformations: String) {
         try {
             (Json.parseToJsonElement(serializedTransformations) as JsonObject).toTransformation(project).applyTransformation(project)
+            project.saveProjectTo(Path(project.getPrivatePath()))
+
         } catch (ex: Exception) {
             ex.printStackTrace()
         }

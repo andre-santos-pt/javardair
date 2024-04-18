@@ -1,22 +1,18 @@
 package pt.iscte.javardise.demo
 
 import Client
+import Client.getPrivatePath
 import Operations
-import Response
+import Message
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.FieldDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.comments.LineComment
-import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver
-import com.github.javaparser.symbolsolver.resolution.typesolvers.MemoryTypeSolver
-import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
-import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import model.FactoryOfTransformations
-import model.Project
 import model.transformations.Transformation
 import pt.iscte.javardise.Command
 import pt.iscte.javardise.CommandKind
@@ -33,7 +29,7 @@ class SubmitChanges : Action {
     override val name: String
         get() = "Submit"
 
-    val transformations: MutableSet<Transformation> = mutableSetOf()
+    private val transformations: MutableSet<Transformation> = mutableSetOf()
 
     override fun init(editor: CodeEditor) {
         updateTransformations()
@@ -84,13 +80,11 @@ class SubmitChanges : Action {
 
     // TODO so pode fazer isto se estiver ligado, proteger
     override fun run(editor: CodeEditor, toggle: Boolean) {
-        //transformations.forEach { println(it.toString()) }
         val serializedTransformations = transformations.map { it.toJson().toString() }
         transformations.clear()
-        println(transformations)
         try {
             serializedTransformations.forEach {
-                val resp = Response(Operations.PUSH, it)
+                val resp = Message(Operations.PUSH, it)
                 Client.write(Json.encodeToString(resp))
             }
 
@@ -100,6 +94,8 @@ class SubmitChanges : Action {
             }.forEach {
                 it.applyTransformation(Client.projectBase)
             }
+            Client.projectBase.saveProjectTo(Path(Client.projectBase.getPrivatePath()))
+
         } catch (ex: Exception) {
             println("Could not send message to Server ${ex.printStackTrace()}")
         }

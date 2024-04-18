@@ -19,12 +19,12 @@ import model.uuid
     when (this) {
         is SignatureChanged -> {
             fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
-            fields["name"] = JsonPrimitive(getNewName().toString()) // vai dizer new name mesmo que nao tenha sido a coisa q mudou is that okay?
-            fields["parameters"] = JsonArray(getNode().parameters.map {
+            fields["name"] = JsonPrimitive(getNewName().toString())
+            fields["parameters"] = JsonArray(getNewParameters().map {
                 JsonObject(
                     mapOf<String, JsonElement>(
-                        "type" to JsonPrimitive(getNewParameters()[0].type.toString()),
-                        "name" to JsonPrimitive(getNewParameters()[0].name.toString())
+                        "type" to JsonPrimitive(it.type.toString()),
+                        "name" to JsonPrimitive(it.name.toString())
                     )
                 )
             })
@@ -78,16 +78,11 @@ import model.uuid
             fields["initializer"] = JsonPrimitive(getNewInitializer().toString())
         }
 
+        is MoveCallableIntraType -> {
+            fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
+            fields["order-index"] = JsonPrimitive(getOrderIndex())
 
-
-
-
-        // moveCallableIntraType - o q é este?
-
-        // addField
-
-        // type changed field
-
+        }
 
     }
     return JsonObject(fields)
