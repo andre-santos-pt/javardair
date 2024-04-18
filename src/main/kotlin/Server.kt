@@ -1,8 +1,10 @@
 import Client.getPrivatePath
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import model.Project
+import model.applyTransformationsTo
 import pt.iscte.javardise.demo.toTransformation
 import java.io.*
 import java.net.ServerSocket
@@ -43,7 +45,7 @@ class Server(port: Int) {
                 val resp = Json.decodeFromString<Message>(message)
                 println(" Received changes from $clientSocket: $resp")
                 if(resp.op == Operations.PUSH) {
-                    applyChanges(resp.trans)
+                    applyChanges(Json.decodeFromString(resp.trans))
                     propagateChanges(resp.trans, clientList)
                 }
             }
@@ -95,9 +97,12 @@ class Server(port: Int) {
         """.trimIndent())
     }
 
-    private fun applyChanges(serializedTransformations: String) {
+    private fun applyChanges(serializedTransformations: JsonArray) {
         try {
-            (Json.parseToJsonElement(serializedTransformations) as JsonObject).toTransformation(project).applyTransformation(project)
+            val trans = serializedTransformations.map { json ->
+                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
+            }
+            applyTransformationsTo(project, trans.toSet())
             project.saveProjectTo(Path(project.getPrivatePath()))
 
         } catch (ex: Exception) {

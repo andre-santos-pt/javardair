@@ -1,4 +1,5 @@
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import model.Project
 import model.applyTransformationsTo
@@ -60,14 +61,20 @@ object Client {
         return f.call(this).toString()
     }
 
-    private fun applyChanges(serializedTransformations: String) {
+    private fun applyChanges(serializedTransformations: JsonArray) {
         try {
-            val trans = (Json.parseToJsonElement(serializedTransformations) as JsonObject)
-            val transBranch = trans.toTransformation(projectBranch)
-            val transBase = trans.toTransformation(projectBase)
-            transBase.applyTransformation(projectBase)
+
+            val transRoot = serializedTransformations.map { json ->
+                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectBase)
+            }
+
+            val transBranch = serializedTransformations.map { json ->
+                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectBranch)
+            }
+
+            Display.getDefault().syncExec { applyTransformationsTo(projectBranch, transBranch.toSet()) }
+            applyTransformationsTo(projectBase, transRoot.toSet())
             projectBase.saveProjectTo(Path(projectBase.getPrivatePath()))
-            Display.getDefault().syncExec { transBranch.applyTransformation(projectBranch) }
 
         } catch (ex: Exception) {
             ex.printStackTrace()
@@ -82,7 +89,7 @@ object Client {
                 val resp = Json.decodeFromString<Message>(message)
                 println("Received changes: $resp")
                 if(resp.op == Operations.PUSH) {
-                    applyChanges(resp.trans)
+                    applyChanges(Json.decodeFromString(resp.trans))
                 }
             }
 

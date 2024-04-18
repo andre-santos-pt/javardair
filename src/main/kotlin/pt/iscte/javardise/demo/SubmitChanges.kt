@@ -2,6 +2,7 @@ package pt.iscte.javardise.demo
 
 import Client
 import Client.getPrivatePath
+import Client.projectBranch
 import Operations
 import Message
 import com.github.javaparser.ast.CompilationUnit
@@ -11,8 +12,10 @@ import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.comments.LineComment
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import model.FactoryOfTransformations
+import model.applyTransformationsTo
 import model.transformations.Transformation
 import pt.iscte.javardise.Command
 import pt.iscte.javardise.CommandKind
@@ -80,24 +83,16 @@ class SubmitChanges : Action {
 
     // TODO so pode fazer isto se estiver ligado, proteger
     override fun run(editor: CodeEditor, toggle: Boolean) {
-        val serializedTransformations = transformations.map { it.toJson().toString() }
-        transformations.clear()
+        val serializedTransformations = JsonArray(transformations.map { it.toJson() })
         try {
-            serializedTransformations.forEach {
-                val resp = Message(Operations.PUSH, it)
-                Client.write(Json.encodeToString(resp))
-            }
-
-            // update projBase
-            serializedTransformations.map { json ->
-                (Json.parseToJsonElement(json) as JsonObject).toTransformation(Client.projectBase)
-            }.forEach {
-                it.applyTransformation(Client.projectBase)
-            }
+            val message = Message(Operations.PUSH, Json.encodeToString(serializedTransformations))
+            Client.write(Json.encodeToString(message))
+            applyTransformationsTo(Client.projectBase, transformations)
             Client.projectBase.saveProjectTo(Path(Client.projectBase.getPrivatePath()))
 
         } catch (ex: Exception) {
             println("Could not send message to Server ${ex.printStackTrace()}")
         }
+        transformations.clear()
     }
 }
