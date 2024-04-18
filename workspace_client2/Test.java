@@ -4,17 +4,14 @@ package test;
 //13c9f311-0d07-46aa-8591-ef22c6ab8e49
 class Test {
 
-    //d22058d5-fdc3-4cd2-98f4-c5fd4c688c89
-    String test() {
-        return "hello world";
+    //ce2411ab-72e7-4c2b-b4b1-3e20dc187945
+    int metad(String b) {
+        int test = 5;
     }
 
     //d0779f95-d537-4501-b708-fc50747e6616
-    void method(int param) {
-    }
-
-    void x() {
-        ;
+    String method(String parama) {
+        param = param + 6;
     }
 }
 
