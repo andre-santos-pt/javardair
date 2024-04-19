@@ -60,10 +60,15 @@ class Server(port: Int) {
                     Operations.PULL -> {
                         val setOfConflict = checkConflicts(transformationsA, resp.content)
                         if (setOfConflict.isEmpty()) {
+                            applyChanges(Json.decodeFromString(transformationsA))
                             propagateChanges(transformationsA, clientList, clientToAvoid)
+                        } else {
+                            notifyClients(clientList, setOfConflict)
                         }
                     }
+                    Operations.NOTIFY_CONFLICTS -> TODO()
                     Operations.FETCH -> TODO()
+
                 }
             }
         }
@@ -122,7 +127,19 @@ class Server(port: Int) {
             } catch (ex: Exception) {
                 println("ERROR $ex")
             }
+        }
 
+        private fun notifyClients(clientList: ArrayList<ClientHandler>, setOfConflict: Set<Conflict>) {
+            println("Notifying clients of conflicts")
+            try {
+                // No futuro so mandar para os que tem conflito
+                clientList.forEach {
+                    val request = Message(Operations.NOTIFY_CONFLICTS, setOfConflict.toString())
+                    it.write(Json.encodeToString(request))
+                }
+            } catch (ex: Exception) {
+                println("ERROR $ex")
+            }
         }
 
         private fun applyChanges(transformations: JsonArray) {

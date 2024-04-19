@@ -10,8 +10,8 @@ class Test {
     }
 
     //d0779f95-d537-4501-b708-fc50747e6616
-    String method(String parama) {
-        param = param + 5;
+    String method() {
+        return "teste";
     }
 }
 

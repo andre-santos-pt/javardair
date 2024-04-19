@@ -128,7 +128,9 @@ object Client {
                     Operations.PULL -> {
                         sendChanges()
                     }
-
+                    Operations.NOTIFY_CONFLICTS -> {
+                        println("Theres conflicts: ${resp.content}")
+                    }
                     Operations.FETCH -> TODO()
                 }
             }
