@@ -1,10 +1,14 @@
 import Client.getPrivatePath
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
 import model.Project
 import model.applyTransformationsTo
+import model.conflictDetection.Conflict
+import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
+import model.getConflicts
 import pt.iscte.javardise.demo.toTransformation
 import java.io.*
 import java.net.ServerSocket
@@ -21,6 +25,8 @@ fun main() {
 class Server(port: Int) {
     lateinit var clientList: ArrayList<ClientHandler>
     private lateinit var project: Project
+    var transformationsA = ""
+    lateinit var clientToAvoid: Socket
     inner class ClientHandler(private val clientSocket: Socket) {
         private val writer: OutputStream = clientSocket.getOutputStream()
         private val reader: Scanner = Scanner(clientSocket.getInputStream())
@@ -40,30 +46,95 @@ class Server(port: Int) {
         }
 
         private fun serve() {
+
             while(true) {
                 val message = reader.nextLine()
                 val resp = Json.decodeFromString<Message>(message)
                 println(" Received changes from $clientSocket: $resp")
-                if(resp.op == Operations.PUSH) {
-                    applyChanges(Json.decodeFromString(resp.trans))
-                    propagateChanges(resp.trans, clientList)
+                when(resp.op) {
+                    Operations.PUSH -> {
+                        transformationsA = resp.content
+                        clientToAvoid = clientSocket
+                        requestChanges(clientList)
+                    }
+                    Operations.PULL -> {
+                        val setOfConflict = checkConflicts(transformationsA, resp.content)
+                        if (setOfConflict.isEmpty()) {
+                            propagateChanges(transformationsA, clientList, clientToAvoid)
+                        }
+                    }
+                    Operations.FETCH -> TODO()
                 }
             }
         }
+
+        private fun checkConflicts(transA: String, transB: String): Set<Conflict> {
+            val newTransA = Json.decodeFromString<JsonArray>(transA)
+            val newTransB = Json.decodeFromString<JsonArray>(transB)
+
+            val transASerialized =newTransA.map { json ->
+                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
+            }.toMutableSet()
+
+            val transBSerialized = newTransB.map { json ->
+                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
+            }.toMutableSet()
+
+            val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(transASerialized, transBSerialized)
+
+            val setOfConflicts = getConflicts(project, redundancyFreeSetOfTransformations)
+
+            println(setOfConflicts)
+
+            setOfConflicts.forEach {
+                println("Conflict between ${it.first.getText()} and ${it.second.getText()} with message: ${it.message}")
+            }
+
+            return setOfConflicts
+        }
+
         private fun write(message: String) {
             writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
         }
 
-        private fun propagateChanges(serializedTransformations: String, clientList: ArrayList<ClientHandler>) {
+        private fun propagateChanges(transformations: String, clientList: ArrayList<ClientHandler>, clientToAvoid: Socket) {
             try {
                 clientList.forEach {
-                    if(it.clientSocket != clientSocket) {
-                        val resp = Message(Operations.PUSH, serializedTransformations)
+                    if(it.clientSocket != clientToAvoid) {
+                        val resp = Message(Operations.PUSH, transformations)
                         it.write(Json.encodeToString(resp))
                     }
                 }
             } catch (ex: Exception) {
                 println("Could not send message to other clients $ex")
+            }
+        }
+
+        private fun requestChanges(clientList: ArrayList<ClientHandler>) {
+            println("Requesting changes from other users")
+            try {
+                clientList.forEach {
+                    if(it.clientSocket != clientSocket) {
+                        val request = Message(Operations.PULL, "")
+                        it.write(Json.encodeToString(request))
+                    }
+                }
+            } catch (ex: Exception) {
+                println("ERROR $ex")
+            }
+
+        }
+
+        private fun applyChanges(transformations: JsonArray) {
+            try {
+                val trans = transformations.map { json ->
+                    (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
+                }
+                applyTransformationsTo(project, trans.toSet())
+                project.saveProjectTo(Path(project.getPrivatePath()))
+
+            } catch (ex: Exception) {
+                ex.printStackTrace()
             }
         }
     }
@@ -95,19 +166,6 @@ class Server(port: Int) {
                     }
                 }
         """.trimIndent())
-    }
-
-    private fun applyChanges(serializedTransformations: JsonArray) {
-        try {
-            val trans = serializedTransformations.map { json ->
-                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
-            }
-            applyTransformationsTo(project, trans.toSet())
-            project.saveProjectTo(Path(project.getPrivatePath()))
-
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
     }
 
     init {

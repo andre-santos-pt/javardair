@@ -2,7 +2,6 @@ package pt.iscte.javardise.demo
 
 import Client
 import Client.getPrivatePath
-import Client.projectBranch
 import Operations
 import Message
 import com.github.javaparser.ast.CompilationUnit
@@ -86,6 +85,7 @@ class SubmitChanges : Action {
         val serializedTransformations = JsonArray(transformations.map { it.toJson() })
         try {
             val message = Message(Operations.PUSH, Json.encodeToString(serializedTransformations))
+            println("Sending changes: $message")
             Client.write(Json.encodeToString(message))
             applyTransformationsTo(Client.projectBase, transformations)
             Client.projectBase.saveProjectTo(Path(Client.projectBase.getPrivatePath()))

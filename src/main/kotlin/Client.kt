@@ -1,9 +1,16 @@
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import model.FactoryOfTransformations
 import model.Project
 import model.applyTransformationsTo
+import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
+import model.getConflicts
+import model.transformations.Transformation
 import org.eclipse.swt.widgets.Display
+import pt.iscte.javardise.demo.toJson
 import pt.iscte.javardise.demo.toTransformation
 import java.io.OutputStream
 import java.net.Socket
@@ -82,14 +89,47 @@ object Client {
 
     }
 
+    private fun sendChanges() {
+        val currentTransformations = FactoryOfTransformations(projectBase, projectBranch).getListOfAllTransformations().toMutableSet()
+        val serializedTransformations = JsonArray(currentTransformations.map { it.toJson() })
+        val message = Message(Operations.PULL, Json.encodeToString(serializedTransformations))
+        println("sending changes to server: $message")
+        write(Json.encodeToString(message))
+
+        /**val transBranch = transformations.map { json ->
+            (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectBranch)
+        }.toMutableSet()
+
+        val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(currentTransformations, transBranch)
+        val setOfConflicts = getConflicts(projectBase, redundancyFreeSetOfTransformations)
+
+        println(setOfConflicts)
+
+        setOfConflicts.forEach {
+            println("Conflict between ${it.first.getText()} and ${it.second.getText()} with message: ${it.message}")
+        }
+    **/
+
+       // val message = Message(Operations.PULL, currentFactoryOfTransformations.toString())
+       // println("Sending message to server: $message")
+       // write(Json.encodeToString(message))
+    }
+
     private fun dealWithServer() {
         try {
             while (isConnected) {
                 val message = reader.nextLine()
                 val resp = Json.decodeFromString<Message>(message)
                 println("Received changes: $resp")
-                if(resp.op == Operations.PUSH) {
-                    applyChanges(Json.decodeFromString(resp.trans))
+                when(resp.op) {
+                    Operations.PUSH -> {
+                        applyChanges(Json.decodeFromString(resp.content))
+                    }
+                    Operations.PULL -> {
+                        sendChanges()
+                    }
+
+                    Operations.FETCH -> TODO()
                 }
             }
 
