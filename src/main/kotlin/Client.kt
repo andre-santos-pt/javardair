@@ -95,24 +95,6 @@ object Client {
         val message = Message(Operations.PULL, Json.encodeToString(serializedTransformations))
         println("sending changes to server: $message")
         write(Json.encodeToString(message))
-
-        /**val transBranch = transformations.map { json ->
-            (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectBranch)
-        }.toMutableSet()
-
-        val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(currentTransformations, transBranch)
-        val setOfConflicts = getConflicts(projectBase, redundancyFreeSetOfTransformations)
-
-        println(setOfConflicts)
-
-        setOfConflicts.forEach {
-            println("Conflict between ${it.first.getText()} and ${it.second.getText()} with message: ${it.message}")
-        }
-    **/
-
-       // val message = Message(Operations.PULL, currentFactoryOfTransformations.toString())
-       // println("Sending message to server: $message")
-       // write(Json.encodeToString(message))
     }
 
     private fun dealWithServer() {
@@ -129,15 +111,18 @@ object Client {
                         sendChanges()
                     }
                     Operations.NOTIFY_CONFLICTS -> {
-                        println("Theres conflicts: ${resp.content}")
+                        notifyConflicts(resp.content)
                     }
                     Operations.FETCH -> TODO()
                 }
             }
-
         } catch (ex: Exception) {
             println("Disconnected from server: $ex")
         }
+    }
+
+    private fun notifyConflicts(conflicts: String) {
+        println(conflicts)
     }
 }
 

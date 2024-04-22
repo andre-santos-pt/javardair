@@ -58,7 +58,8 @@ class Server(port: Int) {
                         requestChanges(clientList)
                     }
                     Operations.PULL -> {
-                        val setOfConflict = checkConflicts(transformationsA, resp.content)
+                        // no futuro filtar as trans que tem conflitos e nao tem, vindo na mesma comparaçao - aplicar as mudanças que nao tem conflito e avisar das outras
+                        val setOfConflict = checkConflicts(Json.decodeFromString<JsonArray>(transformationsA), Json.decodeFromString<JsonArray>(resp.content))
                         if (setOfConflict.isEmpty()) {
                             applyChanges(Json.decodeFromString(transformationsA))
                             propagateChanges(transformationsA, clientList, clientToAvoid)
@@ -73,27 +74,18 @@ class Server(port: Int) {
             }
         }
 
-        private fun checkConflicts(transA: String, transB: String): Set<Conflict> {
-            val newTransA = Json.decodeFromString<JsonArray>(transA)
-            val newTransB = Json.decodeFromString<JsonArray>(transB)
-
-            val transASerialized =newTransA.map { json ->
+        private fun checkConflicts(transA: JsonArray, transB: JsonArray): Set<Conflict> {
+            val transASerialized = transA.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
             }.toMutableSet()
 
-            val transBSerialized = newTransB.map { json ->
+            val transBSerialized = transB.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
             }.toMutableSet()
 
             val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(transASerialized, transBSerialized)
 
             val setOfConflicts = getConflicts(project, redundancyFreeSetOfTransformations)
-
-            println(setOfConflicts)
-
-            setOfConflicts.forEach {
-                println("Conflict between ${it.first.getText()} and ${it.second.getText()} with message: ${it.message}")
-            }
 
             return setOfConflicts
         }
@@ -133,12 +125,13 @@ class Server(port: Int) {
             println("Notifying clients of conflicts")
             try {
                 // No futuro so mandar para os que tem conflito
-                clientList.forEach {
-                    val request = Message(Operations.NOTIFY_CONFLICTS, setOfConflict.toString())
+                clientList.forEach { it ->
+                    val conflictMessage = setOfConflict.map { "Conflict between ${it.first.getText()} and ${it.second.getText()} " }
+                    val request = Message(Operations.NOTIFY_CONFLICTS, conflictMessage.toString() )
                     it.write(Json.encodeToString(request))
                 }
             } catch (ex: Exception) {
-                println("ERROR $ex")
+                ex.printStackTrace()
             }
         }
 

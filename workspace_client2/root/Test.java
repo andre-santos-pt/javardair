@@ -5,12 +5,12 @@ package test;
 class Test {
 
     //ce2411ab-72e7-4c2b-b4b1-3e20dc187945
-    String teste(String parameter) {
-        return "Hello World";
+    String teste(String param) {
+        return "Hello World!!";
     }
 
     //d0779f95-d537-4501-b708-fc50747e6616
-    String method() {
-        return "teste";
+    String method(String parama) {
+        parama = "teste";
     }
 }

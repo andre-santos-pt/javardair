@@ -4,6 +4,7 @@ import Client
 import Client.getPrivatePath
 import Operations
 import Message
+import TransformationsView
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.FieldDeclaration
@@ -12,7 +13,6 @@ import com.github.javaparser.ast.comments.LineComment
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
 import model.FactoryOfTransformations
 import model.applyTransformationsTo
 import model.transformations.Transformation
@@ -33,6 +33,8 @@ class SubmitChanges : Action {
 
     private val transformations: MutableSet<Transformation> = mutableSetOf()
 
+    private val transformationsView: TransformationsView = TransformationsView(transformations)
+
     override fun init(editor: CodeEditor) {
         updateTransformations()
 
@@ -49,6 +51,9 @@ class SubmitChanges : Action {
             updateTransformations()
         }
         editor.addFileObserver(fileObserver)
+
+        transformationsView.showView()
+
     }
 
     private fun injectClassUUIDs(unit: CompilationUnit) {
@@ -73,14 +78,13 @@ class SubmitChanges : Action {
             synchronized(transformations) {
                 transformations.clear()
                 val factoryOfTransformations = FactoryOfTransformations(Client.projectBase, Client.projectBranch)
-                //println(factoryOfTransformations)
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
                 println("transformations: $transformations")
+                transformationsView.updateTransformationList(transformations)
             }
         }
     }
 
-    // TODO so pode fazer isto se estiver ligado, proteger
     override fun run(editor: CodeEditor, toggle: Boolean) {
         val serializedTransformations = JsonArray(transformations.map { it.toJson() })
         try {

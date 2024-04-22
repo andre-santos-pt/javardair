@@ -39,6 +39,7 @@ class ApplyTransformation : Action {
         val json = listOf("""
             {"code":"SignatureChanged","uuid":"d0779f95-d537-4501-b708-fc50747e6616","name":"newName","parameters":[{"type":"int","name":"param"}]}
         """)
+
         var test = json.map {
             (Json.parseToJsonElement(it) as JsonObject).toTransformation(projBranch)
         }
