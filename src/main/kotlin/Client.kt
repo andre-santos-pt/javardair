@@ -1,17 +1,15 @@
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import model.FactoryOfTransformations
 import model.Project
 import model.applyTransformationsTo
-import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
-import model.getConflicts
-import model.transformations.Transformation
+import model.rootPath
 import org.eclipse.swt.widgets.Display
 import pt.iscte.javardise.demo.toJson
 import pt.iscte.javardise.demo.toTransformation
+import java.io.File
 import java.io.OutputStream
 import java.net.Socket
 import java.nio.charset.Charset
@@ -26,8 +24,8 @@ object Client {
     private lateinit var socket: Socket
     private lateinit var reader: Scanner
     private lateinit var writer: OutputStream
-    internal lateinit var projectBranch: Project
-    internal lateinit var projectBase: Project
+    internal lateinit var projectLocal: Project
+    internal lateinit var projectRoot: Project
     var isConnected = false
 
     fun open() {
@@ -47,7 +45,10 @@ object Client {
         socket = Socket(address, port)
         reader = Scanner(socket.getInputStream())
         writer = socket.getOutputStream()
-        thread { dealWithServer() }
+        thread {
+            requestRootFile()
+            dealWithServer()
+        }
     }
 
     fun close() {
@@ -72,16 +73,16 @@ object Client {
         try {
 
             val transRoot = serializedTransformations.map { json ->
-                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectBase)
+                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot)
             }
 
             val transBranch = serializedTransformations.map { json ->
-                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectBranch)
+                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectLocal)
             }
 
-            Display.getDefault().syncExec { applyTransformationsTo(projectBranch, transBranch.toSet()) }
-            applyTransformationsTo(projectBase, transRoot.toSet())
-            projectBase.saveProjectTo(Path(projectBase.getPrivatePath()))
+            Display.getDefault().syncExec { applyTransformationsTo(projectLocal, transBranch.toSet()) }
+            applyTransformationsTo(projectRoot, transRoot.toSet())
+            projectRoot.saveProjectTo(Path(projectRoot.getPrivatePath()))
 
         } catch (ex: Exception) {
             ex.printStackTrace()
@@ -90,7 +91,7 @@ object Client {
     }
 
     private fun sendChanges() {
-        val currentTransformations = FactoryOfTransformations(projectBase, projectBranch).getListOfAllTransformations().toMutableSet()
+        val currentTransformations = FactoryOfTransformations(projectRoot, projectLocal).getListOfAllTransformations().toMutableSet()
         val serializedTransformations = JsonArray(currentTransformations.map { it.toJson() })
         val message = Message(Operations.PULL, Json.encodeToString(serializedTransformations))
         println("sending changes to server: $message")
@@ -114,11 +115,30 @@ object Client {
                         notifyConflicts(resp.content)
                     }
                     Operations.FETCH -> TODO()
+                    Operations.REQUEST_ROOT_FILE -> {
+                        updateRootFile(resp.content)
+                    }
                 }
             }
         } catch (ex: Exception) {
             println("Disconnected from server: $ex")
         }
+    }
+
+    private fun updateRootFile(file: String) {
+        try {
+            File(projectRoot.getProjectRoot().root.toString() + "\\Test.java").writeText(file) //TODO considera a trans de AddFile
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
+
+    }
+
+    private fun requestRootFile() {
+       if(isConnected) {
+           val message = Message(Operations.REQUEST_ROOT_FILE, "")
+           write(Json.encodeToString(message))
+       }
     }
 
     private fun notifyConflicts(conflicts: String) {

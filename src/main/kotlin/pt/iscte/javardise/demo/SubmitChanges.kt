@@ -32,7 +32,6 @@ class SubmitChanges : Action {
         get() = "Submit"
 
     private val transformations: MutableSet<Transformation> = mutableSetOf()
-
     private val transformationsView: TransformationsView = TransformationsView(transformations)
 
     override fun init(editor: CodeEditor) {
@@ -77,7 +76,7 @@ class SubmitChanges : Action {
         thread {
             synchronized(transformations) {
                 transformations.clear()
-                val factoryOfTransformations = FactoryOfTransformations(Client.projectBase, Client.projectBranch)
+                val factoryOfTransformations = FactoryOfTransformations(Client.projectRoot, Client.projectLocal)
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
                 println("transformations: $transformations")
                 transformationsView.updateTransformationList(transformations)
@@ -91,8 +90,8 @@ class SubmitChanges : Action {
             val message = Message(Operations.PUSH, Json.encodeToString(serializedTransformations))
             println("Sending changes: $message")
             Client.write(Json.encodeToString(message))
-            applyTransformationsTo(Client.projectBase, transformations)
-            Client.projectBase.saveProjectTo(Path(Client.projectBase.getPrivatePath()))
+            applyTransformationsTo(Client.projectRoot, transformations)
+            Client.projectRoot.saveProjectTo(Path(Client.projectRoot.getPrivatePath()))
 
         } catch (ex: Exception) {
             println("Could not send message to Server ${ex.printStackTrace()}")

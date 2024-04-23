@@ -69,9 +69,16 @@ class Server(port: Int) {
                     }
                     Operations.NOTIFY_CONFLICTS -> TODO()
                     Operations.FETCH -> TODO()
-
+                    Operations.REQUEST_ROOT_FILE -> {
+                        sendRootFile()
+                    }
                 }
             }
+        }
+
+        private fun sendRootFile() {
+            val message = Message(Operations.REQUEST_ROOT_FILE, project.getSetOfCompilationUnit().toString())
+            write(Json.encodeToString(message))
         }
 
         private fun checkConflicts(transA: JsonArray, transB: JsonArray): Set<Conflict> {
