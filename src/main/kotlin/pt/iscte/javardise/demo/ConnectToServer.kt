@@ -17,7 +17,6 @@ class ConnectToServer : Action {
 
     override fun init(editor: CodeEditor) {
         val memoryTypeSolver = MemoryTypeSolver()
-        // talvez dar update aqui (em vez de quando o cliente é inicializado
         Client.projectRoot = Project(File(editor.folder, "root").absolutePath.toString())
         Client.projectLocal = Project(
             editor.folder.absolutePath.toString(),

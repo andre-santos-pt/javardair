@@ -9,6 +9,8 @@ import model.applyTransformationsTo
 import model.conflictDetection.Conflict
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
 import model.getConflicts
+import model.path
+import model.transformations.Transformation
 import pt.iscte.javardise.demo.toTransformation
 import java.io.*
 import java.net.ServerSocket
@@ -25,8 +27,9 @@ fun main() {
 class Server(port: Int) {
     lateinit var clientList: ArrayList<ClientHandler>
     private lateinit var project: Project
+    private val clientsInfo: MutableMap<ClientHandler, MutableSet<Transformation>> = mutableMapOf()
     var transformationsA = ""
-    lateinit var clientToAvoid: Socket
+
     inner class ClientHandler(private val clientSocket: Socket) {
         private val writer: OutputStream = clientSocket.getOutputStream()
         private val reader: Scanner = Scanner(clientSocket.getInputStream())
@@ -50,28 +53,26 @@ class Server(port: Int) {
             while(true) {
                 val message = reader.nextLine()
                 val resp = Json.decodeFromString<Message>(message)
-                println(" Received changes from $clientSocket: $resp")
+                println("Received message from $clientSocket: $resp")
                 when(resp.op) {
                     Operations.PUSH -> {
                         transformationsA = resp.content
-                        clientToAvoid = clientSocket
                         requestChanges(clientList)
                     }
                     Operations.PULL -> {
-                        // no futuro filtar as trans que tem conflitos e nao tem, vindo na mesma comparaçao - aplicar as mudanças que nao tem conflito e avisar das outras
                         val setOfConflict = checkConflicts(Json.decodeFromString<JsonArray>(transformationsA), Json.decodeFromString<JsonArray>(resp.content))
                         if (setOfConflict.isEmpty()) {
                             applyChanges(Json.decodeFromString(transformationsA))
-                            propagateChanges(transformationsA, clientList, clientToAvoid)
+                            propagateChanges(transformationsA, clientList)
                         } else {
                             notifyClients(clientList, setOfConflict)
                         }
                     }
-                    Operations.NOTIFY_CONFLICTS -> TODO()
-                    Operations.FETCH -> TODO()
                     Operations.REQUEST_ROOT_FILE -> {
                         sendRootFile()
                     }
+                    Operations.NOTIFY_CONFLICTS -> TODO()
+                    Operations.FETCH -> TODO()
                 }
             }
         }
@@ -101,13 +102,11 @@ class Server(port: Int) {
             writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
         }
 
-        private fun propagateChanges(transformations: String, clientList: ArrayList<ClientHandler>, clientToAvoid: Socket) {
+        private fun propagateChanges(transformations: String, clientList: ArrayList<ClientHandler>) {
             try {
                 clientList.forEach {
-                    if(it.clientSocket != clientToAvoid) {
-                        val resp = Message(Operations.PUSH, transformations)
-                        it.write(Json.encodeToString(resp))
-                    }
+                    val resp = Message(Operations.PUSH, transformations)
+                    it.write(Json.encodeToString(resp))
                 }
             } catch (ex: Exception) {
                 println("Could not send message to other clients $ex")

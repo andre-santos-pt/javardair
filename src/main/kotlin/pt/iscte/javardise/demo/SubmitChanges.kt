@@ -90,8 +90,8 @@ class SubmitChanges : Action {
             val message = Message(Operations.PUSH, Json.encodeToString(serializedTransformations))
             println("Sending changes: $message")
             Client.write(Json.encodeToString(message))
-            applyTransformationsTo(Client.projectRoot, transformations)
-            Client.projectRoot.saveProjectTo(Path(Client.projectRoot.getPrivatePath()))
+            //applyTransformationsTo(Client.projectRoot, transformations)
+            //Client.projectRoot.saveProjectTo(Path(Client.projectRoot.getPrivatePath()))
 
         } catch (ex: Exception) {
             println("Could not send message to Server ${ex.printStackTrace()}")
