@@ -46,7 +46,7 @@ object Client {
         reader = Scanner(socket.getInputStream())
         writer = socket.getOutputStream()
         thread {
-            requestRootFile()
+            //requestRootFile()
             dealWithServer()
         }
     }

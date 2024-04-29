@@ -1,15 +1,10 @@
 import Client.getPrivatePath
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
-import kotlinx.serialization.json.JsonObject
-import model.Project
-import model.applyTransformationsTo
+import kotlinx.serialization.json.*
+import model.*
 import model.conflictDetection.Conflict
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
-import model.getConflicts
-import model.path
 import model.transformations.Transformation
 import pt.iscte.javardise.demo.toTransformation
 import java.io.*
@@ -27,7 +22,8 @@ fun main() {
 class Server(port: Int) {
     lateinit var clientList: ArrayList<ClientHandler>
     private lateinit var project: Project
-    private val clientsInfo: MutableMap<ClientHandler, MutableSet<Transformation>> = mutableMapOf()
+    private val clientsInfo: MutableMap<ClientHandler, JsonArray> = mutableMapOf()
+    private var conflicts: MutableMap<Pair<ClientHandler, ClientHandler>, Set<Conflict>> = mutableMapOf()
     var transformationsA = ""
 
     inner class ClientHandler(private val clientSocket: Socket) {
@@ -57,9 +53,19 @@ class Server(port: Int) {
                 when(resp.op) {
                     Operations.PUSH -> {
                         transformationsA = resp.content
+                        clientsInfo[this] = Json.decodeFromString<JsonArray>(resp.content)
                         requestChanges(clientList)
                     }
                     Operations.PULL -> {
+                        clientsInfo[this] = Json.decodeFromString<JsonArray>(resp.content)
+
+                        clientsInfo.map { (client, trans) ->
+                            if(client != this) {
+                                conflicts[Pair(this, client)] = checkConflicts(trans, Json.decodeFromString<JsonArray>(resp.content))
+                                // se estiver vazio nao meter nada
+                            }
+                        }
+
                         val setOfConflict = checkConflicts(Json.decodeFromString<JsonArray>(transformationsA), Json.decodeFromString<JsonArray>(resp.content))
                         if (setOfConflict.isEmpty()) {
                             applyChanges(Json.decodeFromString(transformationsA))
@@ -74,12 +80,19 @@ class Server(port: Int) {
                     Operations.NOTIFY_CONFLICTS -> TODO()
                     Operations.FETCH -> TODO()
                 }
+                // se eu enviar aqui ele vai enviar as mudanças indepdente da mensagem q receba
             }
         }
 
         private fun sendRootFile() {
-            val message = Message(Operations.REQUEST_ROOT_FILE, project.getSetOfCompilationUnit().toString())
-            write(Json.encodeToString(message))
+            val files = JsonArray(project.getSetOfCompilationUnit().map { FileContent(Path(it.path).fileName.toString(), it.toString()).toJson() })
+
+            val message = Message(Operations.REQUEST_ROOT_FILE, Json.encodeToString(files))
+            //println(message)
+
+           //val test = Json.decodeFromString<JsonArray>(Json.decodeFromString<Message>(Json.encodeToString(message)).content).map {
+             //  (Json.parseToJsonElement(it.toString()) as JsonObject).toFileContent()
+           //}
         }
 
         private fun checkConflicts(transA: JsonArray, transB: JsonArray): Set<Conflict> {
@@ -193,6 +206,7 @@ class Server(port: Int) {
             val clientSocket = serverSocket.accept()
             println("Client connected: ${clientSocket.inetAddress.hostAddress}")
             val client = ClientHandler(clientSocket)
+            clientsInfo[client] = JsonArray(emptyList()) // certo?
             clientList.add(client) // considera sempre que os clients sao novos, a lista esta em memoria neste momento
             thread { client.run() }
         }
