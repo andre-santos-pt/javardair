@@ -10,7 +10,7 @@ class Test {
     }
 
     //d0779f95-d537-4501-b708-fc50747e6616
-    String metodo(String param) {
-        return param;
+    String metodo(String para, type parameter) {
+        return "test";
     }
 }

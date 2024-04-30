@@ -5,7 +5,6 @@ import kotlinx.serialization.json.JsonObject
 import model.FactoryOfTransformations
 import model.Project
 import model.applyTransformationsTo
-import model.rootPath
 import org.eclipse.swt.widgets.Display
 import pt.iscte.javardise.demo.toJson
 import pt.iscte.javardise.demo.toTransformation
@@ -71,19 +70,15 @@ object Client {
 
     private fun applyChanges(serializedTransformations: JsonArray) {
         try {
-
             val transRoot = serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot)
             }
-
-            val transBranch = serializedTransformations.map { json ->
+            val transLocal = serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectLocal)
             }
-
-            Display.getDefault().syncExec { applyTransformationsTo(projectLocal, transBranch.toSet()) }
+            Display.getDefault().syncExec { applyTransformationsTo(projectLocal, transLocal.toSet()) }
             applyTransformationsTo(projectRoot, transRoot.toSet())
             projectRoot.saveProjectTo(Path(projectRoot.getPrivatePath()))
-
         } catch (ex: Exception) {
             ex.printStackTrace()
         }
@@ -91,11 +86,15 @@ object Client {
     }
 
     private fun sendChanges() {
-        val currentTransformations = FactoryOfTransformations(projectRoot, projectLocal).getListOfAllTransformations().toMutableSet()
-        val serializedTransformations = JsonArray(currentTransformations.map { it.toJson() })
-        val message = Message(Operations.PULL, Json.encodeToString(serializedTransformations))
-        println("sending changes to server: $message")
-        write(Json.encodeToString(message))
+        try {
+            val currentTransformations = FactoryOfTransformations(projectRoot, projectLocal).getListOfAllTransformations().toMutableSet()
+            val serializedTransformations = JsonArray(currentTransformations.map { it.toJson() })
+            val message = Message(Operations.PULL, Json.encodeToString(serializedTransformations))
+            write(Json.encodeToString(message))
+            println("sentChanges for comparassion")
+        } catch (ex: Exception) {
+            ex.printStackTrace()
+        }
     }
 
     private fun dealWithServer() {
@@ -103,7 +102,7 @@ object Client {
             while (isConnected) {
                 val message = reader.nextLine()
                 val resp = Json.decodeFromString<Message>(message)
-                println("Received changes: $resp")
+                println("Received message: $resp")
                 when(resp.op) {
                     Operations.PUSH -> {
                         applyChanges(Json.decodeFromString(resp.content))
@@ -116,7 +115,7 @@ object Client {
                     }
                     Operations.FETCH -> TODO()
                     Operations.REQUEST_ROOT_FILE -> {
-                        updateRootFile(resp.content)
+                        //updateRootFile(resp.content)
                     }
                 }
             }
@@ -131,7 +130,6 @@ object Client {
         } catch (ex: Exception) {
             ex.printStackTrace()
         }
-
     }
 
     private fun requestRootFile() {

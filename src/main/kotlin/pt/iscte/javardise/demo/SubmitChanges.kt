@@ -94,6 +94,5 @@ class SubmitChanges : Action {
         } catch (ex: Exception) {
             println("Could not send message to Server ${ex.printStackTrace()}")
         }
-        transformations.clear()
     }
 }

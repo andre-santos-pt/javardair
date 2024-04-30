@@ -24,7 +24,7 @@ class Server(port: Int) {
     private lateinit var project: Project
     private val clientsInfo: MutableMap<ClientHandler, JsonArray> = mutableMapOf()
     private var conflicts: MutableMap<Pair<ClientHandler, ClientHandler>, Set<Conflict>> = mutableMapOf()
-    var transformationsA = ""
+    var transformationsToApply = ""
 
     inner class ClientHandler(private val clientSocket: Socket) {
         private val writer: OutputStream = clientSocket.getOutputStream()
@@ -41,6 +41,7 @@ class Server(port: Int) {
                 } catch (ex: Exception) {
                     ex.printStackTrace()
                 }
+
             }
         }
 
@@ -52,35 +53,47 @@ class Server(port: Int) {
                 println("Received message from $clientSocket: $resp")
                 when(resp.op) {
                     Operations.PUSH -> {
-                        transformationsA = resp.content
+                        transformationsToApply = resp.content
                         clientsInfo[this] = Json.decodeFromString<JsonArray>(resp.content)
                         requestChanges(clientList)
                     }
                     Operations.PULL -> {
                         clientsInfo[this] = Json.decodeFromString<JsonArray>(resp.content)
-
                         clientsInfo.map { (client, trans) ->
                             if(client != this) {
-                                conflicts[Pair(this, client)] = checkConflicts(trans, Json.decodeFromString<JsonArray>(resp.content))
-                                // se estiver vazio nao meter nada
+                                conflicts[Pair(this, client)] = checkConflicts(Json.decodeFromString<JsonArray>(resp.content), trans )
                             }
                         }
-
-                        val setOfConflict = checkConflicts(Json.decodeFromString<JsonArray>(transformationsA), Json.decodeFromString<JsonArray>(resp.content))
-                        if (setOfConflict.isEmpty()) {
-                            applyChanges(Json.decodeFromString(transformationsA))
-                            propagateChanges(transformationsA, clientList)
-                        } else {
-                            notifyClients(clientList, setOfConflict)
+                        // only sends conflict message if it has asked every client for their changes
+                        if(conflicts.size == clientsInfo.size*(clientsInfo.size-1)/2) {
+                            val allEmpty = conflicts.all { it.value.isEmpty() }
+                            if (allEmpty) {
+                                applyChanges(Json.decodeFromString<JsonArray>(transformationsToApply))
+                                propagateChanges(transformationsToApply, clientList)
+                            } else {
+                                conflicts.filter { it.value.isNotEmpty() }.forEach { (clientPair, conflicts) ->
+                                    notifyConflictedClients(clientPair.first, clientPair.second, conflicts)
+                                }
+                            }
                         }
                     }
                     Operations.REQUEST_ROOT_FILE -> {
-                        sendRootFile()
+                        //sendRootFile()
                     }
                     Operations.NOTIFY_CONFLICTS -> TODO()
                     Operations.FETCH -> TODO()
                 }
-                // se eu enviar aqui ele vai enviar as mudanças indepdente da mensagem q receba
+            }
+        }
+
+        private fun notifyConflictedClients(first: ClientHandler, second: ClientHandler, conflict: Set<Conflict>) {
+            try {
+                val conflictMessage = conflict.map { "Conflict between ${it.first.getText()} and ${it.second.getText()} " }
+                val request = Message(Operations.NOTIFY_CONFLICTS, conflictMessage.toString() )
+                first.write(Json.encodeToString(request))
+                second.write(Json.encodeToString(request))
+            } catch (ex: Exception) {
+                ex.printStackTrace()
             }
         }
 
@@ -99,15 +112,11 @@ class Server(port: Int) {
             val transASerialized = transA.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
             }.toMutableSet()
-
             val transBSerialized = transB.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
             }.toMutableSet()
-
             val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(transASerialized, transBSerialized)
-
             val setOfConflicts = getConflicts(project, redundancyFreeSetOfTransformations)
-
             return setOfConflicts
         }
 
@@ -127,7 +136,6 @@ class Server(port: Int) {
         }
 
         private fun requestChanges(clientList: ArrayList<ClientHandler>) {
-            println("Requesting changes from other users")
             try {
                 clientList.forEach {
                     if(it.clientSocket != clientSocket) {
@@ -137,20 +145,6 @@ class Server(port: Int) {
                 }
             } catch (ex: Exception) {
                 println("ERROR $ex")
-            }
-        }
-
-        private fun notifyClients(clientList: ArrayList<ClientHandler>, setOfConflict: Set<Conflict>) {
-            println("Notifying clients of conflicts")
-            try {
-                // No futuro so mandar para os que tem conflito
-                clientList.forEach { it ->
-                    val conflictMessage = setOfConflict.map { "Conflict between ${it.first.getText()} and ${it.second.getText()} " }
-                    val request = Message(Operations.NOTIFY_CONFLICTS, conflictMessage.toString() )
-                    it.write(Json.encodeToString(request))
-                }
-            } catch (ex: Exception) {
-                ex.printStackTrace()
             }
         }
 
