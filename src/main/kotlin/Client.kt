@@ -90,8 +90,8 @@ object Client {
             val currentTransformations = FactoryOfTransformations(projectRoot, projectLocal).getListOfAllTransformations().toMutableSet()
             val serializedTransformations = JsonArray(currentTransformations.map { it.toJson() })
             val message = Message(Operations.PULL, Json.encodeToString(serializedTransformations))
+            println("Sending transformation list: $message")
             write(Json.encodeToString(message))
-            println("sentChanges for comparassion")
         } catch (ex: Exception) {
             ex.printStackTrace()
         }

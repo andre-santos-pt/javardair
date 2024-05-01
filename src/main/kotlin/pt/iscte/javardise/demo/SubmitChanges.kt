@@ -86,6 +86,7 @@ class SubmitChanges : Action {
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
         val serializedTransformations = JsonArray(transformations.map { it.toJson() })
+        transformations.clear()
         try {
             val message = Message(Operations.PUSH, Json.encodeToString(serializedTransformations))
             println("Sending changes: $message")

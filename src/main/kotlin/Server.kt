@@ -75,6 +75,7 @@ class Server(port: Int) {
                                     notifyConflictedClients(clientPair.first, clientPair.second, conflicts)
                                 }
                             }
+                            conflicts.clear()
                         }
                     }
                     Operations.REQUEST_ROOT_FILE -> {
@@ -137,6 +138,7 @@ class Server(port: Int) {
 
         private fun requestChanges(clientList: ArrayList<ClientHandler>) {
             try {
+                println("Requesting current transformations from all clients...")
                 clientList.forEach {
                     if(it.clientSocket != clientSocket) {
                         val request = Message(Operations.PULL, "")
