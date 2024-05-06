@@ -81,7 +81,6 @@ class SubmitChanges : Action {
                 println("transformations: $transformations")
                 transformationsView.updateTransformationList(transformations)
 
-                /**
                 val serializedTransformations = JsonArray(transformations.map { it.toJson() })
                 try {
                     val message = Message(Operations.PUSH, Json.encodeToString(serializedTransformations))
@@ -91,7 +90,7 @@ class SubmitChanges : Action {
                 } catch (ex: Exception) {
                     println("Could not send message to Server ${ex.printStackTrace()}")
                 }
-                **/
+
             }
         }
     }
