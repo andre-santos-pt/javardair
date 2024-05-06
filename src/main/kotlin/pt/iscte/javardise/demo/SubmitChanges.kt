@@ -80,6 +80,18 @@ class SubmitChanges : Action {
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
                 println("transformations: $transformations")
                 transformationsView.updateTransformationList(transformations)
+
+                /**
+                val serializedTransformations = JsonArray(transformations.map { it.toJson() })
+                try {
+                    val message = Message(Operations.PUSH, Json.encodeToString(serializedTransformations))
+                    println("Sending changes automatically: $message")
+                    Client.write(Json.encodeToString(message))
+
+                } catch (ex: Exception) {
+                    println("Could not send message to Server ${ex.printStackTrace()}")
+                }
+                **/
             }
         }
     }
@@ -89,7 +101,7 @@ class SubmitChanges : Action {
         transformations.clear()
         try {
             val message = Message(Operations.PUSH, Json.encodeToString(serializedTransformations))
-            println("Sending changes: $message")
+            println("Sending changes manually: $message")
             Client.write(Json.encodeToString(message))
 
         } catch (ex: Exception) {

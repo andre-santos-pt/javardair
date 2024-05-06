@@ -24,6 +24,7 @@ class Server(port: Int) {
     private lateinit var project: Project
     private val clientsInfo: MutableMap<ClientHandler, JsonArray> = mutableMapOf()
     private var conflicts: MutableMap<Pair<ClientHandler, ClientHandler>, Set<Conflict>> = mutableMapOf()
+    private val lock = Any()
     var transformationsToApply = ""
 
     inner class ClientHandler(private val clientSocket: Socket) {
@@ -46,7 +47,6 @@ class Server(port: Int) {
         }
 
         private fun serve() {
-
             while(true) {
                 val message = reader.nextLine()
                 val resp = Json.decodeFromString<Message>(message)
@@ -59,18 +59,27 @@ class Server(port: Int) {
                     }
                     Operations.PULL -> {
                         clientsInfo[this] = Json.decodeFromString<JsonArray>(resp.content)
+                        //println(clientsInfo.size)
+                        //clientsInfo.forEach { (t, u) -> println("Client: $t -> $u")  }
                         clientsInfo.map { (client, trans) ->
-                            if(client != this) {
-                                conflicts[Pair(this, client)] = checkConflicts(Json.decodeFromString<JsonArray>(resp.content), trans )
+                            synchronized(lock)  {
+                                if(client != this && !pairAlreadyExist(this, client)) {
+                                    conflicts[Pair(this, client)] = checkConflicts(Json.decodeFromString<JsonArray>(resp.content), trans )
+                                }
                             }
                         }
+                        println("Lista de conflitos: $conflicts")
                         // only sends conflict message if it has asked every client for their changes
                         if(conflicts.size == clientsInfo.size*(clientsInfo.size-1)/2) {
+                            println("Dentro do IF")
+                            conflicts.forEach { println("Conflito entre ${it.key.first} e ${it.key.second} -> ${it.value}") }
                             val allEmpty = conflicts.all { it.value.isEmpty() }
                             if (allEmpty) {
+                                println("Conflitos vazios!")
                                 applyChanges(Json.decodeFromString<JsonArray>(transformationsToApply))
                                 propagateChanges(transformationsToApply, clientList)
                             } else {
+                                println("conflitos nao vazios")
                                 conflicts.filter { it.value.isNotEmpty() }.forEach { (clientPair, conflicts) ->
                                     notifyConflictedClients(clientPair.first, clientPair.second, conflicts)
                                 }
@@ -85,6 +94,16 @@ class Server(port: Int) {
                     Operations.FETCH -> TODO()
                 }
             }
+        }
+
+        private fun pairAlreadyExist(client1: Server.ClientHandler, client2: Server.ClientHandler): Boolean {
+            var result = false
+            conflicts.map {
+                if((it.key.first == client1 && it.key.second == client2) || (it.key.first == client2 && it.key.second == client1)) {
+                    result = true
+                }
+            }
+            return result
         }
 
         private fun notifyConflictedClients(first: ClientHandler, second: ClientHandler, conflict: Set<Conflict>) {
@@ -127,6 +146,7 @@ class Server(port: Int) {
 
         private fun propagateChanges(transformations: String, clientList: ArrayList<ClientHandler>) {
             try {
+                println("Sending changes to all users.")
                 clientList.forEach {
                     val resp = Message(Operations.PUSH, transformations)
                     it.write(Json.encodeToString(resp))
@@ -204,7 +224,7 @@ class Server(port: Int) {
             val client = ClientHandler(clientSocket)
             clientsInfo[client] = JsonArray(emptyList()) // certo?
             clientList.add(client) // considera sempre que os clients sao novos, a lista esta em memoria neste momento
-            thread { client.run() }
+            thread {  client.run() }
         }
     }
 
