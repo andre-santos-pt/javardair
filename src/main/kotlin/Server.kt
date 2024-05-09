@@ -1,11 +1,9 @@
 import Client.getPrivatePath
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import model.*
 import model.conflictDetection.Conflict
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
-import model.transformations.Transformation
 import pt.iscte.javardise.demo.toTransformation
 import java.io.*
 import java.net.ServerSocket
@@ -55,12 +53,17 @@ class Server(port: Int) {
                     Operations.PUSH -> {
                         transformationsToApply = resp.content
                         clientsInfo[this] = Json.decodeFromString<JsonArray>(resp.content)
-                        requestChanges(clientList)
+                        if(clientsInfo.size > 1) {
+                            requestChanges(clientsInfo.keys) // TODO Mudar para o hashmap
+                        } else {
+                            // TODO tecnicamente nunca pode ser 0 (o tamanho) - mas se for vai dar erro
+                            applyChanges(Json.decodeFromString<JsonArray>(transformationsToApply))
+                            propagateChanges(transformationsToApply, clientsInfo.keys)
+                        }
+
                     }
                     Operations.PULL -> {
                         clientsInfo[this] = Json.decodeFromString<JsonArray>(resp.content)
-                        //println(clientsInfo.size)
-                        //clientsInfo.forEach { (t, u) -> println("Client: $t -> $u")  }
                         clientsInfo.map { (client, trans) ->
                             synchronized(lock)  {
                                 if(client != this && !pairAlreadyExist(this, client)) {
@@ -68,18 +71,15 @@ class Server(port: Int) {
                                 }
                             }
                         }
-                        println("Lista de conflitos: $conflicts")
+
                         // only sends conflict message if it has asked every client for their changes
+
                         if(conflicts.size == clientsInfo.size*(clientsInfo.size-1)/2) {
-                            println("Dentro do IF")
-                            conflicts.forEach { println("Conflito entre ${it.key.first} e ${it.key.second} -> ${it.value}") }
                             val allEmpty = conflicts.all { it.value.isEmpty() }
                             if (allEmpty) {
-                                println("Conflitos vazios!")
                                 applyChanges(Json.decodeFromString<JsonArray>(transformationsToApply))
-                                propagateChanges(transformationsToApply, clientList)
+                                propagateChanges(transformationsToApply, clientsInfo.keys)
                             } else {
-                                println("conflitos nao vazios")
                                 conflicts.filter { it.value.isNotEmpty() }.forEach { (clientPair, conflicts) ->
                                     notifyConflictedClients(clientPair.first, clientPair.second, conflicts)
                                 }
@@ -96,6 +96,7 @@ class Server(port: Int) {
             }
         }
 
+        // TODO - Fazer de uma forma menos "hardcoded"
         private fun pairAlreadyExist(client1: Server.ClientHandler, client2: Server.ClientHandler): Boolean {
             var result = false
             conflicts.map {
@@ -144,7 +145,7 @@ class Server(port: Int) {
             writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
         }
 
-        private fun propagateChanges(transformations: String, clientList: ArrayList<ClientHandler>) {
+        private fun propagateChanges(transformations: String, clientList: MutableSet<ClientHandler>) {
             try {
                 println("Sending changes to all users.")
                 clientList.forEach {
@@ -156,7 +157,7 @@ class Server(port: Int) {
             }
         }
 
-        private fun requestChanges(clientList: ArrayList<ClientHandler>) {
+        private fun requestChanges(clientList: MutableSet<ClientHandler>) {
             try {
                 println("Requesting current transformations from all clients...")
                 clientList.forEach {
@@ -176,7 +177,7 @@ class Server(port: Int) {
                     (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
                 }
                 applyTransformationsTo(project, trans.toSet())
-                project.saveProjectTo(Path(project.getPrivatePath()))
+                project.saveProjectTo(Path(project.getPrivatePath())) // TODO as vezes da um erro :  I am not a child of my parent.
 
             } catch (ex: Exception) {
                 ex.printStackTrace()

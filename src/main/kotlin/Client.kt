@@ -76,7 +76,10 @@ object Client {
             val transLocal = serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectLocal)
             }
-            Display.getDefault().syncExec { applyTransformationsTo(projectLocal, transLocal.toSet()) }
+            Display.getDefault().syncExec {
+                applyTransformationsTo(projectLocal, transLocal.toSet())
+                //projectLocal.saveProjectTo(Path(projectLocal.getPrivatePath()))
+            }
             applyTransformationsTo(projectRoot, transRoot.toSet())
             projectRoot.saveProjectTo(Path(projectRoot.getPrivatePath()))
         } catch (ex: Exception) {

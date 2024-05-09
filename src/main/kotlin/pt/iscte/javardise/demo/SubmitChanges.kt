@@ -4,6 +4,7 @@ import Client
 import Client.getPrivatePath
 import Operations
 import Message
+import ObservableList
 import TransformationsView
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.BodyDeclaration
@@ -31,8 +32,13 @@ class SubmitChanges : Action {
     override val name: String
         get() = "Submit"
 
-    private val transformations: MutableSet<Transformation> = mutableSetOf()
-    private val transformationsView: TransformationsView = TransformationsView(transformations)
+    //private val transformations: MutableSet<Transformation> = mutableSetOf()
+    //private val transformations: ObservableList<Transformation> = ObservableList(mutableSetOf())
+    //private val transformationsView: TransformationsView = TransformationsView(transformations)
+    val transformations: ObservableList = ObservableList(mutableSetOf())
+    val transformationsView: TransformationsView = TransformationsView()
+
+
 
     override fun init(editor: CodeEditor) {
         updateTransformations()
@@ -51,7 +57,8 @@ class SubmitChanges : Action {
         }
         editor.addFileObserver(fileObserver)
 
-        transformationsView.showView()
+        transformations.addObserver(transformationsView)
+        //transformationsView.showView()
 
     }
 
@@ -72,39 +79,34 @@ class SubmitChanges : Action {
             )
     }
 
+    private fun sendMessage(transformations: MutableSet<Transformation>) {
+        if(Client.isConnected) {
+            val serializedTransformations = JsonArray(transformations.map { it.toJson() })
+            try {
+                val message = Message(Operations.PUSH, Json.encodeToString(serializedTransformations))
+                println("Sending changes automatically: $message")
+                Client.write(Json.encodeToString(message))
+
+            } catch (ex: Exception) {
+                println("Could not send message to Server ${ex.printStackTrace()}")
+            }
+        }
+
+    }
+
     private fun updateTransformations() {
         thread {
             synchronized(transformations) {
                 transformations.clear()
                 val factoryOfTransformations = FactoryOfTransformations(Client.projectRoot, Client.projectLocal)
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
-                println("transformations: $transformations")
-                transformationsView.updateTransformationList(transformations)
-
-                val serializedTransformations = JsonArray(transformations.map { it.toJson() })
-                try {
-                    val message = Message(Operations.PUSH, Json.encodeToString(serializedTransformations))
-                    println("Sending changes automatically: $message")
-                    Client.write(Json.encodeToString(message))
-
-                } catch (ex: Exception) {
-                    println("Could not send message to Server ${ex.printStackTrace()}")
-                }
-
+                println("transformations: ${transformations.list}")
+                sendMessage(transformations.list)
             }
         }
     }
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
-        val serializedTransformations = JsonArray(transformations.map { it.toJson() })
-        transformations.clear()
-        try {
-            val message = Message(Operations.PUSH, Json.encodeToString(serializedTransformations))
-            println("Sending changes manually: $message")
-            Client.write(Json.encodeToString(message))
-
-        } catch (ex: Exception) {
-            println("Could not send message to Server ${ex.printStackTrace()}")
-        }
+        sendMessage(transformations)
     }
 }
