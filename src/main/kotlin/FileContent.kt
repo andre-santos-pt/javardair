@@ -13,13 +13,15 @@ class FileContent(val name: String, val content: String) {
         return JsonObject(fields)
     }
 
-    fun JsonObject.toFileContent(): FileContent {
-        fun JsonObject.fieldName(name: String): String =
-            this[name]?.jsonPrimitive?.content ?: throw Exception("Field $name not found")
 
-        fun JsonObject.fieldContent(content: String): String =
-            this[content]?.jsonPrimitive?.content ?: throw Exception("Field $name not found")
-
-        return FileContent(fieldName(name), fieldContent(content))
-    }
 }
+
+/**fun JsonObject.toFileContent(): FileContent {
+    fun JsonObject.fieldName(name: String): String =
+        this[name]?.jsonPrimitive?.content ?: throw Exception("Field $name not found")
+
+    fun JsonObject.fieldContent(content: String): String =
+        this[content]?.jsonPrimitive?.content ?: throw Exception("Field $content not found")
+
+    return FileContent(fieldName(name), fieldContent(content))
+} **/

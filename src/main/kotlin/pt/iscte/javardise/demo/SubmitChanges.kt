@@ -101,7 +101,7 @@ class SubmitChanges : Action {
                 val factoryOfTransformations = FactoryOfTransformations(Client.projectRoot, Client.projectLocal)
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
                 println("transformations: ${transformations.list}")
-                sendMessage(transformations.list)
+                //sendMessage(transformations.list)
             }
         }
     }

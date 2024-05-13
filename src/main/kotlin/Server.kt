@@ -54,7 +54,7 @@ class Server(port: Int) {
                         transformationsToApply = resp.content
                         clientsInfo[this] = Json.decodeFromString<JsonArray>(resp.content)
                         if(clientsInfo.size > 1) {
-                            requestChanges(clientsInfo.keys) // TODO Mudar para o hashmap
+                            requestChanges(clientsInfo.keys)
                         } else {
                             // TODO tecnicamente nunca pode ser 0 (o tamanho) - mas se for vai dar erro
                             applyChanges(Json.decodeFromString<JsonArray>(transformationsToApply))
@@ -124,9 +124,9 @@ class Server(port: Int) {
             val message = Message(Operations.REQUEST_ROOT_FILE, Json.encodeToString(files))
             //println(message)
 
-           //val test = Json.decodeFromString<JsonArray>(Json.decodeFromString<Message>(Json.encodeToString(message)).content).map {
-             //  (Json.parseToJsonElement(it.toString()) as JsonObject).toFileContent()
-           //}
+           /**val test = Json.decodeFromString<JsonArray>(Json.decodeFromString<Message>(Json.encodeToString(message)).content).map {
+               (Json.parseToJsonElement(it.toString()) as JsonObject).toFileContent()
+           }**/
         }
 
         private fun checkConflicts(transA: JsonArray, transB: JsonArray): Set<Conflict> {
@@ -167,7 +167,7 @@ class Server(port: Int) {
                     }
                 }
             } catch (ex: Exception) {
-                println("ERROR $ex")
+               ex.printStackTrace()
             }
         }
 

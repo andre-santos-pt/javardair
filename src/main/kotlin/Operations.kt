@@ -4,5 +4,4 @@ enum class Operations {
     PUSH, // sends the transformations
     NOTIFY_CONFLICTS,
     REQUEST_ROOT_FILE,
-
 }
