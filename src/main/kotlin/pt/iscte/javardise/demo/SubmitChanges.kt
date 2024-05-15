@@ -1,9 +1,5 @@
 package pt.iscte.javardise.demo
 
-import Client
-import Client.getPrivatePath
-import Operations
-import Message
 import ObservableList
 import TransformationsView
 import com.github.javaparser.ast.CompilationUnit
@@ -14,9 +10,9 @@ import com.github.javaparser.ast.comments.LineComment
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import messages.ClientMessage
+import messages.ClientOperations
 import model.FactoryOfTransformations
-import model.applyTransformationsTo
-import model.transformations.Transformation
 import pt.iscte.javardise.Command
 import pt.iscte.javardise.CommandKind
 import pt.iscte.javardise.CommandStack
@@ -26,7 +22,6 @@ import pt.iscte.javardise.editor.FileEvent
 import java.io.File
 import java.util.*
 import kotlin.concurrent.thread
-import kotlin.io.path.Path
 
 class SubmitChanges : Action {
     override val name: String
@@ -79,20 +74,6 @@ class SubmitChanges : Action {
             )
     }
 
-    private fun sendMessage(transformations: MutableSet<Transformation>) {
-        if(Client.isConnected) {
-            val serializedTransformations = JsonArray(transformations.map { it.toJson() })
-            try {
-                val message = Message(Operations.PUSH, Json.encodeToString(serializedTransformations))
-                println("Sending changes automatically: $message")
-                Client.write(Json.encodeToString(message))
-
-            } catch (ex: Exception) {
-                println("Could not send message to Server ${ex.printStackTrace()}")
-            }
-        }
-
-    }
 
     private fun updateTransformations() {
         thread {
@@ -101,12 +82,36 @@ class SubmitChanges : Action {
                 val factoryOfTransformations = FactoryOfTransformations(Client.projectRoot, Client.projectLocal)
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
                 println("transformations: ${transformations.list}")
-                //sendMessage(transformations.list)
+
+                // Sends the changes to server everytime a change is made.
+                if(Client.isConnected) {
+                    val serializedTransformations = JsonArray(transformations.map { it.toJson() })
+                    try {
+                        val message = ClientMessage(ClientOperations.UPDATE, Json.encodeToString(serializedTransformations))
+                        println("Sending changes automatically: $message")
+                        Client.write(Json.encodeToString(message))
+
+                    } catch (ex: Exception) {
+                        println("Could not send message to Server ${ex.printStackTrace()}")
+                    }
+                }
+
             }
         }
     }
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
-        sendMessage(transformations)
+        // Sends the changes to the server with the goal to propagate it.
+        if(Client.isConnected) {
+            val serializedTransformations = JsonArray(transformations.map { it.toJson() })
+            try {
+                val message = ClientMessage(ClientOperations.PUSH, Json.encodeToString(serializedTransformations))
+                println("Sending changes manually: $message")
+                Client.write(Json.encodeToString(message))
+
+            } catch (ex: Exception) {
+                println("Could not send message to Server ${ex.printStackTrace()}")
+            }
+        }
     }
 }

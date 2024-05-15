@@ -2,6 +2,10 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
+import messages.ClientMessage
+import messages.ClientOperations
+import messages.ServerMessage
+import messages.ServerOperations
 import model.FactoryOfTransformations
 import model.Project
 import model.applyTransformationsTo
@@ -55,6 +59,30 @@ object Client {
         isConnected = false
     }
 
+    private fun dealWithServer() {
+        try {
+            while (isConnected) {
+                val text = reader.nextLine()
+                // The client will only receive messages from the server
+                val message = Json.decodeFromString<ServerMessage>(text)
+                println("Received message: $message")
+                when(message.op) {
+                    ServerOperations.FETCH_RESPONSE -> TODO()
+
+                    ServerOperations.PROPAGATE -> {
+                        applyChanges(Json.decodeFromString(message.content))
+                    }
+
+                    ServerOperations.NOTIFY_CONFLICTS -> {
+                        notifyConflicts(message.content)
+                    }
+                }
+            }
+        } catch (ex: Exception) {
+            println("Disconnected from server: ${ex.printStackTrace()}")
+        }
+    }
+
     fun write(message: String) {
         if(isConnected) {
             writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
@@ -88,45 +116,6 @@ object Client {
 
     }
 
-    private fun sendChanges() {
-        try {
-            val currentTransformations = FactoryOfTransformations(projectRoot, projectLocal).getListOfAllTransformations().toMutableSet()
-            val serializedTransformations = JsonArray(currentTransformations.map { it.toJson() })
-            val message = Message(Operations.PULL, Json.encodeToString(serializedTransformations))
-            println("Sending transformation list: $message")
-            write(Json.encodeToString(message))
-        } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
-    }
-
-    private fun dealWithServer() {
-        try {
-            while (isConnected) {
-                val message = reader.nextLine()
-                val resp = Json.decodeFromString<Message>(message)
-                println("Received message: $resp")
-                when(resp.op) {
-                    Operations.PUSH -> {
-                        applyChanges(Json.decodeFromString(resp.content))
-                    }
-                    Operations.PULL -> {
-                        sendChanges()
-                    }
-                    Operations.NOTIFY_CONFLICTS -> {
-                        notifyConflicts(resp.content)
-                    }
-                    Operations.FETCH -> TODO()
-                    Operations.REQUEST_ROOT_FILE -> {
-                        //updateRootFile(resp.content)
-                    }
-                }
-            }
-        } catch (ex: Exception) {
-            println("Disconnected from server: $ex")
-        }
-    }
-
     private fun updateRootFile(file: String) {
         try {
             File(projectRoot.getProjectRoot().root.toString() + "\\Test.java").writeText(file) //TODO considera a trans de AddFile
@@ -137,7 +126,7 @@ object Client {
 
     private fun requestRootFile() {
        if(isConnected) {
-           val message = Message(Operations.REQUEST_ROOT_FILE, "")
+           val message = ClientMessage(ClientOperations.FETCH_REQUEST, "")
            write(Json.encodeToString(message))
        }
     }

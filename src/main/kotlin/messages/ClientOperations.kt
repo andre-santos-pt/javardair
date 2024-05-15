@@ -1,3 +1,5 @@
+package messages
+
 /**
  * Types of messages that the Client can send.
  */
