@@ -102,16 +102,19 @@ class SubmitChanges : Action {
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
         // Sends the changes to the server with the goal to propagate it.
-        if(Client.isConnected) {
+        if(Client.isConnected && Client.conflictFree) {
             val serializedTransformations = JsonArray(transformations.map { it.toJson() })
             try {
                 val message = ClientMessage(ClientOperations.PUSH, Json.encodeToString(serializedTransformations))
                 println("Sending changes manually: $message")
                 Client.write(Json.encodeToString(message))
+                transformations.clear()
 
             } catch (ex: Exception) {
                 println("Could not send message to Server ${ex.printStackTrace()}")
             }
+        } else {
+            println("Can't submit changes due to conflicts.")
         }
     }
 }

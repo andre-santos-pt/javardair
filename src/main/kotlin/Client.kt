@@ -30,6 +30,7 @@ object Client {
     internal lateinit var projectLocal: Project
     internal lateinit var projectRoot: Project
     var isConnected = false
+    var conflictFree = true // sera que deve começar true ou false?
 
     fun open() {
         isConnected = true
@@ -75,6 +76,11 @@ object Client {
 
                     ServerOperations.NOTIFY_CONFLICTS -> {
                         notifyConflicts(message.content)
+                    }
+
+                    ServerOperations.NOTIFY_NO_CONFLICTS -> {
+                        conflictFree = true
+                        println(message.content)
                     }
                 }
             }
@@ -132,6 +138,7 @@ object Client {
     }
 
     private fun notifyConflicts(conflicts: String) {
+        conflictFree = false
         println(conflicts)
     }
 }

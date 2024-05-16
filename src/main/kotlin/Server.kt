@@ -27,8 +27,7 @@ class Server(port: Int) {
     private var conflicts: MutableMap<Pair<ClientHandler, ClientHandler>, Set<Conflict>> =
         mutableMapOf() // TODO Mudar estrutura.
     private val clientsInfoLock = Any()
-    private val conflictsLock = Any() // TODO Rename
-    var transformationsToApply = ""
+    private val conflictsLock = Any()
 
     inner class ClientHandler(private val clientSocket: Socket) {
         private val writer: OutputStream = clientSocket.getOutputStream()
@@ -66,11 +65,12 @@ class Server(port: Int) {
                             checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
 
                             // check if all combination of conflicts possible were checked
-                            if(conflicts.size == clientsInfo.size*(clientsInfo.size-1)/2) {
+                            // conflicts.size == clientsInfo.size*(clientsInfo.size-1)/2
+                            if(conflicts.size == clientsInfo.size-1) {
                                 val allEmpty = conflicts.all { it.value.isEmpty() }
                                 if (allEmpty) {
                                     // TODO Aplica as mudanças nos ficheiros do servidor aqui?
-                                    val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, "No conflicts!" )
+                                    val response = ServerMessage(ServerOperations.NOTIFY_NO_CONFLICTS, "No conflicts!" )
                                     write(Json.encodeToString(response))
                                 } else {
                                     conflicts.filter { it.value.isNotEmpty() }.forEach { (clientPair, conflicts) ->
@@ -78,6 +78,7 @@ class Server(port: Int) {
                                     }
                                 }
                                 conflicts.clear()
+
                             }
                         } else {
                             // TODO Nao acontece nada?
@@ -99,6 +100,7 @@ class Server(port: Int) {
             clientsInfo.map { (otherClient, otherTrans) ->
                 synchronized(conflictsLock) {
                     if(otherClient != client && !pairAlreadyExist(client, otherClient)) {
+                        println("Transformaçao: $trans comparado com $otherTrans")
                         conflicts[Pair(client, otherClient)] = getConflicts(trans, otherTrans)
                     }
                 }
@@ -208,7 +210,7 @@ class Server(port: Int) {
             val clientSocket = serverSocket.accept()
             println("Client connected: ${clientSocket.port}")
             val client = ClientHandler(clientSocket)
-            clientsInfo[client] = JsonArray(emptyList()) // certo?
+            clientsInfo[client] = JsonArray(emptyList())
             thread { client.run() }
         }
     }
