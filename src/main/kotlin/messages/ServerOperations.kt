@@ -6,6 +6,5 @@ package messages
 enum class ServerOperations {
     FETCH_RESPONSE, // Sends client the current files.
     PROPAGATE, // Propagates the changes to the other clients.
-    NOTIFY_CONFLICTS, // Notifies clients with conflicts.
-    NOTIFY_NO_CONFLICTS, // Notifies the client that there are no conflicts.
+    NOTIFY_CONFLICTS, // Notifies clients about the existense of conflicts.
 }

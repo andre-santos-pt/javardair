@@ -63,15 +63,19 @@ class Server(port: Int) {
                         }
                         if (clientsInfo.size > 1) {
                             checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
+                            // faz mais sentido secalhar simplesmente fazer return do array de conflitos, pq é so para um dos clientes, nao faz sentido ser uma var global
 
                             // check if all combination of conflicts possible were checked
                             // conflicts.size == clientsInfo.size*(clientsInfo.size-1)/2
                             if(conflicts.size == clientsInfo.size-1) {
                                 val allEmpty = conflicts.all { it.value.isEmpty() }
                                 if (allEmpty) {
-                                    // TODO Aplica as mudanças nos ficheiros do servidor aqui?
-                                    val response = ServerMessage(ServerOperations.NOTIFY_NO_CONFLICTS, "No conflicts!" )
-                                    write(Json.encodeToString(response))
+                                    val conflict = Conflict(true, "No conflicts!")
+                                    val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflict) )
+                                    clientsInfo.keys.forEach {
+                                        it.write(Json.encodeToString(response))
+
+                                    }
                                 } else {
                                     conflicts.filter { it.value.isNotEmpty() }.forEach { (clientPair, conflicts) ->
                                         notifyConflictedClients(clientPair.first, clientPair.second, conflicts)
@@ -80,16 +84,32 @@ class Server(port: Int) {
                                 conflicts.clear()
 
                             }
-                        } else {
-                            // TODO Nao acontece nada?
                         }
                     }
 
                     ClientOperations.PUSH -> {
                         // TODO Testar a ver se é preciso armazenar no hashmap as transformaçoes tbm, pq um client pode enviar mais do que o que o hashmap ja tem armazenado (no caso de fazer uma alteraçao que nao foi apanhada pela lista automatica)
-                        applyChanges(Json.decodeFromString<JsonArray>(message.content))
+                        synchronized(clientsInfoLock) {
+                            clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content) // este lock aqui é necessario? mesmo que dois clients metam coisas ao mesmo tempo vai ser semppre em posicoes dif
+                        }
                         if (clientsInfo.size > 1) {
-                            propagateChanges(message.content)
+                            checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
+                            if(conflicts.size == clientsInfo.size-1) {
+                                val allEmpty = conflicts.all { it.value.isEmpty() }
+                                if(allEmpty) {
+                                    applyChanges(Json.decodeFromString<JsonArray>(message.content))
+                                    propagateChanges(message.content)
+                                } else {
+                                    conflicts.filter { it.value.isNotEmpty() }.forEach { (clientPair, conflicts) ->
+                                        notifyConflictedClients(clientPair.first, clientPair.second, conflicts)
+                                    }
+                                }
+                                conflicts.clear()
+                            }
+                        }
+                        else {
+                            // Nao pode haver conflitos pq é o unico que esta connectado.
+                            applyChanges(Json.decodeFromString<JsonArray>(message.content))
                         }
                     }
                 }
@@ -129,10 +149,11 @@ class Server(port: Int) {
             return setOfConflicts
         }
 
-        private fun notifyConflictedClients(first: ClientHandler, second: ClientHandler, conflict: Set<Conflict>) {
+        private fun notifyConflictedClients(first: ClientHandler, second: ClientHandler, conflicts: Set<Conflict>) {
             try {
-                val conflictMessage = conflict.map { "Conflict between ${it.first.getText()} and ${it.second.getText()} " }
-                val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, conflictMessage.toString() )
+                val conflictMessage = conflicts.map { "Conflict between ${it.first.getText()} and ${it.second.getText()} " }
+                val conflict = Conflict(false, conflictMessage.toString())
+                val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflict) )
                 first.write(Json.encodeToString(response))
                 second.write(Json.encodeToString(response))
             } catch (ex: Exception) {

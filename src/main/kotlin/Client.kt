@@ -75,12 +75,7 @@ object Client {
                     }
 
                     ServerOperations.NOTIFY_CONFLICTS -> {
-                        notifyConflicts(message.content)
-                    }
-
-                    ServerOperations.NOTIFY_NO_CONFLICTS -> {
-                        conflictFree = true
-                        println(message.content)
+                        notifyConflicts(Json.decodeFromString(message.content))
                     }
                 }
             }
@@ -137,9 +132,14 @@ object Client {
        }
     }
 
-    private fun notifyConflicts(conflicts: String) {
-        conflictFree = false
-        println(conflicts)
+    private fun notifyConflicts(conflict: Conflict) {
+        if(conflict.isClear) {
+            conflictFree = true
+            println(conflict.content)
+        } else {
+            conflictFree = false
+            println(conflict.content)
+        }
     }
 }
 
