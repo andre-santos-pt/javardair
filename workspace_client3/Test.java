@@ -6,12 +6,13 @@ class Test {
 
     //1b4fb7b4-07b7-480d-b63c-a5c58db73227
     void methodo(int a) {
-        int b = c + 10;
+        int b = a + 10;
         int x = 20;
     }
 
     //ce2411ab-72e7-4c2b-b4b1-3e20dc187945
     String test() {
-        return "Hello World!!!";
+        return "Hello World!!";
     }
 }
+

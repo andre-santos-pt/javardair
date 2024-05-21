@@ -6,11 +6,9 @@ import messages.ClientMessage
 import messages.ClientOperations
 import messages.ServerMessage
 import messages.ServerOperations
-import model.FactoryOfTransformations
 import model.Project
 import model.applyTransformationsTo
 import org.eclipse.swt.widgets.Display
-import pt.iscte.javardise.demo.toJson
 import pt.iscte.javardise.demo.toTransformation
 import java.io.File
 import java.io.OutputStream
@@ -132,13 +130,13 @@ object Client {
        }
     }
 
-    private fun notifyConflicts(conflict: Conflict) {
-        if(conflict.isClear) {
+    private fun notifyConflicts(conflictInfo: ConflictInfo) {
+        if(conflictInfo.isClear) {
             conflictFree = true
-            println(conflict.content)
+            println(conflictInfo.content)
         } else {
             conflictFree = false
-            println(conflict.content)
+            println(conflictInfo.content)
         }
     }
 }

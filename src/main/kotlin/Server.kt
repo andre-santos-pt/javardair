@@ -24,10 +24,7 @@ fun main() {
 class Server(port: Int) {
     private lateinit var project: Project
     private val clientsInfo: MutableMap<ClientHandler, JsonArray> = mutableMapOf()
-    private var conflicts: MutableMap<Pair<ClientHandler, ClientHandler>, Set<Conflict>> =
-        mutableMapOf() // TODO Mudar estrutura.
     private val clientsInfoLock = Any()
-    private val conflictsLock = Any()
 
     inner class ClientHandler(private val clientSocket: Socket) {
         private val writer: OutputStream = clientSocket.getOutputStream()
@@ -62,49 +59,38 @@ class Server(port: Int) {
                             clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content) // este lock aqui é necessario? mesmo que dois clients metam coisas ao mesmo tempo vai ser semppre em posicoes dif
                         }
                         if (clientsInfo.size > 1) {
-                            checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
-                            // faz mais sentido secalhar simplesmente fazer return do array de conflitos, pq é so para um dos clientes, nao faz sentido ser uma var global
-
-                            // check if all combination of conflicts possible were checked
-                            // conflicts.size == clientsInfo.size*(clientsInfo.size-1)/2
-                            if(conflicts.size == clientsInfo.size-1) {
-                                val allEmpty = conflicts.all { it.value.isEmpty() }
-                                if (allEmpty) {
-                                    val conflict = Conflict(true, "No conflicts!")
-                                    val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflict) )
-                                    clientsInfo.keys.forEach {
-                                        it.write(Json.encodeToString(response))
-
-                                    }
-                                } else {
-                                    conflicts.filter { it.value.isNotEmpty() }.forEach { (clientPair, conflicts) ->
-                                        notifyConflictedClients(clientPair.first, clientPair.second, conflicts)
-                                    }
+                            val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
+                            val allEmpty = conflicts.all { it.value.isEmpty() }
+                            if (allEmpty) {
+                                val conflictInfo = ConflictInfo(true, "No conflicts!")
+                                val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictInfo) )
+                                // A ideia de avisar todos os clientes que nao ha conflito quando UM deles faz a mudança nao é boa, pq permite q outros clientes q tenham outros conflitos possam fazer um submit (que vai ser rejeitado)
+                                clientsInfo.keys.forEach {
+                                    it.write(Json.encodeToString(response))
                                 }
-                                conflicts.clear()
-
+                            } else {
+                                conflicts.filter { it.value.isNotEmpty() }.forEach {
+                                    notifyConflictedClients(this, it.key, it.value)
+                                }
                             }
                         }
                     }
 
                     ClientOperations.PUSH -> {
-                        // TODO Testar a ver se é preciso armazenar no hashmap as transformaçoes tbm, pq um client pode enviar mais do que o que o hashmap ja tem armazenado (no caso de fazer uma alteraçao que nao foi apanhada pela lista automatica)
                         synchronized(clientsInfoLock) {
                             clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content) // este lock aqui é necessario? mesmo que dois clients metam coisas ao mesmo tempo vai ser semppre em posicoes dif
                         }
                         if (clientsInfo.size > 1) {
-                            checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
-                            if(conflicts.size == clientsInfo.size-1) {
-                                val allEmpty = conflicts.all { it.value.isEmpty() }
-                                if(allEmpty) {
-                                    applyChanges(Json.decodeFromString<JsonArray>(message.content))
-                                    propagateChanges(message.content)
-                                } else {
-                                    conflicts.filter { it.value.isNotEmpty() }.forEach { (clientPair, conflicts) ->
-                                        notifyConflictedClients(clientPair.first, clientPair.second, conflicts)
-                                    }
+                            val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
+                            val allEmpty = conflicts.all { it.value.isEmpty() }
+                            if(allEmpty) {
+                                // TODO Devo avisar aqui tbm que nao há conflitos? Nao acho que seja necessario
+                                applyChanges(Json.decodeFromString<JsonArray>(message.content))
+                                propagateChanges(message.content)
+                            } else {
+                                conflicts.filter { it.value.isNotEmpty() }.forEach {
+                                    notifyConflictedClients(this, it.key, it.value)
                                 }
-                                conflicts.clear()
                             }
                         }
                         else {
@@ -116,25 +102,19 @@ class Server(port: Int) {
             }
         }
 
-        private fun checkForConflicts(client: ClientHandler, trans: JsonArray) {
-            clientsInfo.map { (otherClient, otherTrans) ->
-                synchronized(conflictsLock) {
-                    if(otherClient != client && !pairAlreadyExist(client, otherClient)) {
-                        println("Transformaçao: $trans comparado com $otherTrans")
-                        conflicts[Pair(client, otherClient)] = getConflicts(trans, otherTrans)
+        // Returns a map with the conflict of the client with the other clients.
+        private fun checkForConflicts(client: ClientHandler, trans: JsonArray): MutableMap<ClientHandler, Set<Conflict>> {
+            val conflicts: MutableMap<ClientHandler, Set<Conflict>> = mutableMapOf()
+            // TODO Devia bloquear o clientsInfo aqui tbm?
+            synchronized(clientsInfoLock) {
+                clientsInfo.map { (otherClient, otherTrans) ->
+                    if(otherClient != client) {
+                        conflicts[otherClient] = getConflicts(trans, otherTrans)
+                        println("Conflito com $otherClient -> ${conflicts[otherClient]}")
                     }
                 }
+                return conflicts
             }
-        }
-
-        private fun pairAlreadyExist(client1: ClientHandler, client2: ClientHandler): Boolean {
-            var result = false
-            conflicts.map {
-                if((it.key.first == client1 && it.key.second == client2) || (it.key.first == client2 && it.key.second == client1)) {
-                    result = true
-                }
-            }
-            return result
         }
 
         private fun getConflicts(transA: JsonArray, transB: JsonArray): Set<Conflict> {
@@ -144,16 +124,16 @@ class Server(port: Int) {
             val transBSerialized = transB.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
             }.toMutableSet()
-            val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(transASerialized, transBSerialized)
-            val setOfConflicts = getConflicts(project, redundancyFreeSetOfTransformations)
-            return setOfConflicts
+            val redundancyFreeSetOfTransformations =
+                RedundancyFreeSetOfTransformations(transASerialized, transBSerialized)
+            return getConflicts(project, redundancyFreeSetOfTransformations)
         }
 
         private fun notifyConflictedClients(first: ClientHandler, second: ClientHandler, conflicts: Set<Conflict>) {
             try {
                 val conflictMessage = conflicts.map { "Conflict between ${it.first.getText()} and ${it.second.getText()} " }
-                val conflict = Conflict(false, conflictMessage.toString())
-                val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflict) )
+                val conflictInfo = ConflictInfo(false, conflictMessage.toString())
+                val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictInfo) )
                 first.write(Json.encodeToString(response))
                 second.write(Json.encodeToString(response))
             } catch (ex: Exception) {

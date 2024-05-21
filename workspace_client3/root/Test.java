@@ -12,6 +12,6 @@ class Test {
 
     //ce2411ab-72e7-4c2b-b4b1-3e20dc187945
     String test() {
-        return "Hello World!!!";
+        return "HelloWorld!!";
     }
 }
