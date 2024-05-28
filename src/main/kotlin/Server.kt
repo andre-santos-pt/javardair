@@ -64,13 +64,19 @@ class Server(port: Int) {
                             if (allEmpty) {
                                 val conflictInfo = ConflictInfo(true, "No conflicts!")
                                 val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictInfo) )
-                                // A ideia de avisar todos os clientes que nao ha conflito quando UM deles faz a mudança nao é boa, pq permite q outros clientes q tenham outros conflitos possam fazer um submit (que vai ser rejeitado)
-                                clientsInfo.keys.forEach {
+                                //TODO A ideia de avisar todos os clientes que nao ha conflito quando UM deles faz a mudança nao é boa, pq permite q outros clientes q tenham outros conflitos possam fazer um submit (que vai ser rejeitado)
+                                //TODO devia se avisar que nao ha conflitos naquele node
+                                thread {
+                                    clientsInfo.keys.forEach {
                                     it.write(Json.encodeToString(response))
+                                    }
                                 }
                             } else {
                                 conflicts.filter { it.value.isNotEmpty() }.forEach {
-                                    notifyConflictedClients(this, it.key, it.value)
+                                    //TODO Faz sentido a thread ser aqui?
+                                    thread {
+                                        notifyConflictedClients(this, it.key, it.value)
+                                    }
                                 }
                             }
                         }
@@ -105,7 +111,6 @@ class Server(port: Int) {
         // Returns a map with the conflict of the client with the other clients.
         private fun checkForConflicts(client: ClientHandler, trans: JsonArray): MutableMap<ClientHandler, Set<Conflict>> {
             val conflicts: MutableMap<ClientHandler, Set<Conflict>> = mutableMapOf()
-            // TODO Devia bloquear o clientsInfo aqui tbm?
             synchronized(clientsInfoLock) {
                 clientsInfo.map { (otherClient, otherTrans) ->
                     if(otherClient != client) {

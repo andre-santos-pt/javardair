@@ -6,7 +6,7 @@ class Test {
 
     //1b4fb7b4-07b7-480d-b63c-a5c58db73227
     void methodo(int a) {
-        int b = a + 10;
+        int b = a + 100;
         int x = 20;
     }
 
