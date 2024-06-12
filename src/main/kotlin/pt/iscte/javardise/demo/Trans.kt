@@ -126,6 +126,7 @@ fun JsonObject.toTransformation(project: Project): Transformation {
                 project.getMethodByUUID(UUID(field("uuid")))!!,
                 StaticJavaParser.parseBlock(field("body"))
             )
+
         RemoveCallable::class.java.simpleName ->
             RemoveCallable(
                 project.getTypeByUUID(UUID(field("owner-uuid")))!!,

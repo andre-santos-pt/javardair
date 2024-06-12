@@ -6,9 +6,14 @@ import messages.ClientMessage
 import messages.ClientOperations
 import messages.ServerMessage
 import messages.ServerOperations
+import model.FactoryOfTransformations
 import model.Project
 import model.applyTransformationsTo
+import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
+import model.getConflicts
+import model.transformations.Transformation
 import org.eclipse.swt.widgets.Display
+import pt.iscte.javardise.demo.toJson
 import pt.iscte.javardise.demo.toTransformation
 import java.io.File
 import java.io.OutputStream
@@ -69,7 +74,13 @@ object Client {
                     ServerOperations.FETCH_RESPONSE -> TODO()
 
                     ServerOperations.PROPAGATE -> {
-                        applyChanges(Json.decodeFromString(message.content))
+                        // forcar o focus a sair
+                        // ver se ha conflitos com a current lista de trans
+                        // se houver, guardar esta current list numa var extra
+                        // aplicar as mudanças vindas do propagate
+                        // aplicar as mundanças da current list
+                        checkChanges(Json.decodeFromString(message.content))
+                        //applyChanges(Json.decodeFro"mString(message.content))
                     }
 
                     ServerOperations.NOTIFY_CONFLICTS -> {
@@ -79,6 +90,39 @@ object Client {
             }
         } catch (ex: Exception) {
             println("Disconnected from server: ${ex.printStackTrace()}")
+        }
+    }
+
+    // safe mechanism to deal with the case of user making a change while receiving a PROPAGATE message
+    private fun checkChanges(forcedTrans: JsonArray) {
+        // TODO perceber se é preciso forçar sair do focus
+
+        // get current changes
+        val currentTrans = mutableSetOf<Transformation>()
+        val factoryOfTransformations = FactoryOfTransformations(projectRoot, projectLocal)
+        currentTrans.addAll(factoryOfTransformations.getListOfAllTransformations())
+        println("Current transformations: ${currentTrans}")
+
+        // check if conflicts exist between current changes and trans being forced into
+        val forcedTransSerialized = forcedTrans.map { json ->
+            (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectLocal)
+        }.toMutableSet()
+
+        // TODO ERRO DIZ NO VALUE PRESENT
+        print(forcedTrans)
+        val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(currentTrans, forcedTransSerialized)
+        var conflicts = getConflicts(projectLocal, redundancyFreeSetOfTransformations)
+
+        // apply changes normally
+        applyChanges(forcedTrans)
+
+        // apply the current changes to the local only
+        if(conflicts.isNotEmpty()) {
+            // TODO Verificar se ele depois vai ver as difs bem
+            Display.getDefault().syncExec {
+                applyTransformationsTo(projectLocal, currentTrans.toSet())
+                //projectLocal.saveProjectTo(Path(projectLocal.getPrivatePath()))
+            }
         }
     }
 

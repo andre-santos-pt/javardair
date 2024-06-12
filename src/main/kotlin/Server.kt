@@ -8,6 +8,7 @@ import messages.ServerOperations
 import model.*
 import model.conflictDetection.Conflict
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
+import pt.iscte.javardise.demo.toJson
 import pt.iscte.javardise.demo.toTransformation
 import java.io.*
 import java.net.ServerSocket
@@ -38,6 +39,7 @@ class Server(port: Int) {
             } finally {
                 try {
                     clientSocket.close()
+                    clientsInfo.remove(this)
                 } catch (ex: Exception) {
                     ex.printStackTrace()
                 }
@@ -126,6 +128,7 @@ class Server(port: Int) {
             val transASerialized = transA.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
             }.toMutableSet()
+            //println(transASerialized)
             val transBSerialized = transB.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
             }.toMutableSet()
@@ -136,8 +139,9 @@ class Server(port: Int) {
 
         private fun notifyConflictedClients(first: ClientHandler, second: ClientHandler, conflicts: Set<Conflict>) {
             try {
-                val conflictMessage = conflicts.map { "Conflict between ${it.first.getText()} and ${it.second.getText()} " }
-                val conflictInfo = ConflictInfo(false, conflictMessage.toString())
+                val conflictMessage = conflicts.map { "Conflict between ${it.first.toJson()} and ${it.second.toJson()} " }
+                println(conflictMessage)
+                val conflictInfo = ConflictInfo(false, conflictMessage.toString()) // remover o isClear
                 val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictInfo) )
                 first.write(Json.encodeToString(response))
                 second.write(Json.encodeToString(response))

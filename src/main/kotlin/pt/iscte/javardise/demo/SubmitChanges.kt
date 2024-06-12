@@ -30,8 +30,8 @@ class SubmitChanges : Action {
     //private val transformations: MutableSet<Transformation> = mutableSetOf()
     //private val transformations: ObservableList<Transformation> = ObservableList(mutableSetOf())
     //private val transformationsView: TransformationsView = TransformationsView(transformations)
-    val transformations: ObservableList = ObservableList(mutableSetOf())
-    val transformationsView: TransformationsView = TransformationsView()
+    private val transformations: ObservableList = ObservableList(mutableSetOf())
+    private val transformationsView: TransformationsView = TransformationsView()
 
 
 
