@@ -95,35 +95,59 @@ object Client {
 
     // safe mechanism to deal with the case of user making a change while receiving a PROPAGATE message
     private fun checkChanges(forcedTrans: JsonArray) {
+        println("in checkChanges")
         // TODO perceber se é preciso forçar sair do focus
 
         // get current changes
         val currentTrans = mutableSetOf<Transformation>()
         val factoryOfTransformations = FactoryOfTransformations(projectRoot, projectLocal)
         currentTrans.addAll(factoryOfTransformations.getListOfAllTransformations())
-        println("Current transformations: ${currentTrans}")
+        currentTrans.forEach { println("currentTrans: ${it.toJson()}") }
+
 
         // check if conflicts exist between current changes and trans being forced into
         val forcedTransSerialized = forcedTrans.map { json ->
             (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectLocal)
         }.toMutableSet()
+        forcedTransSerialized.forEach { println("forcedTrans: ${it.toJson()}") }
 
-        // TODO ERRO DIZ NO VALUE PRESENT
-        print(forcedTrans)
-        val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(currentTrans, forcedTransSerialized)
-        var conflicts = getConflicts(projectLocal, redundancyFreeSetOfTransformations)
+        if(setsAreEqual(currentTrans, forcedTransSerialized)){
+            // TODO VER SE ISTO ASSIM ESTA BEM, ESTA VERIFICÇAO É A UNICA COISA QUE PROTEGE O ERRO DO NO VALUE PRESENT
+            println("Applying changes...")
+            applyChanges(forcedTrans)
 
-        // apply changes normally
-        applyChanges(forcedTrans)
+        } else {
+            val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(forcedTransSerialized, currentTrans)
+            println("Calcular as diferenças: $redundancyFreeSetOfTransformations")
+            var conflicts = getConflicts(projectLocal, redundancyFreeSetOfTransformations)
+            println("Conflitos: $conflicts")
 
-        // apply the current changes to the local only
-        if(conflicts.isNotEmpty()) {
-            // TODO Verificar se ele depois vai ver as difs bem
-            Display.getDefault().syncExec {
-                applyTransformationsTo(projectLocal, currentTrans.toSet())
-                //projectLocal.saveProjectTo(Path(projectLocal.getPrivatePath()))
+            // apply changes normally
+            println("Applying changes...")
+            applyChanges(forcedTrans)
+
+            // apply the current changes to the local only
+            if(conflicts.isNotEmpty()) {
+                // TODO Verificar se ele depois vai ver as difs bem
+                Display.getDefault().syncExec {
+                    applyTransformationsTo(projectLocal, currentTrans.toSet())
+                    //projectLocal.saveProjectTo(Path(projectLocal.getPrivatePath()))
+                }
             }
         }
+        // TODO ERRO DIZ NO VALUE PRESENT so no client que faz o submit da mudança
+
+    }
+
+    fun setsAreEqual(set1: MutableSet<Transformation>, set2: MutableSet<Transformation>): Boolean {
+        if (set1.size != set2.size) return false
+
+        val list1 = set1.map { it.toJson().toString() }.sorted()
+        println(list1)
+        val list2 = set2.map { it.toJson().toString() }.sorted()
+        println(list2)
+
+        return list1 == list2
     }
 
     fun write(message: String) {
