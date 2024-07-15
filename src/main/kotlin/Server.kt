@@ -64,13 +64,15 @@ class Server(port: Int) {
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
                             val allEmpty = conflicts.all { it.value.isEmpty() }
                             if (allEmpty) {
-                                val conflictInfo = ConflictInfo(true, "No conflicts!")
+                                // TODO Enviar a lista de conflitos vazia
+                                val conflictInfo = ConflictInfo(true, conflicts.toString())
                                 val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictInfo) )
+                                //val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, conflicts.toString())
                                 //TODO A ideia de avisar todos os clientes que nao ha conflito quando UM deles faz a mudança nao é boa, pq permite q outros clientes q tenham outros conflitos possam fazer um submit (que vai ser rejeitado)
                                 //TODO devia se avisar que nao ha conflitos naquele node
                                 thread {
                                     clientsInfo.keys.forEach {
-                                    it.write(Json.encodeToString(response))
+                                        it.write(Json.encodeToString(response))
                                     }
                                 }
                             } else {
@@ -128,7 +130,6 @@ class Server(port: Int) {
             val transASerialized = transA.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
             }.toMutableSet()
-            //println(transASerialized)
             val transBSerialized = transB.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
             }.toMutableSet()
@@ -141,8 +142,9 @@ class Server(port: Int) {
             try {
                 val conflictMessage = conflicts.map { "Conflict between ${it.first.toJson()} and ${it.second.toJson()} " }
                 println(conflictMessage)
-                val conflictInfo = ConflictInfo(false, conflictMessage.toString()) // remover o isClear
+                val conflictInfo = ConflictInfo(false, conflicts.toString()) // remover o isClear
                 val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictInfo) )
+                //val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, conflicts.toString())
                 first.write(Json.encodeToString(response))
                 second.write(Json.encodeToString(response))
             } catch (ex: Exception) {
@@ -210,7 +212,6 @@ class Server(port: Int) {
         }
         project = Project(file.parentFile.path)
     }
-
 
     init {
         loadFiles()

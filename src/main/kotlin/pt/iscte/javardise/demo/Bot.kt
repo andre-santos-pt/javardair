@@ -53,7 +53,7 @@ class Bot : Action {
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
         thread {
-            val m = type.addMethod("hello", "String")
+            val m = type.getMethodsByName("test")[0]
             sleep(2000)
             m.addStatement("return \"Hello\";")
             sleep(2000)

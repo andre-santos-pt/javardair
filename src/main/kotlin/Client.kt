@@ -113,17 +113,13 @@ object Client {
 
         if(setsAreEqual(currentTrans, forcedTransSerialized)){
             // TODO VER SE ISTO ASSIM ESTA BEM, ESTA VERIFICÇAO É A UNICA COISA QUE PROTEGE O ERRO DO NO VALUE PRESENT
-            println("Applying changes...")
             applyChanges(forcedTrans)
 
         } else {
             val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(forcedTransSerialized, currentTrans)
-            println("Calcular as diferenças: $redundancyFreeSetOfTransformations")
             var conflicts = getConflicts(projectLocal, redundancyFreeSetOfTransformations)
-            println("Conflitos: $conflicts")
 
             // apply changes normally
-            println("Applying changes...")
             applyChanges(forcedTrans)
 
             // apply the current changes to the local only
