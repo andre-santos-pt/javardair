@@ -1,3 +1,4 @@
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -9,6 +10,7 @@ import messages.ServerOperations
 import model.FactoryOfTransformations
 import model.Project
 import model.applyTransformationsTo
+import model.conflictDetection.Conflict
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
 import model.getConflicts
 import model.transformations.Transformation
@@ -194,13 +196,13 @@ object Client {
        }
     }
 
-    private fun notifyConflicts(conflictInfo: ConflictInfo) {
-        if(conflictInfo.isClear) {
-            conflictFree = true
-            println(conflictInfo.content)
-        } else {
+    private fun notifyConflicts(conflictList: List<ConflictInfo>) {
+        if(conflictList.isNotEmpty()) {
             conflictFree = false
-            println(conflictInfo.content)
+            println("Lista recebida: $conflictList com tamanho ${conflictList.size}")
+        } else {
+            conflictFree = true
+            println("Lista recebida: $conflictList com tamanho ${conflictList.size}")
         }
     }
 }

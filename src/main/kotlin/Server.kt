@@ -65,9 +65,9 @@ class Server(port: Int) {
                             val allEmpty = conflicts.all { it.value.isEmpty() }
                             if (allEmpty) {
                                 // TODO Enviar a lista de conflitos vazia
-                                val conflictInfo = ConflictInfo(true, conflicts.toString())
-                                val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictInfo) )
-                                //val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, conflicts.toString())
+                                //val tempList = listOf<String>()
+                                val tempList = listOf<ConflictInfo>()
+                                val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(tempList))
                                 //TODO A ideia de avisar todos os clientes que nao ha conflito quando UM deles faz a mudança nao é boa, pq permite q outros clientes q tenham outros conflitos possam fazer um submit (que vai ser rejeitado)
                                 //TODO devia se avisar que nao ha conflitos naquele node
                                 thread {
@@ -140,11 +140,13 @@ class Server(port: Int) {
 
         private fun notifyConflictedClients(first: ClientHandler, second: ClientHandler, conflicts: Set<Conflict>) {
             try {
+                // TODO mudar o conteudo do conflictMessage -> Deve continuar a ser uma List<Strings> ou entao List<Objeto>
+                //val conflictList = conflicts.toList()
                 val conflictMessage = conflicts.map { "Conflict between ${it.first.toJson()} and ${it.second.toJson()} " }
+                val conflictList = conflicts.map { ConflictInfo("Conflict between ${it.first.toJson()} and ${it.second.toJson()}", it.first.getNode().uuid.toString(), it.second.toString() ) }
                 println(conflictMessage)
-                val conflictInfo = ConflictInfo(false, conflicts.toString()) // remover o isClear
-                val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictInfo) )
-                //val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, conflicts.toString())
+                //val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictMessage))
+                val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictList))
                 first.write(Json.encodeToString(response))
                 second.write(Json.encodeToString(response))
             } catch (ex: Exception) {
