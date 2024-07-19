@@ -65,7 +65,6 @@ class Server(port: Int) {
                             val allEmpty = conflicts.all { it.value.isEmpty() }
                             if (allEmpty) {
                                 // TODO Enviar a lista de conflitos vazia
-                                //val tempList = listOf<String>()
                                 val tempList = listOf<ConflictInfo>()
                                 val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(tempList))
                                 //TODO A ideia de avisar todos os clientes que nao ha conflito quando UM deles faz a mudança nao é boa, pq permite q outros clientes q tenham outros conflitos possam fazer um submit (que vai ser rejeitado)
@@ -77,7 +76,6 @@ class Server(port: Int) {
                                 }
                             } else {
                                 conflicts.filter { it.value.isNotEmpty() }.forEach {
-                                    //TODO Faz sentido a thread ser aqui?
                                     thread {
                                         notifyConflictedClients(this, it.key, it.value)
                                     }
@@ -94,7 +92,7 @@ class Server(port: Int) {
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
                             val allEmpty = conflicts.all { it.value.isEmpty() }
                             if(allEmpty) {
-                                // TODO Devo avisar aqui tbm que nao há conflitos? Nao acho que seja necessario
+                                // TODO Devo avisar aqui tbm que nao há conflitos? Nao acho que seja necessario -> SIM
                                 applyChanges(Json.decodeFromString<JsonArray>(message.content))
                                 propagateChanges(message.content)
                             } else {
@@ -116,6 +114,7 @@ class Server(port: Int) {
         private fun checkForConflicts(client: ClientHandler, trans: JsonArray): MutableMap<ClientHandler, Set<Conflict>> {
             val conflicts: MutableMap<ClientHandler, Set<Conflict>> = mutableMapOf()
             synchronized(clientsInfoLock) {
+                // TODO talvez fazer uma thread para cada uma iteraçao do for
                 clientsInfo.map { (otherClient, otherTrans) ->
                     if(otherClient != client) {
                         conflicts[otherClient] = getConflicts(trans, otherTrans)
@@ -140,15 +139,19 @@ class Server(port: Int) {
 
         private fun notifyConflictedClients(first: ClientHandler, second: ClientHandler, conflicts: Set<Conflict>) {
             try {
-                // TODO mudar o conteudo do conflictMessage -> Deve continuar a ser uma List<Strings> ou entao List<Objeto>
-                //val conflictList = conflicts.toList()
+                // TODO mudar o conteudo do conflictMessage
                 val conflictMessage = conflicts.map { "Conflict between ${it.first.toJson()} and ${it.second.toJson()} " }
-                val conflictList = conflicts.map { ConflictInfo("Conflict between ${it.first.toJson()} and ${it.second.toJson()}", it.first.getNode().uuid.toString(), it.second.toString() ) }
+                val conflictList = conflicts.map {
+                    ConflictInfo(
+                        it.message,
+                        it.first.getNode().uuid.toString(),
+                        second.clientSocket.port.toString() // TODO Isto devia ser um id do cliente
+                    )
+                }
                 println(conflictMessage)
-                //val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictMessage))
                 val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictList))
                 first.write(Json.encodeToString(response))
-                second.write(Json.encodeToString(response))
+                second.write(Json.encodeToString(response)) // esta mensagem nao pode ser igual
             } catch (ex: Exception) {
                 ex.printStackTrace()
             }

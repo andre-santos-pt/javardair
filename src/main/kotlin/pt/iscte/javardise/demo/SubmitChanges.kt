@@ -27,9 +27,6 @@ class SubmitChanges : Action {
     override val name: String
         get() = "Submit"
 
-    //private val transformations: MutableSet<Transformation> = mutableSetOf()
-    //private val transformations: ObservableList<Transformation> = ObservableList(mutableSetOf())
-    //private val transformationsView: TransformationsView = TransformationsView(transformations)
     private val transformations: ObservableList = ObservableList(mutableSetOf())
     private val transformationsView: TransformationsView = TransformationsView()
 
@@ -53,7 +50,6 @@ class SubmitChanges : Action {
         editor.addFileObserver(fileObserver)
 
         transformations.addObserver(transformationsView)
-        //transformationsView.showView()
 
     }
 

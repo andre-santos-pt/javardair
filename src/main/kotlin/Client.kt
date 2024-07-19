@@ -7,14 +7,12 @@ import messages.ClientMessage
 import messages.ClientOperations
 import messages.ServerMessage
 import messages.ServerOperations
-import model.FactoryOfTransformations
-import model.Project
-import model.applyTransformationsTo
+import model.*
 import model.conflictDetection.Conflict
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
-import model.getConflicts
 import model.transformations.Transformation
 import org.eclipse.swt.widgets.Display
+import pt.iscte.javardise.JavardiseWindow
 import pt.iscte.javardise.demo.toJson
 import pt.iscte.javardise.demo.toTransformation
 import java.io.File
@@ -36,6 +34,7 @@ object Client {
     internal lateinit var projectRoot: Project
     var isConnected = false
     var conflictFree = true // sera que deve começar true ou false?
+    val conflictsMap: MutableMap<String, ConflictInfo> = mutableMapOf()
 
     fun open() {
         isConnected = true
@@ -197,12 +196,21 @@ object Client {
     }
 
     private fun notifyConflicts(conflictList: List<ConflictInfo>) {
+        conflictList.forEach {
+            conflictsMap[it.conflictedPair] = it
+        }
+
         if(conflictList.isNotEmpty()) {
             conflictFree = false
-            println("Lista recebida: $conflictList com tamanho ${conflictList.size}")
+            //println("Lista recebida: $conflictList com tamanho ${conflictList.size}")
+
         } else {
             conflictFree = true
-            println("Lista recebida: $conflictList com tamanho ${conflictList.size}")
+            //println("Lista recebida: $conflictList com tamanho ${conflictList.size}")
+        }
+
+        conflictsMap.forEach {
+            println("Conflict with client ${it.key} -> ${it.value.conflictMessage}")
         }
     }
 }
