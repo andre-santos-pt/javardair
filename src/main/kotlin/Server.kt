@@ -62,6 +62,7 @@ class Server(port: Int) {
                         }
                         if (clientsInfo.size > 1) {
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
+                            println("Conflitos: $conflicts")
                             val allEmpty = conflicts.all { it.value.isEmpty() }
                             if (allEmpty) {
                                 // TODO Enviar a lista de conflitos vazia
@@ -75,11 +76,47 @@ class Server(port: Int) {
                                     }
                                 }
                             } else {
-                                conflicts.filter { it.value.isNotEmpty() }.forEach {
+                                // TODO TALVEZ AQUI PERCORRA A LISTA DE CONFLITOS TODA PARA LIMPAR O HASHMAP NO LADO DO CLIENTE
+
+                                // todo -> literalmente enviar $conflicts para o cliente
+
+                                println("Estou a trabalhar no cliente $this")
+
+                                val conflictList = mutableListOf<ConflictInfo>()
+
+                                conflicts.filter { it.value.isNotEmpty() }.forEach { (otherClient, conflictSet) ->
+                                    println("A iterar cada conflito: $otherClient -> $conflictSet")
+                                    val otherClientConflictList = mutableListOf<ConflictInfo>()
+                                    conflictSet.forEach{
+                                        conflictList.add(ConflictInfo(
+                                               "Conflict between ${it.first.toJson()} and ${it.second.toJson()}",
+                                               it.first.getNode().uuid.toString(),
+                                               otherClient.clientSocket.port.toString()
+                                        ))
+                                        val conflictInfoTemp = ConflictInfo(
+                                            "Conflict between ${it.first.toJson()} and ${it.second.toJson()}",
+                                            it.first.getNode().uuid.toString(),
+                                            this.clientSocket.port.toString()
+                                        )
+                                        otherClientConflictList.add(conflictInfoTemp)
+                                    }
+                                    println("Lista de conflitos para os outros clientes")
+                                    val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(otherClientConflictList.toList()))
+                                    otherClient.write(Json.encodeToString(response))
+
+                                }
+                                println("lista de todos os conflitos em formato novo: $conflictList")
+                                val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictList.toList()))
+                                write(Json.encodeToString(response))
+                                //otherClient.write(Json.encodeToString(response)) // todo o id no conflictInfo tem de ser dif
+
+
+                                /**conflicts.filter { it.value.isNotEmpty() }.forEach {
                                     thread {
+                                        println("iteraçao atual $it")
                                         notifyConflictedClients(this, it.key, it.value)
                                     }
-                                }
+                                }**/
                             }
                         }
                     }
@@ -97,7 +134,7 @@ class Server(port: Int) {
                                 propagateChanges(message.content)
                             } else {
                                 conflicts.filter { it.value.isNotEmpty() }.forEach {
-                                    notifyConflictedClients(this, it.key, it.value)
+                                    //notifyConflictedClients(this, it.key, it.value)
                                 }
                             }
                         }
@@ -143,12 +180,13 @@ class Server(port: Int) {
                 val conflictMessage = conflicts.map { "Conflict between ${it.first.toJson()} and ${it.second.toJson()} " }
                 val conflictList = conflicts.map {
                     ConflictInfo(
-                        it.message,
+                        "Conflict between ${it.first.toJson()} and ${it.second.toJson()}",
                         it.first.getNode().uuid.toString(),
                         second.clientSocket.port.toString() // TODO Isto devia ser um id do cliente
                     )
                 }
-                println(conflictMessage)
+                //println(conflictMessage)
+                println("Conflict list: $conflictList")
                 val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictList))
                 first.write(Json.encodeToString(response))
                 second.write(Json.encodeToString(response)) // esta mensagem nao pode ser igual

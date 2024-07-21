@@ -34,7 +34,7 @@ object Client {
     internal lateinit var projectRoot: Project
     var isConnected = false
     var conflictFree = true // sera que deve começar true ou false?
-    val conflictsMap: MutableMap<String, ConflictInfo> = mutableMapOf()
+    val conflictsMap: MutableMap<String, MutableList<ConflictInfo>> = mutableMapOf()
 
     fun open() {
         isConnected = true
@@ -196,9 +196,17 @@ object Client {
     }
 
     private fun notifyConflicts(conflictList: List<ConflictInfo>) {
+        println("ConflictList recebida: $conflictList")
+
         conflictList.forEach {
-            conflictsMap[it.conflictedPair] = it
+            if(conflictsMap.containsKey(it.conflictedPair)) {
+                conflictsMap[it.conflictedPair]?.add(it)
+            } else {
+                conflictsMap[it.conflictedPair] = mutableListOf<ConflictInfo>(it)
+            }
         }
+
+        println("Hashmap: $conflictsMap")
 
         if(conflictList.isNotEmpty()) {
             conflictFree = false
@@ -209,9 +217,6 @@ object Client {
             //println("Lista recebida: $conflictList com tamanho ${conflictList.size}")
         }
 
-        conflictsMap.forEach {
-            println("Conflict with client ${it.key} -> ${it.value.conflictMessage}")
-        }
     }
 }
 
