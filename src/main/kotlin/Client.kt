@@ -1,4 +1,3 @@
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -8,11 +7,9 @@ import messages.ClientOperations
 import messages.ServerMessage
 import messages.ServerOperations
 import model.*
-import model.conflictDetection.Conflict
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
 import model.transformations.Transformation
 import org.eclipse.swt.widgets.Display
-import pt.iscte.javardise.JavardiseWindow
 import pt.iscte.javardise.demo.toJson
 import pt.iscte.javardise.demo.toTransformation
 import java.io.File
@@ -195,20 +192,37 @@ object Client {
        }
     }
 
-    private fun notifyConflicts(conflictList: List<ConflictInfo>) {
-        println("ConflictList recebida: $conflictList")
+    private fun notifyConflicts(conflicts: List<ConflictInfo>) {
+        println("ConflictList recebida: $conflicts")
 
-        conflictList.forEach {
-            if(conflictsMap.containsKey(it.conflictedPair)) {
-                conflictsMap[it.conflictedPair]?.add(it)
+        conflicts.forEach {
+            val conflictedPair = it.conflictedPair
+            val conflictedNodeUUID = it.conflictedNodeUUID
+
+            if(conflictsMap.containsKey(conflictedPair)) {
+                val conflictList = conflictsMap[conflictedPair]
+                val existingConflictIndex = conflictList?.indexOfFirst { it.conflictedNodeUUID == conflictedNodeUUID }
+
+                if (existingConflictIndex != null && existingConflictIndex != -1) {
+                    // Replace the existing ConflictInfo
+                    conflictList[existingConflictIndex] = it
+                } else {
+                    // Add the new ConflictInfo
+                    conflictList?.add(it)
+                }
             } else {
-                conflictsMap[it.conflictedPair] = mutableListOf<ConflictInfo>(it)
+                conflictsMap[it.conflictedPair] = mutableListOf(it)
             }
         }
 
-        println("Hashmap: $conflictsMap")
+        for ((pair, conflictInfos) in conflictsMap) {
+            println("Conflicted Pair: $pair")
+            for (conflictInfo in conflictInfos) {
+                println(" - $conflictInfo")
+            }
+        }
 
-        if(conflictList.isNotEmpty()) {
+        if(conflicts.isNotEmpty()) {
             conflictFree = false
             //println("Lista recebida: $conflictList com tamanho ${conflictList.size}")
 
