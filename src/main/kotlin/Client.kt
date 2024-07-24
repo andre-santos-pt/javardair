@@ -195,34 +195,30 @@ object Client {
     private fun notifyConflicts(conflicts: List<ConflictInfo>) {
         println("ConflictList recebida: $conflicts")
 
-        if(conflicts.isEmpty()) {
-            //conflictsMap.clear()
-        } else {
-            conflicts.forEach { conflictInfo ->
-                val conflictedPair = conflictInfo.conflictedPair
-                val conflictedNodeUUID = conflictInfo.conflictedNodeUUID
+        conflicts.forEach { conflictInfo ->
+            val conflictedPair = conflictInfo.conflictedPair
+            val conflictedNodeUUID = conflictInfo.conflictedNodeUUID
 
-                // TODO MUDAR ISTO, NAO FAZ SENTIDO ESTAR A MANDAR UMA MENSAGEM A DIZER QUE NAO HA CONFLITO
+            // TODO MUDAR ISTO, NAO FAZ SENTIDO ESTAR A MANDAR UMA MENSAGEM A DIZER QUE NAO HA CONFLITO
 
-                if(conflictsMap.containsKey(conflictedPair)) {
-                    if(conflictInfo.conflictMessage == "No conflicts") {
-                        conflictsMap[conflictedPair]?.clear()
-                    } else {
-                        val conflictList = conflictsMap[conflictedPair]
-                        val existingConflictIndex = conflictList?.indexOfFirst { it.conflictedNodeUUID == conflictedNodeUUID }
-
-                        if (existingConflictIndex != null && existingConflictIndex != -1) {
-                            conflictList[existingConflictIndex] = conflictInfo
-                        } else {
-                            conflictList?.add(conflictInfo)
-                        }
-                    }
-
+            if(conflictsMap.containsKey(conflictedPair)) {
+                if(conflictInfo.conflictMessage == "No conflicts") {
+                    conflictsMap[conflictedPair]?.clear()
                 } else {
-                    conflictsMap[conflictInfo.conflictedPair] = mutableListOf(conflictInfo)
+                    val conflictList = conflictsMap[conflictedPair]
+                    val existingConflictIndex = conflictList?.indexOfFirst { it.conflictedNodeUUID == conflictedNodeUUID }
+
+                    if (existingConflictIndex != null && existingConflictIndex != -1) {
+                        conflictList[existingConflictIndex] = conflictInfo
+                    } else {
+                        conflictList?.add(conflictInfo)
+                    }
                 }
 
+            } else {
+                if(conflictInfo.conflictMessage != "No conflicts") conflictsMap[conflictInfo.conflictedPair] = mutableListOf(conflictInfo)
             }
+
         }
 
 
