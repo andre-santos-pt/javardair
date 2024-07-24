@@ -6,7 +6,7 @@ class Test {
 
     //39ffce85-a0f7-47fc-8898-d03e11abafc7
     String newHello(int x) {
-        return "Hello!!";
+        return "Hello!";
     }
 
     //1b4fb7b4-07b7-480d-b63c-a5c58db73227
@@ -17,7 +17,6 @@ class Test {
 
     //ce2411ab-72e7-4c2b-b4b1-3e20dc187945
     String test() {
-        return "teste";
     }
 }
 

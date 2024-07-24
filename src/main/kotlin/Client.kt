@@ -31,7 +31,7 @@ object Client {
     internal lateinit var projectRoot: Project
     var isConnected = false
     var conflictFree = true // sera que deve começar true ou false?
-    val conflictsMap: MutableMap<String, MutableList<ConflictInfo>> = mutableMapOf()
+    private val conflictsMap: MutableMap<String, MutableList<ConflictInfo>> = mutableMapOf()
 
     fun open() {
         isConnected = true
@@ -195,42 +195,45 @@ object Client {
     private fun notifyConflicts(conflicts: List<ConflictInfo>) {
         println("ConflictList recebida: $conflicts")
 
-        conflicts.forEach {
-            val conflictedPair = it.conflictedPair
-            val conflictedNodeUUID = it.conflictedNodeUUID
+        if(conflicts.isEmpty()) {
+            //conflictsMap.clear()
+        } else {
+            conflicts.forEach { conflictInfo ->
+                val conflictedPair = conflictInfo.conflictedPair
+                val conflictedNodeUUID = conflictInfo.conflictedNodeUUID
 
-            if(conflictsMap.containsKey(conflictedPair)) {
-                val conflictList = conflictsMap[conflictedPair]
-                val existingConflictIndex = conflictList?.indexOfFirst { it.conflictedNodeUUID == conflictedNodeUUID }
+                // TODO MUDAR ISTO, NAO FAZ SENTIDO ESTAR A MANDAR UMA MENSAGEM A DIZER QUE NAO HA CONFLITO
 
-                if (existingConflictIndex != null && existingConflictIndex != -1) {
-                    // Replace the existing ConflictInfo
-                    conflictList[existingConflictIndex] = it
+                if(conflictsMap.containsKey(conflictedPair)) {
+                    if(conflictInfo.conflictMessage == "No conflicts") {
+                        conflictsMap[conflictedPair]?.clear()
+                    } else {
+                        val conflictList = conflictsMap[conflictedPair]
+                        val existingConflictIndex = conflictList?.indexOfFirst { it.conflictedNodeUUID == conflictedNodeUUID }
+
+                        if (existingConflictIndex != null && existingConflictIndex != -1) {
+                            conflictList[existingConflictIndex] = conflictInfo
+                        } else {
+                            conflictList?.add(conflictInfo)
+                        }
+                    }
+
                 } else {
-                    // Add the new ConflictInfo
-                    conflictList?.add(it)
+                    conflictsMap[conflictInfo.conflictedPair] = mutableListOf(conflictInfo)
                 }
-            } else {
-                conflictsMap[it.conflictedPair] = mutableListOf(it)
+
             }
         }
 
+
+
+        //TODO tornar isto numa janela que observa o hashmap
         for ((pair, conflictInfos) in conflictsMap) {
             println("Conflicted Pair: $pair")
             for (conflictInfo in conflictInfos) {
                 println(" - $conflictInfo")
             }
         }
-
-        if(conflicts.isNotEmpty()) {
-            conflictFree = false
-            //println("Lista recebida: $conflictList com tamanho ${conflictList.size}")
-
-        } else {
-            conflictFree = true
-            //println("Lista recebida: $conflictList com tamanho ${conflictList.size}")
-        }
-
     }
 }
 
