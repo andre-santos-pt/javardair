@@ -19,6 +19,7 @@ import java.nio.charset.Charset
 import java.util.Scanner
 import kotlin.concurrent.thread
 import kotlin.io.path.Path
+import kotlin.properties.Delegates
 import kotlin.reflect.jvm.isAccessible
 
 object Client {
@@ -31,7 +32,9 @@ object Client {
     internal lateinit var projectRoot: Project
     var isConnected = false
     var conflictFree = true // sera que deve começar true ou false?
-    private val conflictsMap: MutableMap<String, MutableList<ConflictInfo>> = mutableMapOf()
+    private val conflictsMap = ObservableConflictMap(mutableMapOf())
+    val conflictView = ConflictView()
+    //private val conflictsMap: MutableMap<String, MutableList<ConflictInfo>> = mutableMapOf()
 
     fun open() {
         isConnected = true
@@ -41,6 +44,7 @@ object Client {
     private fun runClient() {
         try {
             connectToServer()
+            conflictsMap.addObserver(conflictView)
         } catch (ex: Exception) {
             println("Cannot connect to the server ${ex.printStackTrace()}")
         }
@@ -204,23 +208,27 @@ object Client {
             if(conflictsMap.containsKey(conflictedPair)) {
                 if(conflictInfo.conflictMessage == "No conflicts") {
                     conflictsMap[conflictedPair]?.clear()
+                    conflictsMap.notifyObservers()
                 } else {
                     val conflictList = conflictsMap[conflictedPair]
                     val existingConflictIndex = conflictList?.indexOfFirst { it.conflictedNodeUUID == conflictedNodeUUID }
 
                     if (existingConflictIndex != null && existingConflictIndex != -1) {
                         conflictList[existingConflictIndex] = conflictInfo
+                        conflictsMap.notifyObservers()
                     } else {
                         conflictList?.add(conflictInfo)
+                        conflictsMap.notifyObservers()
                     }
                 }
 
             } else {
                 if(conflictInfo.conflictMessage != "No conflicts") conflictsMap[conflictInfo.conflictedPair] = mutableListOf(conflictInfo)
             }
-
         }
 
+
+        conflictFree = conflictsMap.all { it.value.isEmpty() }
 
 
         //TODO tornar isto numa janela que observa o hashmap

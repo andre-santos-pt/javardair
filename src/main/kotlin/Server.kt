@@ -64,7 +64,7 @@ class Server(port: Int) {
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
                             println("Conflitos: $conflicts")
 
-                            val allEmpty = conflicts.all { it.value.isEmpty() }
+                            //val allEmpty = conflicts.all { it.value.isEmpty() }
 
                             //TODO se nao ha conflitos com nenhum cliente, entao dizer ao client q fez a mudança que nao ha nada, e limpar o hashmap?
                             /**if (allEmpty) {
