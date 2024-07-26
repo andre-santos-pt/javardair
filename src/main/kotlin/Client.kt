@@ -196,9 +196,26 @@ object Client {
        }
     }
 
-    private fun notifyConflicts(conflicts: List<ConflictInfo>) {
-        println("ConflictList recebida: $conflicts")
+    private fun notifyConflicts(conflicts: MutableMap<String, Set<ConflictInfo>>) {
+        println("Hashmap recebido: $conflicts")
 
+        conflicts.forEach { (client, conflictSet) ->
+            conflictsMap[client] = conflictSet.toMutableList()
+            conflictsMap.notifyObservers()
+
+            /**
+            if(conflictsMap.containsKey(client)) {
+                val existingList = conflictsMap[client]!!
+                existingList.addAll(conflictSet)
+                conflictsMap.notifyObservers()
+            } else {
+                conflictsMap[client] = conflictSet.toMutableList()
+                conflictsMap.notifyObservers()
+            }
+            **/
+        }
+
+        /**
         conflicts.forEach { conflictInfo ->
             val conflictedPair = conflictInfo.conflictedPair
             val conflictedNodeUUID = conflictInfo.conflictedNodeUUID
@@ -225,7 +242,9 @@ object Client {
             } else {
                 if(conflictInfo.conflictMessage != "No conflicts") conflictsMap[conflictInfo.conflictedPair] = mutableListOf(conflictInfo)
             }
-        }
+        } **/
+
+
 
 
         conflictFree = conflictsMap.all { it.value.isEmpty() }

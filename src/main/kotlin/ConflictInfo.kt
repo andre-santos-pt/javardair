@@ -6,4 +6,4 @@ import kotlinx.serialization.Serializable
  */
 
 @Serializable
-data class ConflictInfo(val conflictMessage: String, val conflictedNodeUUID: String, val conflictedPair: String) {}
+data class ConflictInfo(val conflictMessage: String, val conflictedNodeUUID: String) {}

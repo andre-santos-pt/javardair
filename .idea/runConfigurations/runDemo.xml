@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="runDemo" type="CompoundRunConfigurationType">
+    <toRun name="javardair_client1 " type="GradleRunConfiguration" />
+    <toRun name="javardair_client2" type="GradleRunConfiguration" />
+    <toRun name="javardair_client3" type="GradleRunConfiguration" />
+    <toRun name="ServerKt" type="JetRunConfigurationType" />
+    <method v="2" />
+  </configuration>
+</component>
