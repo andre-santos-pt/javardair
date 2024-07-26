@@ -65,106 +65,33 @@ class Server(port: Int) {
                             // TODO Idealmente era enviar este map diretamente para o cliente
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
                             println("Conflitos: $conflicts")
-
                             // todo percorrer o map e criar uma lista [(otherClient, list<conflictInfo())] basicamente transformar o conflict em conflict info so pq o conflict nao é serializable (se puder mudar melhor)
                             val newMap: MutableMap<String, Set<ConflictInfo>> = mutableMapOf()
-
                             conflicts.forEach { (clientHandler, conflicts) ->
                                 val tempMap = mutableMapOf<String, Set<ConflictInfo>>()
-
                                 val conflictInfoSet = conflicts.map { conflict ->
                                     ConflictInfo(
                                         "Conflict between ${conflict.first.toJson()} and ${conflict.second.toJson()}",
                                         conflict.first.getNode().uuid.toString(),
                                     )
                                 }.toSet()
-
                                 tempMap[this.clientSocket.port.toString()] = conflictInfoSet
                                 newMap[clientHandler.clientSocket.port.toString()] = conflictInfoSet
-
                                 val response = ServerMessage(
                                     ServerOperations.NOTIFY_CONFLICTS,
                                     Json.encodeToString(tempMap)
                                 )
-
                                 clientHandler.write(Json.encodeToString(response))
                             }
-
-                            println("Novo hashmap: $newMap")
-
                             val response = ServerMessage(
                                 ServerOperations.NOTIFY_CONFLICTS,
                                 Json.encodeToString(newMap)
                             )
-
-                            println("Mensagem que iria enviar: $response")
-
                             write(Json.encodeToString(response))
-
-
-
-                            //TODO se nao ha conflitos com nenhum cliente, entao dizer ao client q fez a mudança que nao ha nada, e limpar o hashmap?
-                            /**if (allEmpty) {
-                                val tempList = listOf<ConflictInfo>()
-                                val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(tempList))
-                                //TODO A ideia de avisar todos os clientes que nao ha conflito quando UM deles faz a mudança nao é boa, pq permite q outros clientes q tenham outros conflitos possam fazer um submit (que vai ser rejeitado)
-                                //TODO devia se avisar que nao ha conflitos naquele node
-                                thread {
-                                    clientsInfo.keys.forEach {
-                                        it.write(Json.encodeToString(response))
-                                    }
-                                }
-                            } else {
-                            **/
-
-                            /**
-                            val conflictList = mutableListOf<ConflictInfo>()
-
-                            conflicts.forEach { (otherClient, conflictSet) ->
-                                println("A iterar cada conflito: $otherClient -> $conflictSet")
-                                val otherClientConflictList = mutableListOf<ConflictInfo>()
-                                if (conflictSet.isNotEmpty()) {
-                                    conflictSet.forEach {
-                                        conflictList.add(
-                                            ConflictInfo(
-                                                "Conflict between ${it.first.toJson()} and ${it.second.toJson()}",
-                                                it.first.getNode().uuid.toString(),
-                                                otherClient.clientSocket.port.toString()
-                                            )
-                                        )
-                                        otherClientConflictList.add(
-                                            ConflictInfo(
-                                                "Conflict between ${it.first.toJson()} and ${it.second.toJson()}",
-                                                it.first.getNode().uuid.toString(),
-                                                this.clientSocket.port.toString()
-                                            )
-                                        )
-                                    }
-                                    println("Lista de conflitos para os outros clientes")
-                                    val response = ServerMessage(
-                                        ServerOperations.NOTIFY_CONFLICTS,
-                                        Json.encodeToString(otherClientConflictList.toList())
-                                    )
-                                    otherClient.write(Json.encodeToString(response))
-                                } else {
-                                    //TODO avisar o cliente q fez mandou o update que nao ha conflitos com especifico cliente
-                                    //TODO avisar o outroCliente que nao ha conflito com o client que fez o update
-                                    sendNoConflictMessage(this, otherClient.clientSocket.port.toString())
-                                    sendNoConflictMessage(otherClient, this.clientSocket.port.toString())
-                                }
-
-                            }
-                            println("lista de todos os conflitos em formato novo: $conflictList")
-                            val response = ServerMessage(
-                                ServerOperations.NOTIFY_CONFLICTS,
-                                Json.encodeToString(conflictList.toList())
-                            )
-                            write(Json.encodeToString(response))
-                            **/
                         }
-
                     }
 
+                    // TODO mudar aqui, o push tem de fazer a verificaçao de conflitos tbm e enviar para os clientes?
                     ClientOperations.PUSH -> {
                         synchronized(clientsInfoLock) {
                             clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content) // este lock aqui é necessario? mesmo que dois clients metam coisas ao mesmo tempo vai ser semppre em posicoes dif

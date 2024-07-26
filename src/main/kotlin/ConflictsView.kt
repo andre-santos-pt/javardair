@@ -1,8 +1,7 @@
 import java.awt.Dimension
-import javax.swing.BoxLayout
-import javax.swing.JFrame
-import javax.swing.JScrollPane
-import javax.swing.JTextArea
+import javax.swing.*
+import javax.swing.event.HyperlinkEvent
+import javax.swing.event.HyperlinkListener
 
 // TODO tornas estas interfaces globais, porque uso algo muito igual no Transformation List
 interface ConflictObservable {
@@ -87,3 +86,60 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
         repaint()
     }
 }
+
+/**class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
+    private val editorPane = JEditorPane().apply {
+        contentType = "text/html"
+        isEditable = false
+    }
+
+    init {
+        defaultCloseOperation = EXIT_ON_CLOSE
+        size = Dimension(600, 400)
+        layout = BoxLayout(contentPane, BoxLayout.Y_AXIS)
+
+        editorPane.addHyperlinkListener { e ->
+            if (e.eventType == HyperlinkEvent.EventType.ACTIVATED) {
+                println("Clicked on: ${e.description}")
+                handleConflictLinkClick(e.description)
+            }
+        }
+
+        add(JScrollPane(editorPane))
+        setLocationRelativeTo(null)
+        showView()
+    }
+
+    private fun appendConflictList(conflictMap: Map<String, MutableList<ConflictInfo>>) {
+        val htmlContent = StringBuilder("<html><body>")
+        for ((pair, conflicts) in conflictMap) {
+            htmlContent.append("<h3>Pair: $pair</h3>")
+            conflicts.forEachIndexed { index, conflict ->
+                htmlContent.append("""
+                    <p>
+                        <a href="${conflict.conflictedNodeUUID}">Message: ${conflict.conflictMessage}</a><br>
+                        UUID: ${conflict.conflictedNodeUUID}
+                    </p>
+                """.trimIndent())
+            }
+            htmlContent.append("<hr>")
+        }
+        htmlContent.append("</body></html>")
+        editorPane.text = htmlContent.toString()
+    }
+
+    fun showView() {
+        isVisible = true
+    }
+
+    override fun update(map: Map<String, MutableList<ConflictInfo>>) {
+        appendConflictList(map)
+        revalidate()
+        repaint()
+    }
+
+    private fun handleConflictLinkClick(uuid: String) {
+        println("Handling click for UUID: $uuid")
+        // Handle the click event, such as showing detailed information or processing the UUID.
+    }
+}**/

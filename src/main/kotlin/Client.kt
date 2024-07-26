@@ -202,53 +202,9 @@ object Client {
         conflicts.forEach { (client, conflictSet) ->
             conflictsMap[client] = conflictSet.toMutableList()
             conflictsMap.notifyObservers()
-
-            /**
-            if(conflictsMap.containsKey(client)) {
-                val existingList = conflictsMap[client]!!
-                existingList.addAll(conflictSet)
-                conflictsMap.notifyObservers()
-            } else {
-                conflictsMap[client] = conflictSet.toMutableList()
-                conflictsMap.notifyObservers()
-            }
-            **/
         }
 
-        /**
-        conflicts.forEach { conflictInfo ->
-            val conflictedPair = conflictInfo.conflictedPair
-            val conflictedNodeUUID = conflictInfo.conflictedNodeUUID
-
-            // TODO MUDAR ISTO, NAO FAZ SENTIDO ESTAR A MANDAR UMA MENSAGEM A DIZER QUE NAO HA CONFLITO
-
-            if(conflictsMap.containsKey(conflictedPair)) {
-                if(conflictInfo.conflictMessage == "No conflicts") {
-                    conflictsMap[conflictedPair]?.clear()
-                    conflictsMap.notifyObservers()
-                } else {
-                    val conflictList = conflictsMap[conflictedPair]
-                    val existingConflictIndex = conflictList?.indexOfFirst { it.conflictedNodeUUID == conflictedNodeUUID }
-
-                    if (existingConflictIndex != null && existingConflictIndex != -1) {
-                        conflictList[existingConflictIndex] = conflictInfo
-                        conflictsMap.notifyObservers()
-                    } else {
-                        conflictList?.add(conflictInfo)
-                        conflictsMap.notifyObservers()
-                    }
-                }
-
-            } else {
-                if(conflictInfo.conflictMessage != "No conflicts") conflictsMap[conflictInfo.conflictedPair] = mutableListOf(conflictInfo)
-            }
-        } **/
-
-
-
-
         conflictFree = conflictsMap.all { it.value.isEmpty() }
-
 
         //TODO tornar isto numa janela que observa o hashmap
         for ((pair, conflictInfos) in conflictsMap) {
