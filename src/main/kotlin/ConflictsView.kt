@@ -1,4 +1,6 @@
 import java.awt.Dimension
+import java.awt.event.MouseAdapter
+import java.awt.event.MouseEvent
 import javax.swing.*
 import javax.swing.event.HyperlinkEvent
 import javax.swing.event.HyperlinkListener
@@ -87,10 +89,19 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
     }
 }
 
-/**class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
-    private val editorPane = JEditorPane().apply {
-        contentType = "text/html"
-        isEditable = false
+/**
+class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
+    private val listModel = DefaultListModel<String>()
+    private val list = JList(listModel).apply {
+        addMouseListener(object : MouseAdapter() {
+            override fun mouseClicked(e: MouseEvent) {
+                if (e.clickCount == 1) {
+                    val index = locationToIndex(e.point)
+                    val selectedItem = listModel.getElementAt(index)
+                    handleConflictClick(selectedItem)
+                }
+            }
+        })
     }
 
     init {
@@ -98,34 +109,18 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
         size = Dimension(600, 400)
         layout = BoxLayout(contentPane, BoxLayout.Y_AXIS)
 
-        editorPane.addHyperlinkListener { e ->
-            if (e.eventType == HyperlinkEvent.EventType.ACTIVATED) {
-                println("Clicked on: ${e.description}")
-                handleConflictLinkClick(e.description)
-            }
-        }
-
-        add(JScrollPane(editorPane))
+        add(JScrollPane(list))
         setLocationRelativeTo(null)
         showView()
     }
 
     private fun appendConflictList(conflictMap: Map<String, MutableList<ConflictInfo>>) {
-        val htmlContent = StringBuilder("<html><body>")
+        listModel.clear()
         for ((pair, conflicts) in conflictMap) {
-            htmlContent.append("<h3>Pair: $pair</h3>")
-            conflicts.forEachIndexed { index, conflict ->
-                htmlContent.append("""
-                    <p>
-                        <a href="${conflict.conflictedNodeUUID}">Message: ${conflict.conflictMessage}</a><br>
-                        UUID: ${conflict.conflictedNodeUUID}
-                    </p>
-                """.trimIndent())
+            conflicts.forEach { conflict ->
+                listModel.addElement("Pair: $pair, Message: ${conflict.conflictMessage}, UUID: ${conflict.conflictedNodeUUID}")
             }
-            htmlContent.append("<hr>")
         }
-        htmlContent.append("</body></html>")
-        editorPane.text = htmlContent.toString()
     }
 
     fun showView() {
@@ -138,8 +133,10 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
         repaint()
     }
 
-    private fun handleConflictLinkClick(uuid: String) {
-        println("Handling click for UUID: $uuid")
-        // Handle the click event, such as showing detailed information or processing the UUID.
+    private fun handleConflictClick(item: String) {
+        // TODO Aplicar a transformaçao
+        println("Clicked on: $item")
+
     }
-}**/
+}
+        **/
