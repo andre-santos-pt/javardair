@@ -4,14 +4,24 @@ package test;
 //13c9f311-0d07-46aa-8591-ef22c6ab8e49
 class Test {
 
+    //834d58f3-0364-4480-93c6-e12c720f8d01
+    int metodonovo(int z) {
+        ;
+    }
+
+    //e502eea8-8696-4bff-ae53-ff485e243a4a
+    String testenovo() {
+        ;
+    }
+
     //39ffce85-a0f7-47fc-8898-d03e11abafc7
     String newHello(int x) {
-        return "Hello";
+        return "Hellob";
     }
 
     //1b4fb7b4-07b7-480d-b63c-a5c58db73227
     void methodo(int a) {
-        int b = b + 100;
+        int b = b + 1000;
         int c = 200;
     }
 

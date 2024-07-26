@@ -162,6 +162,12 @@ fun JsonObject.toTransformation(project: Project): Transformation {
                 project.getFieldByUUID(UUID(field("uuid")))!!,
                 StaticJavaParser.parseExpression(field("initializer"))
             )
+        /**
+         * MoveCallableIntraType::class.java.simpleName ->
+            MoveCallableIntraType(
+
+            )
+        **/
 
         else -> throw Exception("Transformation not found $code")
     }

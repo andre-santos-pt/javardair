@@ -22,7 +22,7 @@ import kotlin.io.path.Path
 import kotlin.properties.Delegates
 import kotlin.reflect.jvm.isAccessible
 
-object Client {
+object  Client {
     private const val address: String = "localhost" // mudar
     private const val port: Int = 8080 // mudar
     private lateinit var socket: Socket

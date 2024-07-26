@@ -67,6 +67,8 @@ class Server(port: Int) {
                             println("Conflitos: $conflicts")
                             // todo percorrer o map e criar uma lista [(otherClient, list<conflictInfo())] basicamente transformar o conflict em conflict info so pq o conflict nao é serializable (se puder mudar melhor)
                             val newMap: MutableMap<String, Set<ConflictInfo>> = mutableMapOf()
+
+                            // Transformar Map<ClientHandler, List<Conflict> em Map<String, List<ConflictInfo>
                             conflicts.forEach { (clientHandler, conflicts) ->
                                 val tempMap = mutableMapOf<String, Set<ConflictInfo>>()
                                 val conflictInfoSet = conflicts.map { conflict ->
