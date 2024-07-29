@@ -1,5 +1,4 @@
 import Client.getPrivatePath
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import messages.ClientMessage
@@ -62,9 +61,12 @@ class Server(port: Int) {
                             clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content) // este lock aqui é necessario? mesmo que dois clients metam coisas ao mesmo tempo vai ser semppre em posicoes dif
                         }
                         if (clientsInfo.size > 1) {
-                            // TODO Idealmente era enviar este map diretamente para o cliente
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
                             println("Conflitos: $conflicts")
+
+                            notifyConflicts(conflicts)
+
+                            /**
                             // todo percorrer o map e criar uma lista [(otherClient, list<conflictInfo())] basicamente transformar o conflict em conflict info so pq o conflict nao é serializable (se puder mudar melhor)
                             val newMap: MutableMap<String, Set<ConflictInfo>> = mutableMapOf()
 
@@ -90,6 +92,7 @@ class Server(port: Int) {
                                 Json.encodeToString(newMap)
                             )
                             write(Json.encodeToString(response))
+                            **/
                         }
                     }
 
@@ -99,16 +102,18 @@ class Server(port: Int) {
                             clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content) // este lock aqui é necessario? mesmo que dois clients metam coisas ao mesmo tempo vai ser semppre em posicoes dif
                         }
                         if (clientsInfo.size > 1) {
+                            // Check if there are no conflicts.
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
+
+                            // If there are 0 conflicts, apply changes and propagate it.
                             val allEmpty = conflicts.all { it.value.isEmpty() }
                             if(allEmpty) {
-                                // TODO Devo avisar aqui tbm que nao há conflitos? Nao acho que seja necessario -> SIM
                                 applyChanges(Json.decodeFromString<JsonArray>(message.content))
                                 propagateChanges(message.content)
+                                // TODO Devo avisar aqui tbm que nao há conflitos?
                             } else {
-                                conflicts.filter { it.value.isNotEmpty() }.forEach {
-                                    //notifyConflictedClients(this, it.key, it.value)
-                                }
+                                // Notify clients for the specific conflicts.
+                                notifyConflicts(conflicts)
                             }
                         }
                         else {
@@ -120,11 +125,33 @@ class Server(port: Int) {
             }
         }
 
-        fun sendNoConflictMessage(client: ClientHandler, conflictedPair: String) {
-            //TODO idealmente aqui mandava uma lista vazia, mas no lado do cliente é preciso saber qual o conflictedPair
-            val noConflictList = listOf(ConflictInfo("No conflicts", ""))
-            val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(noConflictList))
-            client.write(Json.encodeToString(response))
+        // TODO onde é que devo meter as threads? Uma thread para fazer esta tarefa toda, ou iniciar threads so para enviar as mensagens?
+        private fun notifyConflicts(conflicts: MutableMap<ClientHandler, Set<Conflict>>) {
+            // Criar um novo MutableMap para lidar com o facto de ClientHandler e Conflict nao serem Serilaizble
+            val newMap: MutableMap<String, Set<ConflictInfo>> = mutableMapOf()
+
+            // Transformar Map<ClientHandler, List<Conflict> em Map<String, List<ConflictInfo>
+            conflicts.forEach { (clientHandler, conflicts) ->
+                val tempMap = mutableMapOf<String, Set<ConflictInfo>>()
+                val conflictInfoSet = conflicts.map { conflict ->
+                    ConflictInfo(
+                        "Conflict between ${conflict.first.toJson()} and ${conflict.second.toJson()}",
+                        conflict.first.getNode().uuid.toString(),
+                    )
+                }.toSet()
+                tempMap[this.clientSocket.port.toString()] = conflictInfoSet
+                newMap[clientHandler.clientSocket.port.toString()] = conflictInfoSet
+                val response = ServerMessage(
+                    ServerOperations.NOTIFY_CONFLICTS,
+                    Json.encodeToString(tempMap)
+                )
+                clientHandler.write(Json.encodeToString(response))
+            }
+            val response = ServerMessage(
+                ServerOperations.NOTIFY_CONFLICTS,
+                Json.encodeToString(newMap)
+            )
+            write(Json.encodeToString(response))
         }
 
         // Returns a map with the conflict of the client with the other clients.
@@ -142,6 +169,7 @@ class Server(port: Int) {
             }
         }
 
+        // Get a Set of conflicts between two List of Transformations.
         private fun getConflicts(transA: JsonArray, transB: JsonArray): Set<Conflict> {
             val transASerialized = transA.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
@@ -154,25 +182,6 @@ class Server(port: Int) {
             return getConflicts(project, redundancyFreeSetOfTransformations)
         }
 
-        private fun notifyConflictedClients(first: ClientHandler, second: ClientHandler, conflicts: Set<Conflict>) {
-            try {
-                // TODO mudar o conteudo do conflictMessage
-                val conflictMessage = conflicts.map { "Conflict between ${it.first.toJson()} and ${it.second.toJson()} " }
-                val conflictList = conflicts.map {
-                    ConflictInfo(
-                        "Conflict between ${it.first.toJson()} and ${it.second.toJson()}",
-                        it.first.getNode().uuid.toString(),
-                    )
-                }
-                //println(conflictMessage)
-                println("Conflict list: $conflictList")
-                val response = ServerMessage(ServerOperations.NOTIFY_CONFLICTS, Json.encodeToString(conflictList))
-                first.write(Json.encodeToString(response))
-                second.write(Json.encodeToString(response)) // esta mensagem nao pode ser igual
-            } catch (ex: Exception) {
-                ex.printStackTrace()
-            }
-        }
 
         private fun write(message: String) {
             writer.write((message + '\n').toByteArray(Charset.defaultCharset()))

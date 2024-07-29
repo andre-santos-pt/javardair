@@ -78,7 +78,7 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
         }
     }
 
-    fun showView() {
+    private fun showView() {
         isVisible = true
     }
 

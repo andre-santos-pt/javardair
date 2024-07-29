@@ -32,12 +32,14 @@ object  Client {
     internal lateinit var projectRoot: Project
     var isConnected = false
     var conflictFree = true // sera que deve começar true ou false?
-    private val conflictsMap = ObservableConflictMap(mutableMapOf())
-    val conflictView = ConflictView()
+    private lateinit var conflictsMap: ObservableConflictMap
+    private lateinit var conflictView: ConflictView
     //private val conflictsMap: MutableMap<String, MutableList<ConflictInfo>> = mutableMapOf()
 
     fun open() {
         isConnected = true
+        conflictsMap = ObservableConflictMap(mutableMapOf())
+        conflictView = ConflictView()
         runClient()
     }
 
