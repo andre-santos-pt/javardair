@@ -33,6 +33,7 @@ class Server(port: Int) {
 
         fun run() {
             try {
+                sendClientInfo()
                 serve()
             } catch (ex: Exception) {
                 println("${clientSocket.port } closed the connection due to ${ex.printStackTrace()}")
@@ -63,36 +64,7 @@ class Server(port: Int) {
                         if (clientsInfo.size > 1) {
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
                             println("Conflitos: $conflicts")
-
                             notifyConflicts(conflicts)
-
-                            /**
-                            // todo percorrer o map e criar uma lista [(otherClient, list<conflictInfo())] basicamente transformar o conflict em conflict info so pq o conflict nao é serializable (se puder mudar melhor)
-                            val newMap: MutableMap<String, Set<ConflictInfo>> = mutableMapOf()
-
-                            // Transformar Map<ClientHandler, List<Conflict> em Map<String, List<ConflictInfo>
-                            conflicts.forEach { (clientHandler, conflicts) ->
-                                val tempMap = mutableMapOf<String, Set<ConflictInfo>>()
-                                val conflictInfoSet = conflicts.map { conflict ->
-                                    ConflictInfo(
-                                        "Conflict between ${conflict.first.toJson()} and ${conflict.second.toJson()}",
-                                        conflict.first.getNode().uuid.toString(),
-                                    )
-                                }.toSet()
-                                tempMap[this.clientSocket.port.toString()] = conflictInfoSet
-                                newMap[clientHandler.clientSocket.port.toString()] = conflictInfoSet
-                                val response = ServerMessage(
-                                    ServerOperations.NOTIFY_CONFLICTS,
-                                    Json.encodeToString(tempMap)
-                                )
-                                clientHandler.write(Json.encodeToString(response))
-                            }
-                            val response = ServerMessage(
-                                ServerOperations.NOTIFY_CONFLICTS,
-                                Json.encodeToString(newMap)
-                            )
-                            write(Json.encodeToString(response))
-                            **/
                         }
                     }
 
@@ -102,7 +74,6 @@ class Server(port: Int) {
                             clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content) // este lock aqui é necessario? mesmo que dois clients metam coisas ao mesmo tempo vai ser semppre em posicoes dif
                         }
                         if (clientsInfo.size > 1) {
-                            // Check if there are no conflicts.
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
 
                             // If there are 0 conflicts, apply changes and propagate it.
@@ -137,9 +108,18 @@ class Server(port: Int) {
                     ConflictInfo(
                         "Conflict between ${conflict.first.toJson()} and ${conflict.second.toJson()}",
                         conflict.first.getNode().uuid.toString(),
+                        conflict.second
                     )
                 }.toSet()
-                tempMap[this.clientSocket.port.toString()] = conflictInfoSet
+                // TODO Havera uma forma mais eficiente de fazer isto? Sobre diferenciar que Trans mudar
+                val conflictInfoSetOpposite = conflicts.map { conflict ->
+                    ConflictInfo(
+                        "Conflict between ${conflict.first.toJson()} and ${conflict.second.toJson()}",
+                        conflict.first.getNode().uuid.toString(),
+                        conflict.first
+                    )
+                }.toSet()
+                tempMap[this.clientSocket.port.toString()] = conflictInfoSetOpposite
                 newMap[clientHandler.clientSocket.port.toString()] = conflictInfoSet
                 val response = ServerMessage(
                     ServerOperations.NOTIFY_CONFLICTS,
@@ -211,6 +191,15 @@ class Server(port: Int) {
             } catch (ex: Exception) {
                 println("Could not send message to other clients $ex")
             }
+        }
+
+        private fun sendClientInfo() {
+            // TODO Talvez criar um UUID para os clientes, para nao estar a usar os portes
+            val message = ServerMessage(
+                ServerOperations.HANDSHAKE,
+                this.clientSocket.port.toString()
+            )
+            write(Json.encodeToString(message))
         }
 
     }

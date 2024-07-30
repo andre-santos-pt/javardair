@@ -71,7 +71,7 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
         for ((pair, conflicts) in conflictMap) {
             textArea.append("Pair: $pair\n")
             conflicts.forEach { conflict ->
-                textArea.append("  Message: ${conflict.conflictMessage}\n")
+                textArea.append("  Conflict: ${conflict.conflictTransformation}\n")
                 textArea.append("  UUID: ${conflict.conflictedNodeUUID}\n")
             }
             textArea.append("\n")

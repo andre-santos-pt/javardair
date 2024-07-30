@@ -34,6 +34,7 @@ object  Client {
     var conflictFree = true // sera que deve começar true ou false?
     private lateinit var conflictsMap: ObservableConflictMap
     private lateinit var conflictView: ConflictView
+    lateinit var clientId: String
     //private val conflictsMap: MutableMap<String, MutableList<ConflictInfo>> = mutableMapOf()
 
     fun open() {
@@ -75,7 +76,9 @@ object  Client {
                 val message = Json.decodeFromString<ServerMessage>(text)
                 println("Received message: $message")
                 when(message.op) {
-                    ServerOperations.FETCH_RESPONSE -> TODO()
+                    ServerOperations.FETCH_RESPONSE -> {
+                        clientId = message.content
+                    }
 
                     ServerOperations.PROPAGATE -> {
                         // forcar o focus a sair
@@ -90,6 +93,8 @@ object  Client {
                     ServerOperations.NOTIFY_CONFLICTS -> {
                         notifyConflicts(Json.decodeFromString(message.content))
                     }
+
+                    ServerOperations.HANDSHAKE -> TODO()
                 }
             }
         } catch (ex: Exception) {
