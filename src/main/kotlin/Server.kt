@@ -30,10 +30,10 @@ class Server(port: Int) {
     inner class ClientHandler(private val clientSocket: Socket) {
         private val writer: OutputStream = clientSocket.getOutputStream()
         private val reader: Scanner = Scanner(clientSocket.getInputStream())
+        private lateinit var clientID: String
 
         fun run() {
             try {
-                sendClientInfo()
                 serve()
             } catch (ex: Exception) {
                 println("${clientSocket.port } closed the connection due to ${ex.printStackTrace()}")
@@ -92,6 +92,11 @@ class Server(port: Int) {
                             applyChanges(Json.decodeFromString<JsonArray>(message.content))
                         }
                     }
+
+                    ClientOperations.HANDSHAKE -> {
+                        clientID = message.content
+                        println(clientID)
+                    }
                 }
             }
         }
@@ -116,20 +121,22 @@ class Server(port: Int) {
                     ConflictInfo(
                         "Conflict between ${conflict.first.toJson()} and ${conflict.second.toJson()}",
                         conflict.first.getNode().uuid.toString(),
-                        conflict.first
+                        conflict.first // Resolver este problema, tem que se meter toJson()
                     )
                 }.toSet()
-                tempMap[this.clientSocket.port.toString()] = conflictInfoSetOpposite
-                newMap[clientHandler.clientSocket.port.toString()] = conflictInfoSet
+                tempMap[this.clientID] = conflictInfoSetOpposite
+                newMap[clientHandler.clientID] = conflictInfoSet
                 val response = ServerMessage(
                     ServerOperations.NOTIFY_CONFLICTS,
-                    Json.encodeToString(tempMap)
+                    Json.encodeToString(tempMap),
+                    this.clientID
                 )
                 clientHandler.write(Json.encodeToString(response))
             }
             val response = ServerMessage(
                 ServerOperations.NOTIFY_CONFLICTS,
-                Json.encodeToString(newMap)
+                Json.encodeToString(newMap),
+                this.clientID
             )
             write(Json.encodeToString(response))
         }
@@ -184,22 +191,17 @@ class Server(port: Int) {
             try {
                 println("Propagating changes to all users.")
                 clientsInfo.keys.forEach {
-                    val response = ServerMessage(ServerOperations.PROPAGATE, trans)
+                    val response = ServerMessage(
+                        ServerOperations.PROPAGATE,
+                        trans,
+                        this.clientID
+                    )
                     it.write(Json.encodeToString(response))
 
                 }
             } catch (ex: Exception) {
                 println("Could not send message to other clients $ex")
             }
-        }
-
-        private fun sendClientInfo() {
-            // TODO Talvez criar um UUID para os clientes, para nao estar a usar os portes
-            val message = ServerMessage(
-                ServerOperations.HANDSHAKE,
-                this.clientSocket.port.toString()
-            )
-            write(Json.encodeToString(message))
         }
 
     }

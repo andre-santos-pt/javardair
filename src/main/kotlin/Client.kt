@@ -17,9 +17,9 @@ import java.io.OutputStream
 import java.net.Socket
 import java.nio.charset.Charset
 import java.util.Scanner
+import java.util.UUID
 import kotlin.concurrent.thread
 import kotlin.io.path.Path
-import kotlin.properties.Delegates
 import kotlin.reflect.jvm.isAccessible
 
 object  Client {
@@ -34,8 +34,7 @@ object  Client {
     var conflictFree = true // sera que deve começar true ou false?
     private lateinit var conflictsMap: ObservableConflictMap
     private lateinit var conflictView: ConflictView
-    lateinit var clientId: String
-    //private val conflictsMap: MutableMap<String, MutableList<ConflictInfo>> = mutableMapOf()
+    private val clientID: UUID = UUID.randomUUID()
 
     fun open() {
         isConnected = true
@@ -46,6 +45,7 @@ object  Client {
 
     private fun runClient() {
         try {
+            println("Client $clientID")
             connectToServer()
             conflictsMap.addObserver(conflictView)
         } catch (ex: Exception) {
@@ -59,6 +59,7 @@ object  Client {
         writer = socket.getOutputStream()
         thread {
             //requestRootFile()
+            sendClientInfo()
             dealWithServer()
         }
     }
@@ -76,9 +77,7 @@ object  Client {
                 val message = Json.decodeFromString<ServerMessage>(text)
                 println("Received message: $message")
                 when(message.op) {
-                    ServerOperations.FETCH_RESPONSE -> {
-                        clientId = message.content
-                    }
+                    ServerOperations.FETCH_RESPONSE -> TODO()
 
                     ServerOperations.PROPAGATE -> {
                         // forcar o focus a sair
@@ -86,15 +85,13 @@ object  Client {
                         // se houver, guardar esta current list numa var extra
                         // aplicar as mudanças vindas do propagate
                         // aplicar as mundanças da current list
-                        checkChanges(Json.decodeFromString(message.content))
+                        checkChanges(Json.decodeFromString(message.content), message.sender)
                         //applyChanges(Json.decodeFro"mString(message.content))
                     }
 
                     ServerOperations.NOTIFY_CONFLICTS -> {
                         notifyConflicts(Json.decodeFromString(message.content))
                     }
-
-                    ServerOperations.HANDSHAKE -> TODO()
                 }
             }
         } catch (ex: Exception) {
@@ -103,7 +100,7 @@ object  Client {
     }
 
     // safe mechanism to deal with the case of user making a change while receiving a PROPAGATE message
-    private fun checkChanges(forcedTrans: JsonArray) {
+    private fun checkChanges(forcedTrans: JsonArray, sender: String) {
         println("in checkChanges")
         // TODO perceber se é preciso forçar sair do focus
 
@@ -122,14 +119,14 @@ object  Client {
 
         if(setsAreEqual(currentTrans, forcedTransSerialized)){
             // TODO VER SE ISTO ASSIM ESTA BEM, ESTA VERIFICÇAO É A UNICA COISA QUE PROTEGE O ERRO DO NO VALUE PRESENT
-            applyChanges(forcedTrans)
+            applyChanges(forcedTrans, sender)
 
         } else {
             val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(forcedTransSerialized, currentTrans)
             var conflicts = getConflicts(projectLocal, redundancyFreeSetOfTransformations)
 
             // apply changes normally
-            applyChanges(forcedTrans)
+            applyChanges(forcedTrans, sender)
 
             // apply the current changes to the local only
             if(conflicts.isNotEmpty()) {
@@ -168,7 +165,7 @@ object  Client {
         return f.call(this).toString()
     }
 
-    private fun applyChanges(serializedTransformations: JsonArray) {
+    private fun applyChanges(serializedTransformations: JsonArray, sender: String) {
         try {
             val transRoot = serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot)
@@ -176,9 +173,11 @@ object  Client {
             val transLocal = serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectLocal)
             }
-            Display.getDefault().syncExec {
-                applyTransformationsTo(projectLocal, transLocal.toSet())
-                //projectLocal.saveProjectTo(Path(projectLocal.getPrivatePath()))
+            if(sender != clientID.toString()) {
+                Display.getDefault().syncExec {
+                    applyTransformationsTo(projectLocal, transLocal.toSet())
+                    //projectLocal.saveProjectTo(Path(projectLocal.getPrivatePath()))
+                }
             }
             applyTransformationsTo(projectRoot, transRoot.toSet())
             projectRoot.saveProjectTo(Path(projectRoot.getPrivatePath()))
@@ -220,6 +219,16 @@ object  Client {
                 println(" - $conflictInfo")
             }
         }
+    }
+
+    private fun sendClientInfo() {
+        // TODO Talvez criar um UUID para os clientes, para nao estar a usar os portes
+        val message = ClientMessage(
+            ClientOperations.HANDSHAKE,
+            clientID.toString()
+            //Json.encodeToString(clientID)
+        )
+        write(Json.encodeToString(message))
     }
 }
 

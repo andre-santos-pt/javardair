@@ -4,6 +4,11 @@ package test;
 //13c9f311-0d07-46aa-8591-ef22c6ab8e49
 class Test {
 
+    //a2f31512-3fb6-4fa9-ac67-885c6cd5284b
+    void novo(int x) {
+        ;
+    }
+
     //39ffce85-a0f7-47fc-8898-d03e11abafc7
     String newHello(int x) {
         return "Hellobc";
@@ -19,3 +24,4 @@ class Test {
     String test() {
     }
 }
+

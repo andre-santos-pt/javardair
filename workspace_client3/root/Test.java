@@ -3,7 +3,6 @@ package test;
 
 //13c9f311-0d07-46aa-8591-ef22c6ab8e49
 class Test {
-
     //39ffce85-a0f7-47fc-8898-d03e11abafc7
     String newHello(int x) {
         return "Hellobc";
