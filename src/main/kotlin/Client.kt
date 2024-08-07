@@ -23,18 +23,18 @@ import kotlin.io.path.Path
 import kotlin.reflect.jvm.isAccessible
 
 object  Client {
-    private const val address: String = "localhost" // mudar
-    private const val port: Int = 8080 // mudar
+    private const val address: String = "localhost" // TODO mudar
+    private const val port: Int = 8080 // TODO mudar
     private lateinit var socket: Socket
     private lateinit var reader: Scanner
     private lateinit var writer: OutputStream
     internal lateinit var projectLocal: Project
     internal lateinit var projectRoot: Project
     var isConnected = false
-    var conflictFree = true // sera que deve começar true ou false?
+    var conflictFree = true
     private lateinit var conflictsMap: ObservableConflictMap
     private lateinit var conflictView: ConflictView
-    private val clientID: UUID = UUID.randomUUID()
+    private val clientID: UUID = UUID.randomUUID() // TODO sera que este uuid devia ser criado quando a ide é aberta e nao quando o cliente se junta?
 
     fun open() {
         isConnected = true
@@ -102,7 +102,6 @@ object  Client {
     // safe mechanism to deal with the case of user making a change while receiving a PROPAGATE message
     private fun checkChanges(forcedTrans: JsonArray, sender: String) {
         println("in checkChanges")
-        // TODO perceber se é preciso forçar sair do focus
 
         // get current changes
         val currentTrans = mutableSetOf<Transformation>()
@@ -117,6 +116,8 @@ object  Client {
         }.toMutableSet()
         forcedTransSerialized.forEach { println("forcedTrans: ${it.toJson()}") }
 
+
+        // TODO talvez antes de fazer a verificaçao, aplicar a trans que veio ao root
         if(setsAreEqual(currentTrans, forcedTransSerialized)){
             // TODO VER SE ISTO ASSIM ESTA BEM, ESTA VERIFICÇAO É A UNICA COISA QUE PROTEGE O ERRO DO NO VALUE PRESENT
             applyChanges(forcedTrans, sender)
@@ -141,7 +142,7 @@ object  Client {
 
     }
 
-    fun setsAreEqual(set1: MutableSet<Transformation>, set2: MutableSet<Transformation>): Boolean {
+    private fun setsAreEqual(set1: MutableSet<Transformation>, set2: MutableSet<Transformation>): Boolean {
         if (set1.size != set2.size) return false
 
         val list1 = set1.map { it.toJson().toString() }.sorted()
@@ -210,7 +211,7 @@ object  Client {
             conflictsMap.notifyObservers()
         }
 
-        conflictFree = conflictsMap.all { it.value.isEmpty() }
+        conflictFree = conflictsMap.all { it.value.isEmpty() } //TODO em vez de dar update aqui da variavel podia so fzr esta verifiaçao quando vou fazer submit
 
         //TODO tornar isto numa janela que observa o hashmap
         for ((pair, conflictInfos) in conflictsMap) {

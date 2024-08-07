@@ -113,7 +113,7 @@ class Server(port: Int) {
                     ConflictInfo(
                         "Conflict between ${conflict.first.toJson()} and ${conflict.second.toJson()}",
                         conflict.first.getNode().uuid.toString(),
-                        conflict.second
+                        conflict.second.toJson()
                     )
                 }.toSet()
                 // TODO Havera uma forma mais eficiente de fazer isto? Sobre diferenciar que Trans mudar
@@ -121,7 +121,7 @@ class Server(port: Int) {
                     ConflictInfo(
                         "Conflict between ${conflict.first.toJson()} and ${conflict.second.toJson()}",
                         conflict.first.getNode().uuid.toString(),
-                        conflict.first // Resolver este problema, tem que se meter toJson()
+                        conflict.first.toJson() //TODO Resolver este problema, tem que se meter toJson()
                     )
                 }.toSet()
                 tempMap[this.clientID] = conflictInfoSetOpposite

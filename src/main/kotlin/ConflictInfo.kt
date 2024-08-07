@@ -1,4 +1,5 @@
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonObject
 import model.transformations.Transformation
 
 /**
@@ -6,4 +7,4 @@ import model.transformations.Transformation
  */
 
 @Serializable
-data class ConflictInfo(val conflictMessage: String, val conflictedNodeUUID: String, val conflictTransformation: Transformation) {}
+data class ConflictInfo(val conflictMessage: String, val conflictedNodeUUID: String, val conflictTransformation: JsonObject) {}

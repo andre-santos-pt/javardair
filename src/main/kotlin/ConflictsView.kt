@@ -1,3 +1,4 @@
+import pt.iscte.javardise.demo.toTransformation
 import java.awt.Dimension
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
@@ -71,7 +72,7 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
         for ((pair, conflicts) in conflictMap) {
             textArea.append("Pair: $pair\n")
             conflicts.forEach { conflict ->
-                textArea.append("  Conflict: ${conflict.conflictTransformation}\n")
+                textArea.append("  Conflict: ${conflict.conflictTransformation}\n") // TODO Limpar a forma sobre como aparecem os dados - idealmente so aparecer o codigo que gera conflito
                 textArea.append("  UUID: ${conflict.conflictedNodeUUID}\n")
             }
             textArea.append("\n")
