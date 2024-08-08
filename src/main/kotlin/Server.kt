@@ -93,10 +93,28 @@ class Server(port: Int) {
                         }
                     }
 
+                    // TODO É suposto o ForcePush aplicar as mudanças independemtente se ha conflitos?
+                    ClientOperations.FORCE_PUSH -> {
+                        synchronized(clientsInfoLock) {
+                            clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content) // este lock aqui é necessario? mesmo que dois clients metam coisas ao mesmo tempo vai ser semppre em posicoes dif
+                        }
+                        if (clientsInfo.size > 1) {
+                            applyChanges(Json.decodeFromString<JsonArray>(message.content))
+                            propagateChanges(message.content)
+
+                        }
+                        else {
+                            // Nao pode haver conflitos pq é o unico que esta connectado.
+                            applyChanges(Json.decodeFromString<JsonArray>(message.content))
+                        }
+                    }
+
                     ClientOperations.HANDSHAKE -> {
                         clientID = message.content
                         println(clientID)
                     }
+
+
                 }
             }
         }

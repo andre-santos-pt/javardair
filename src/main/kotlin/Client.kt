@@ -31,7 +31,6 @@ object  Client {
     internal lateinit var projectLocal: Project
     internal lateinit var projectRoot: Project
     var isConnected = false
-    var conflictFree = true
     private lateinit var conflictsMap: ObservableConflictMap
     private lateinit var conflictView: ConflictView
     private val clientID: UUID = UUID.randomUUID() // TODO sera que este uuid devia ser criado quando a ide é aberta e nao quando o cliente se junta?
@@ -120,13 +119,15 @@ object  Client {
         // TODO talvez antes de fazer a verificaçao, aplicar a trans que veio ao root
         if(setsAreEqual(currentTrans, forcedTransSerialized)){
             // TODO VER SE ISTO ASSIM ESTA BEM, ESTA VERIFICÇAO É A UNICA COISA QUE PROTEGE O ERRO DO NO VALUE PRESENT
+            // apply changes normally (to both local and root project)
             applyChanges(forcedTrans, sender)
+            updateServer()
 
         } else {
             val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(forcedTransSerialized, currentTrans)
             var conflicts = getConflicts(projectLocal, redundancyFreeSetOfTransformations)
 
-            // apply changes normally
+            // apply changes normally (to both local and root project)
             applyChanges(forcedTrans, sender)
 
             // apply the current changes to the local only
@@ -137,6 +138,7 @@ object  Client {
                     //projectLocal.saveProjectTo(Path(projectLocal.getPrivatePath()))
                 }
             }
+            updateServer()
         }
         // TODO ERRO DIZ NO VALUE PRESENT so no client que faz o submit da mudança
 
@@ -174,20 +176,37 @@ object  Client {
             val transLocal = serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectLocal)
             }
+
             if(sender != clientID.toString()) {
                 Display.getDefault().syncExec {
                     applyTransformationsTo(projectLocal, transLocal.toSet())
-                    //projectLocal.saveProjectTo(Path(projectLocal.getPrivatePath()))
                 }
             }
             applyTransformationsTo(projectRoot, transRoot.toSet())
             projectRoot.saveProjectTo(Path(projectRoot.getPrivatePath()))
         } catch (ex: Exception) {
-            ex.printStackTrace()
-        }
+            println("Could not apply changes. ${ex.printStackTrace()}")        }
 
     }
 
+    // send current transformation list to the server for consistency matters
+    private fun updateServer() {
+        val factoryOfTransformations = FactoryOfTransformations(projectRoot, projectLocal)
+        val transformations: MutableSet<Transformation> = mutableSetOf()
+        transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
+
+        if(isConnected) {
+            val tempTrans = JsonArray(transformations.map { it.toJson() })
+            try {
+                val message = ClientMessage(ClientOperations.UPDATE, Json.encodeToString(tempTrans))
+                println("Sending changes after updating: $message")
+                write(Json.encodeToString(message))
+
+            } catch (ex: Exception) {
+                println("Could not send message to Server. ${ex.printStackTrace()}")
+            }
+        }
+    }
     private fun updateRootFile(file: String) {
         try {
             File(projectRoot.getProjectRoot().root.toString() + "\\Test.java").writeText(file) //TODO considera a trans de AddFile
@@ -205,25 +224,17 @@ object  Client {
 
     private fun notifyConflicts(conflicts: MutableMap<String, Set<ConflictInfo>>) {
         println("Hashmap recebido: $conflicts")
-
         conflicts.forEach { (client, conflictSet) ->
             conflictsMap[client] = conflictSet.toMutableList()
             conflictsMap.notifyObservers()
         }
+    }
 
-        conflictFree = conflictsMap.all { it.value.isEmpty() } //TODO em vez de dar update aqui da variavel podia so fzr esta verifiaçao quando vou fazer submit
-
-        //TODO tornar isto numa janela que observa o hashmap
-        for ((pair, conflictInfos) in conflictsMap) {
-            println("Conflicted Pair: $pair")
-            for (conflictInfo in conflictInfos) {
-                println(" - $conflictInfo")
-            }
-        }
+    fun isConflictFree(): Boolean {
+        return conflictsMap.all { it.value.isEmpty() }
     }
 
     private fun sendClientInfo() {
-        // TODO Talvez criar um UUID para os clientes, para nao estar a usar os portes
         val message = ClientMessage(
             ClientOperations.HANDSHAKE,
             clientID.toString()
