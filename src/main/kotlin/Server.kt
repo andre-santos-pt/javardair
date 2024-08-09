@@ -1,4 +1,5 @@
 import Client.getPrivatePath
+import com.google.gson.Gson
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import messages.ClientMessage
@@ -15,7 +16,7 @@ import java.net.ServerSocket
 import java.net.Socket
 import java.nio.charset.Charset
 import java.nio.file.Files
-import java.util.Scanner
+import java.util.*
 import kotlin.concurrent.thread
 import kotlin.io.path.Path
 
@@ -54,7 +55,14 @@ class Server(port: Int) {
                 val message = Json.decodeFromString<ClientMessage>(text) // The server will only receive messages from the client.
                 println("Received message from $clientSocket: $message")
                 when (message.op) {
-                    ClientOperations.FETCH_REQUEST -> TODO()
+                    ClientOperations.HANDSHAKE -> {
+                        clientID = message.content
+                        println(clientID)
+                    }
+
+                    ClientOperations.FETCH_REQUEST -> {
+                        sendFiles()
+                    }
 
                     // Checks if there are any conflicts with the other clients.
                     ClientOperations.UPDATE -> {
@@ -68,27 +76,23 @@ class Server(port: Int) {
                         }
                     }
 
-                    // TODO mudar aqui, o push tem de fazer a verificaçao de conflitos tbm e enviar para os clientes?
                     ClientOperations.PUSH -> {
                         synchronized(clientsInfoLock) {
                             clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content) // este lock aqui é necessario? mesmo que dois clients metam coisas ao mesmo tempo vai ser semppre em posicoes dif
                         }
                         if (clientsInfo.size > 1) {
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
-
                             // If there are 0 conflicts, apply changes and propagate it.
                             val allEmpty = conflicts.all { it.value.isEmpty() }
                             if(allEmpty) {
                                 applyChanges(Json.decodeFromString<JsonArray>(message.content))
                                 propagateChanges(message.content)
-                                // TODO Devo avisar aqui tbm que nao há conflitos?
                             } else {
                                 // Notify clients for the specific conflicts.
                                 notifyConflicts(conflicts)
                             }
                         }
                         else {
-                            // Nao pode haver conflitos pq é o unico que esta connectado.
                             applyChanges(Json.decodeFromString<JsonArray>(message.content))
                         }
                     }
@@ -108,13 +112,6 @@ class Server(port: Int) {
                             applyChanges(Json.decodeFromString<JsonArray>(message.content))
                         }
                     }
-
-                    ClientOperations.HANDSHAKE -> {
-                        clientID = message.content
-                        println(clientID)
-                    }
-
-
                 }
             }
         }
@@ -187,7 +184,6 @@ class Server(port: Int) {
             return getConflicts(project, redundancyFreeSetOfTransformations)
         }
 
-
         private fun write(message: String) {
             writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
         }
@@ -222,6 +218,34 @@ class Server(port: Int) {
             }
         }
 
+        private fun sendFiles() {
+            val dir = File(project.getProjectRoot().root.toString())
+            val files = dir.listFiles()
+            val fileListTemp = mutableListOf<FileContent>()
+
+            files?.forEach {
+                if (it.isFile) {
+                    val content = Base64.getEncoder().encodeToString(Files.readAllBytes(it.toPath()))
+                    fileListTemp.add(FileContent(
+                        it.name,
+                        content
+                    ))
+                }
+            }
+
+            val fileList = Json.encodeToString(fileListTemp)
+
+            println(fileList)
+
+            val message = ServerMessage(
+                ServerOperations.FETCH_RESPONSE,
+                fileList,
+                this.clientID
+            )
+
+            write(Json.encodeToString(message))
+        }
+
     }
 
     private fun loadFiles() {
@@ -241,9 +265,7 @@ class Server(port: Int) {
     }
 
     private fun writeFile(path: String, src:String) {
-        // everytime the server is initiated it loads a new set of files - TESTING PURPOSES
         val file = File(path)
-        //Files.deleteIfExists(file.toPath())
         if(!Files.exists(file.toPath())) {
             Files.createDirectories(file.parentFile.toPath());
             PrintWriter(file).use { out ->

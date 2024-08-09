@@ -16,7 +16,7 @@ import java.io.File
 import java.io.OutputStream
 import java.net.Socket
 import java.nio.charset.Charset
-import java.util.Scanner
+import java.util.*
 import java.util.UUID
 import kotlin.concurrent.thread
 import kotlin.io.path.Path
@@ -57,8 +57,8 @@ object  Client {
         reader = Scanner(socket.getInputStream())
         writer = socket.getOutputStream()
         thread {
-            //requestRootFile()
-            sendClientInfo()
+            sendHandshakeMessage()
+            requestFiles()
             dealWithServer()
         }
     }
@@ -76,7 +76,9 @@ object  Client {
                 val message = Json.decodeFromString<ServerMessage>(text)
                 println("Received message: $message")
                 when(message.op) {
-                    ServerOperations.FETCH_RESPONSE -> TODO()
+                    ServerOperations.FETCH_RESPONSE -> {
+                        updateRootFiles(Json.decodeFromString(message.content))
+                    }
 
                     ServerOperations.PROPAGATE -> {
                         // forcar o focus a sair
@@ -207,15 +209,20 @@ object  Client {
             }
         }
     }
-    private fun updateRootFile(file: String) {
-        try {
-            File(projectRoot.getProjectRoot().root.toString() + "\\Test.java").writeText(file) //TODO considera a trans de AddFile
-        } catch (ex: Exception) {
-            ex.printStackTrace()
+    private fun updateRootFiles(fileList: List<FileContent>) {
+        // Get dir from current client
+        val rootDir = File(projectRoot.getProjectRoot().root.toString())
+
+        // Update/Create files
+        fileList.forEach {
+            val filePath = "$rootDir\\${it.fileName}"
+            val file = File(filePath)
+            val decodedContent = Base64.getDecoder().decode(it.fileContent)
+            file.writeBytes(decodedContent)
         }
     }
 
-    private fun requestRootFile() {
+    private fun requestFiles() {
        if(isConnected) {
            val message = ClientMessage(ClientOperations.FETCH_REQUEST, "")
            write(Json.encodeToString(message))
@@ -234,13 +241,14 @@ object  Client {
         return conflictsMap.all { it.value.isEmpty() }
     }
 
-    private fun sendClientInfo() {
-        val message = ClientMessage(
-            ClientOperations.HANDSHAKE,
-            clientID.toString()
-            //Json.encodeToString(clientID)
-        )
-        write(Json.encodeToString(message))
+    private fun sendHandshakeMessage() {
+        if(isConnected) {
+            val message = ClientMessage(
+                ClientOperations.HANDSHAKE,
+                clientID.toString()
+            )
+            write(Json.encodeToString(message))
+        }
     }
 }
 

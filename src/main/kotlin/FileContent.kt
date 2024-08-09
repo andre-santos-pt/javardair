@@ -5,15 +5,13 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
 
 @Serializable
-class FileContent(val name: String, val content: String) {
-    fun toJson(): JsonObject {
+class FileContent(val fileName: String, val fileContent: String) {
+   /** fun toJson(): JsonObject {
         val fields = mutableMapOf<String, JsonElement>()
         fields["name"] = JsonPrimitive(name)
         fields["content"] = JsonPrimitive(content)
         return JsonObject(fields)
-    }
-
-
+    }**/
 }
 
 /**fun JsonObject.toFileContent(): FileContent {
