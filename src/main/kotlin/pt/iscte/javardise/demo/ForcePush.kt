@@ -25,7 +25,7 @@ import kotlin.concurrent.thread
 
 class ForcePush : Action {
     override val name: String
-        get() = "Submit"
+        get() = "ForcePush"
 
     private val transformations: ObservableList = ObservableList(mutableSetOf())
 
@@ -50,10 +50,10 @@ class ForcePush : Action {
     private fun updateTransformations() {
         thread {
             synchronized(transformations) {
+                println("AQUI FP")
                 transformations.clear()
                 val factoryOfTransformations = FactoryOfTransformations(Client.projectRoot, Client.projectLocal)
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
-                println("transformations: ${transformations.list}")
             }
         }
     }

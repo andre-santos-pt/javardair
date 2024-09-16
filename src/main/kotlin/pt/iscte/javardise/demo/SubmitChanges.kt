@@ -25,7 +25,7 @@ import kotlin.concurrent.thread
 
 class SubmitChanges : Action {
     override val name: String
-        get() = "Submit"
+        get() = "Push"
 
     private val transformations: ObservableList = ObservableList(mutableSetOf())
     private val transformationsView: TransformationsView = TransformationsView()
@@ -76,6 +76,7 @@ class SubmitChanges : Action {
     private fun updateTransformations() {
         thread {
             synchronized(transformations) {
+                println("AQUI SC")
                 transformations.clear()
                 val factoryOfTransformations = FactoryOfTransformations(Client.projectRoot, Client.projectLocal)
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())

@@ -70,7 +70,6 @@ class TransformationsView() : JFrame("Transformations"), Observer {
 
     private fun appendTransformationList(transformation: MutableSet<Transformation>) {
         textArea.text = ""
-
         for (line in transformation) {
             textArea.append(line.getText())
             textArea.append("\n \n")

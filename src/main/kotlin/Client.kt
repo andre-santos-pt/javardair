@@ -87,7 +87,6 @@ object  Client {
                         // aplicar as mudanças vindas do propagate
                         // aplicar as mundanças da current list
                         checkChanges(Json.decodeFromString(message.content), message.sender)
-                        //applyChanges(Json.decodeFro"mString(message.content))
                     }
 
                     ServerOperations.NOTIFY_CONFLICTS -> {
@@ -122,18 +121,22 @@ object  Client {
         if(setsAreEqual(currentTrans, forcedTransSerialized)){
             // TODO VER SE ISTO ASSIM ESTA BEM, ESTA VERIFICÇAO É A UNICA COISA QUE PROTEGE O ERRO DO NO VALUE PRESENT
             // apply changes normally (to both local and root project)
+            println("os sets sao iguais")
             applyChanges(forcedTrans, sender)
             updateServer()
 
         } else {
+            println("os sets nao sao iguais")
             val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(forcedTransSerialized, currentTrans)
             var conflicts = getConflicts(projectLocal, redundancyFreeSetOfTransformations)
+            println(conflicts)
 
             // apply changes normally (to both local and root project)
             applyChanges(forcedTrans, sender)
 
             // apply the current changes to the local only
             if(conflicts.isNotEmpty()) {
+                println("existe conflitos, a aplicar a versao original ao local")
                 // TODO Verificar se ele depois vai ver as difs bem
                 Display.getDefault().syncExec {
                     applyTransformationsTo(projectLocal, currentTrans.toSet())
@@ -142,8 +145,6 @@ object  Client {
             }
             updateServer()
         }
-        // TODO ERRO DIZ NO VALUE PRESENT so no client que faz o submit da mudança
-
     }
 
     private fun setsAreEqual(set1: MutableSet<Transformation>, set2: MutableSet<Transformation>): Boolean {
