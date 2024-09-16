@@ -16,7 +16,10 @@ class Test {
     }
 
     //ce2411ab-72e7-4c2b-b4b1-3e20dc187945
-    String test() {
+    String test(int x, int x, int x) {
+        String conflito = "0";
+        String conflito = "0";
+        String conflito = "0";
     }
 }
 
