@@ -105,6 +105,7 @@ class Bot : Action {
 
     /**
      * Testar tambem com apagar coisas quando estao a ser usadas
+     * adicionar rename
      */
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
