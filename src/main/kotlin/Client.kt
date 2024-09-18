@@ -112,7 +112,7 @@ object  Client {
 
         // check if conflicts exist between current changes and trans being forced into
         val forcedTransSerialized = forcedTrans.map { json ->
-            (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectLocal)
+            (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot) // da erro se for Local pq em teoria o UUID e nao esta la. É aqui que esta a haver o erro de mudar um metodo adicionado
         }.toMutableSet()
         forcedTransSerialized.forEach { println("forcedTrans: ${it.toJson()}") }
 
@@ -176,17 +176,21 @@ object  Client {
             val transRoot = serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot)
             }
-            val transLocal = serializedTransformations.map { json ->
-                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectLocal)
-            }
 
             if(sender != clientID.toString()) {
+                val transLocal = serializedTransformations.map { json ->
+                    (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectLocal) // aqui dava erro tambem quando se edita um metodo que foi adicionado (no client q o adicionou)
+                }
+
                 Display.getDefault().syncExec {
                     applyTransformationsTo(projectLocal, transLocal.toSet())
                 }
             }
             applyTransformationsTo(projectRoot, transRoot.toSet())
             projectRoot.saveProjectTo(Path(projectRoot.getPrivatePath()))
+
+            println("Local:")
+            projectLocal.getSetOfCompilationUnit().forEach { println(it) }
         } catch (ex: Exception) {
             println("Could not apply changes. ${ex.printStackTrace()}")        }
 
@@ -194,9 +198,10 @@ object  Client {
 
     // send current transformation list to the server for consistency matters
     private fun updateServer() {
-        val factoryOfTransformations = FactoryOfTransformations(projectRoot, projectLocal)
         val transformations: MutableSet<Transformation> = mutableSetOf()
+        val factoryOfTransformations = FactoryOfTransformations(projectRoot, projectLocal)
         transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
+        println("Lista de dif : $transformations")
 
         if(isConnected) {
             val tempTrans = JsonArray(transformations.map { it.toJson() })
@@ -221,6 +226,9 @@ object  Client {
             val decodedContent = Base64.getDecoder().decode(it.fileContent)
             file.writeBytes(decodedContent)
         }
+
+        // Debug para ver se as mudanças estao a ser aplicadas bem no ficheiro do root. Aqui ja devia ter a atualizaçao mas nao tem. Mas se eu depois disto abrir o ficheiro Root, ja aparece as mudanças
+        //projectRoot.getSetOfCompilationUnit().forEach { println(it) }
     }
 
     private fun requestFiles() {

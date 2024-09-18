@@ -76,7 +76,6 @@ class SubmitChanges : Action {
     private fun updateTransformations() {
         thread {
             synchronized(transformations) {
-                println("AQUI SC")
                 transformations.clear()
                 val factoryOfTransformations = FactoryOfTransformations(Client.projectRoot, Client.projectLocal)
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
@@ -93,6 +92,7 @@ class SubmitChanges : Action {
                     } catch (ex: Exception) {
                         println("Could not send message to Server ${ex.printStackTrace()}")
                     }
+
                 }
 
             }

@@ -94,6 +94,7 @@ class Server(port: Int) {
                         }
                         else {
                             applyChanges(Json.decodeFromString<JsonArray>(message.content))
+                            propagateChanges(message.content)
                         }
                     }
 
@@ -110,6 +111,7 @@ class Server(port: Int) {
                         else {
                             // Nao pode haver conflitos pq é o unico que esta connectado.
                             applyChanges(Json.decodeFromString<JsonArray>(message.content))
+                            propagateChanges(message.content)
                         }
                     }
                 }

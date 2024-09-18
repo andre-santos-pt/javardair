@@ -41,6 +41,12 @@ class Bot : Action {
         return m
     }
 
+    fun TypeDeclaration<*>.deleteMethod(methodName: String) {
+        Display.getDefault().syncExec {
+            commands.removeCommand(this.members,this, type.getMethodsByName(methodName)[0])
+        }
+    }
+
     fun MethodDeclaration.rename(newName: String) =
         Display.getDefault().syncExec {
             commands.modifyCommand(this, this.name, SimpleName(newName), this::setName)
@@ -56,8 +62,8 @@ class Bot : Action {
             commands.addCommand(body.get().statements, body.get(), StaticJavaParser.parseStatement(src))
         }
 
-    private fun applyChanges(workspace: File, editor: CodeEditor) {
-        when(workspace) {
+    private fun applyChanges(editor: CodeEditor) {
+        when(editor.folder) {
             workspaceOne -> editWorkspaceOne()
             workspaceTwo -> editWorkspaceTwo()
             workspaceThree -> editWorkspaceThree()
@@ -67,31 +73,32 @@ class Bot : Action {
     private fun editWorkspaceOne() {
         thread {
             val m = type.getMethodsByName("test")[0]
-            sleep(2000)
+            sleep(5000)
             m.addStatement("String teste = \"Teste\";")
-            sleep(2000)
+            sleep(5000)
             m.addStatement("return \"Hello\";")
         }
     }
 
     private fun editWorkspaceTwo() {
         thread {
-            val m = type.getMethodsByName("method")[0]
-            sleep(2000)
+            val m = type.addMethod("method", "void")
+            sleep(5000)
             m.rename("newNameMethod")
-            sleep(2000)
+            sleep(5000)
             m.addParam("int", "b")
+            sleep(5000)
+            //type.deleteMethod("method")
         }
     }
 
     private fun editWorkspaceThree() {
         thread {
             val m = type.getMethodsByName("test")[0]
-            sleep(2000)
+            sleep(5000)
             m.addParam("int", "x")
-            sleep(3000)
+            sleep(6000)
             m.addStatement("String conflito = \"0\";")
-
         }
 
     }
@@ -101,9 +108,7 @@ class Bot : Action {
      */
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
-        applyChanges(workspaceOne, editor)
-        applyChanges(workspaceTwo, editor)
-        applyChanges(workspaceThree, editor)
+        applyChanges(editor)
 
     }
 }
