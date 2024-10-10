@@ -86,15 +86,3 @@ class TransformationsView() : JFrame("Transformations"), Observer {
         repaint()
     }
 }
-
-
-/**object ObserverExample {
-    @JvmStatic
-    fun main(args: Array<String>) {
-        val myList = ObservableList(mutableSetOf())
-        val notify = TransformationsView()
-        myList.addObserver(notify)
-        notify.showView()
-        //myList.add()
-    }
-}**/

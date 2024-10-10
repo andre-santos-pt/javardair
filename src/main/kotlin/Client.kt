@@ -132,6 +132,7 @@ object  Client {
             println(conflicts)
 
             // apply changes normally (to both local and root project)
+            // TODO ISTO TEM PROBLEMAS SE FOR O CLIENTE QUE MANDOU O PROPAGATE E SE FOR ELE QUE FIZER UMA MUDANÇA??????
             applyChanges(forcedTrans, sender)
 
             // apply the current changes to the local only
@@ -229,6 +230,8 @@ object  Client {
 
         // Debug para ver se as mudanças estao a ser aplicadas bem no ficheiro do root. Aqui ja devia ter a atualizaçao mas nao tem. Mas se eu depois disto abrir o ficheiro Root, ja aparece as mudanças
         //projectRoot.getSetOfCompilationUnit().forEach { println(it) }
+
+        //updateServer()
     }
 
     private fun requestFiles() {

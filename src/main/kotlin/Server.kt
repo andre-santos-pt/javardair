@@ -67,7 +67,7 @@ class Server(port: Int) {
                     // Checks if there are any conflicts with the other clients.
                     ClientOperations.UPDATE -> {
                         synchronized(clientsInfoLock) {
-                            clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content) // este lock aqui é necessario? mesmo que dois clients metam coisas ao mesmo tempo vai ser semppre em posicoes dif
+                            clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content)
                         }
                         if (clientsInfo.size > 1) {
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
@@ -78,7 +78,7 @@ class Server(port: Int) {
 
                     ClientOperations.PUSH -> {
                         synchronized(clientsInfoLock) {
-                            clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content) // este lock aqui é necessario? mesmo que dois clients metam coisas ao mesmo tempo vai ser semppre em posicoes dif
+                            clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content)
                         }
                         if (clientsInfo.size > 1) {
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
@@ -98,10 +98,9 @@ class Server(port: Int) {
                         }
                     }
 
-                    // TODO É suposto o ForcePush aplicar as mudanças independemtente se ha conflitos?
                     ClientOperations.FORCE_PUSH -> {
                         synchronized(clientsInfoLock) {
-                            clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content) // este lock aqui é necessario? mesmo que dois clients metam coisas ao mesmo tempo vai ser semppre em posicoes dif
+                            clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content)
                         }
                         if (clientsInfo.size > 1) {
                             applyChanges(Json.decodeFromString<JsonArray>(message.content))
@@ -196,7 +195,7 @@ class Server(port: Int) {
                     (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
                 }
                 applyTransformationsTo(project, trans.toSet())
-                project.saveProjectTo(Path(project.getPrivatePath())) // TODO as vezes da um erro : I am not a child of my parent.
+                project.saveProjectTo(Path(project.getPrivatePath()))
 
             } catch (ex: Exception) {
                 ex.printStackTrace()

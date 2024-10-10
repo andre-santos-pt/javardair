@@ -50,7 +50,6 @@ class ForcePush : Action {
     private fun updateTransformations() {
         thread {
             synchronized(transformations) {
-                println("AQUI FP")
                 transformations.clear()
                 val factoryOfTransformations = FactoryOfTransformations(Client.projectRoot, Client.projectLocal)
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())

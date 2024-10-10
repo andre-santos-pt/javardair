@@ -1,10 +1,12 @@
 package pt.iscte.javardise.demo
 
 import com.github.javaparser.StaticJavaParser
+import com.github.javaparser.ast.body.FieldDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.body.Parameter
 import com.github.javaparser.ast.body.TypeDeclaration
 import com.github.javaparser.ast.expr.SimpleName
+import model.name
 import org.eclipse.swt.widgets.Display
 import pt.iscte.javardise.CommandStack
 import pt.iscte.javardise.editor.Action
@@ -41,11 +43,13 @@ class Bot : Action {
         return m
     }
 
-    fun TypeDeclaration<*>.deleteMethod(methodName: String) {
+    /**
+     fun TypeDeclaration<*>.deleteMethod(methodName: String) {
         Display.getDefault().syncExec {
             commands.removeCommand(this.members,this, type.getMethodsByName(methodName)[0])
         }
     }
+     **/
 
     fun MethodDeclaration.rename(newName: String) =
         Display.getDefault().syncExec {
@@ -62,6 +66,28 @@ class Bot : Action {
             commands.addCommand(body.get().statements, body.get(), StaticJavaParser.parseStatement(src))
         }
 
+    /**
+    fun FieldDeclaration.renameField(name: String) =
+        Display.getDefault().syncExec {
+            commands.modifyCommand(this, this.name, name, this::setName)
+        }
+    **/
+
+    /**
+    fun FieldDeclaration.removeField() =
+        Display.getDefault().syncExec {
+            commands.removeCommand()
+        }
+    **/
+
+    /**
+    fun FieldDeclaration.changeTypeField(name: String) {
+        Display.getDefault().syncExec {
+            commands.modifyCommand(this, this.name, name, this::)
+        }
+    }
+    **/
+
     private fun applyChanges(editor: CodeEditor) {
         when(editor.folder) {
             workspaceOne -> editWorkspaceOne()
@@ -73,9 +99,8 @@ class Bot : Action {
     private fun editWorkspaceOne() {
         thread {
             val m = type.getMethodsByName("test")[0]
-            sleep(5000)
             m.addStatement("String teste = \"Teste\";")
-            sleep(5000)
+            sleep(10000)
             m.addStatement("return \"Hello\";")
         }
     }
@@ -83,11 +108,11 @@ class Bot : Action {
     private fun editWorkspaceTwo() {
         thread {
             val m = type.addMethod("method", "void")
-            sleep(5000)
+            sleep(10000)
             m.rename("newNameMethod")
-            sleep(5000)
+            sleep(10000)
             m.addParam("int", "b")
-            sleep(5000)
+            sleep(10000)
             //type.deleteMethod("method")
         }
     }
@@ -95,9 +120,8 @@ class Bot : Action {
     private fun editWorkspaceThree() {
         thread {
             val m = type.getMethodsByName("test")[0]
-            sleep(5000)
             m.addParam("int", "x")
-            sleep(6000)
+            sleep(10000)
             m.addStatement("String conflito = \"0\";")
         }
 
