@@ -18,5 +18,5 @@ class Test {
     int fieldA = 10;
 
     //83a9ea55-3893-42e2-b11a-95eef9f22af7
-    String test = methodA("teste!!");
+    String test = methodNovo("teste!!");
 }

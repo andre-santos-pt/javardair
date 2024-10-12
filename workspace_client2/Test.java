@@ -11,13 +11,13 @@ class Test {
 
     //52f17915-21ad-413a-824d-0c39584037f0
     void methodB(int parameterA) {
-        parameterA = parameterA + 3;
+        parameterA = parameterA + 5;
     }
 
     //df9ce168-1448-4556-b0c7-744cb31ad715
     int fieldA = 10;
 
     //83a9ea55-3893-42e2-b11a-95eef9f22af7
-    String test = methodA("teste!!");
+    String test = methodNovo("teste!!");
 }
 

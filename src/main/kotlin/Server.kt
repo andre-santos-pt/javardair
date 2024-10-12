@@ -127,17 +127,16 @@ class Server(port: Int) {
                 val tempMap = mutableMapOf<String, Set<ConflictInfo>>()
                 val conflictInfoSet = conflicts.map { conflict ->
                     ConflictInfo(
-                        "Conflict between ${conflict.first.toJson()} and ${conflict.second.toJson()}",
-                        conflict.first.getNode().uuid.toString(),
-                        conflict.second.toJson()
+                        "Conflict between ${(conflict.first.toJson()["code"]).toString().trim('"')} and ${conflict.second.toJson()["code"].toString().trim('"')}",
+                        conflict.first.toJson()["uuid"].toString(), //TODO verificar este UUID
+                        conflict.second.toJson()["body"].toString()
                     )
                 }.toSet()
-                // TODO Havera uma forma mais eficiente de fazer isto? Sobre diferenciar que Trans mudar
                 val conflictInfoSetOpposite = conflicts.map { conflict ->
                     ConflictInfo(
-                        "Conflict between ${conflict.first.toJson()} and ${conflict.second.toJson()}",
-                        conflict.first.getNode().uuid.toString(),
-                        conflict.first.toJson() //TODO Resolver este problema, tem que se meter toJson()
+                        "Conflict between ${conflict.first.toJson()["code"].toString().trim('"')} and ${conflict.second.toJson()["code"].toString().trim('"')}",
+                        conflict.first.toJson()["uuid"].toString(), //TODO verificar este UUID
+                        conflict.first.toJson()["body"].toString()
                     )
                 }.toSet()
                 tempMap[this.clientID] = conflictInfoSetOpposite

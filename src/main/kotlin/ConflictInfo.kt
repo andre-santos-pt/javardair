@@ -7,4 +7,4 @@ import model.transformations.Transformation
  */
 
 @Serializable
-data class ConflictInfo(val conflictMessage: String, val conflictedNodeUUID: String, val conflictTransformation: JsonObject) {}
+data class ConflictInfo(val conflictMessage: String, val conflictedNodeUUID: String, val conflictTransformation: String) {}

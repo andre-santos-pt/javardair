@@ -72,8 +72,9 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
         for ((pair, conflicts) in conflictMap) {
             textArea.append("Pair: $pair\n")
             conflicts.forEach { conflict ->
-                textArea.append("  Conflict: ${conflict.conflictTransformation}\n") // TODO Limpar a forma sobre como aparecem os dados - idealmente so aparecer o codigo que gera conflito
-                textArea.append("  UUID: ${conflict.conflictedNodeUUID}\n")
+                textArea.append("Conflict: ${conflict.conflictMessage.trim('"')}\n")
+                textArea.append("Conflicted Node: ${conflict.conflictTransformation.trim('"')}\n")
+                textArea.append("Conflicted Node UUID: ${conflict.conflictedNodeUUID.trim('"')}\n")
             }
             textArea.append("\n")
         }
@@ -89,55 +90,3 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
         repaint()
     }
 }
-
-/**
-class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
-    private val listModel = DefaultListModel<String>()
-    private val list = JList(listModel).apply {
-        addMouseListener(object : MouseAdapter() {
-            override fun mouseClicked(e: MouseEvent) {
-                if (e.clickCount == 1) {
-                    val index = locationToIndex(e.point)
-                    val selectedItem = listModel.getElementAt(index)
-                    handleConflictClick(selectedItem)
-                }
-            }
-        })
-    }
-
-    init {
-        defaultCloseOperation = EXIT_ON_CLOSE
-        size = Dimension(600, 400)
-        layout = BoxLayout(contentPane, BoxLayout.Y_AXIS)
-
-        add(JScrollPane(list))
-        setLocationRelativeTo(null)
-        showView()
-    }
-
-    private fun appendConflictList(conflictMap: Map<String, MutableList<ConflictInfo>>) {
-        listModel.clear()
-        for ((pair, conflicts) in conflictMap) {
-            conflicts.forEach { conflict ->
-                listModel.addElement("Pair: $pair, Message: ${conflict.conflictMessage}, UUID: ${conflict.conflictedNodeUUID}")
-            }
-        }
-    }
-
-    fun showView() {
-        isVisible = true
-    }
-
-    override fun update(map: Map<String, MutableList<ConflictInfo>>) {
-        appendConflictList(map)
-        revalidate()
-        repaint()
-    }
-
-    private fun handleConflictClick(item: String) {
-        // TODO Aplicar a transformaçao
-        println("Clicked on: $item")
-
-    }
-}
-        **/

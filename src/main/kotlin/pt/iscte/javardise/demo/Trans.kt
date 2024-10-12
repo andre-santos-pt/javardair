@@ -51,12 +51,11 @@ import model.uuid
             fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
         }
 
-        /**
         is AddField -> {
             fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
-            fields["body"] = JsonPrimitive(getNode().toString())
+            val fieldDeclaration = getNode() as FieldDeclaration
+            fields["field"] = JsonPrimitive(fieldDeclaration.toString())
         }
-        **/
 
         is RemoveField -> {
             fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
@@ -132,14 +131,17 @@ fun JsonObject.toTransformation(project: Project): Transformation {
                 project.getTypeByUUID(UUID(field("owner-uuid")))!!,
                 project.getMethodByUUID(UUID(field("uuid")))!!,
             )
+
         /**
         AddField::class.java.simpleName ->
             AddField(
                 project,
                 project.getTypeByUUID(UUID(field("owner-uuid")))!!,
-                StaticJavaParser.parseExpression(field("body"))
+                //TODO é suposto eu dar parse aqui.. mas nao ha nenhuma funcao para isso - parseFieldDeclaration??
+
             )
         **/
+
         RemoveField::class.java.simpleName ->
             RemoveField(
                 project.getTypeByUUID(UUID(field("owner-uuid")))!!,

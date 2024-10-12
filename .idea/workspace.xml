@@ -7,18 +7,14 @@
     <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/Test.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Client.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Client.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/FileContent.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/FileContent.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/ConflictInfo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/ConflictInfo.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/ConflictsView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/ConflictsView.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/Server.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Server.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/TransformationList.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/TransformationList.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Bot.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Bot.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/ForcePush.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/ForcePush.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Trans.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Trans.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/workspace_client1/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client1/Test.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/workspace_client1/root/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client1/root/Test.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/workspace_client2/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client2/Test.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/workspace_client2/root/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client2/root/Test.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client3/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client3/Test.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client3/root/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client3/root/Test.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -73,7 +69,7 @@
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RunManager" selected="Gradle.javardair_client1 ">
+  <component name="RunManager" selected="Kotlin.ServerKt">
     <configuration name="javardair [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -150,6 +146,9 @@
       <workItem from="1728406590912" duration="695000" />
       <workItem from="1728500583403" duration="2597000" />
       <workItem from="1728558877689" duration="1547000" />
+      <workItem from="1728587802179" duration="2751000" />
+      <workItem from="1728594431948" duration="595000" />
+      <workItem from="1728768490147" duration="6796000" />
     </task>
     <servers />
   </component>
