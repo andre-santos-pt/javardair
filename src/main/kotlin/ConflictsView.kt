@@ -1,10 +1,9 @@
-import pt.iscte.javardise.demo.toTransformation
+import com.github.javaparser.ast.body.FieldDeclaration
+import kotlinx.serialization.json.*
+import model.transformations.*
+import model.uuid
 import java.awt.Dimension
-import java.awt.event.MouseAdapter
-import java.awt.event.MouseEvent
 import javax.swing.*
-import javax.swing.event.HyperlinkEvent
-import javax.swing.event.HyperlinkListener
 
 // TODO tornas estas interfaces globais, porque uso algo muito igual no Transformation List
 interface ConflictObservable {
@@ -72,11 +71,81 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
         for ((pair, conflicts) in conflictMap) {
             textArea.append("Pair: $pair\n")
             conflicts.forEach { conflict ->
-                textArea.append("Conflict: ${conflict.conflictMessage.trim('"')}\n")
-                textArea.append("Conflicted Node: ${conflict.conflictTransformation.trim('"')}\n")
-                textArea.append("Conflicted Node UUID: ${conflict.conflictedNodeUUID.trim('"')}\n")
+                var conflictedTransformation = conflict.conflictedTransformation
+                textArea.append("\nConflict Detected:\n")
+                textArea.append("   - Conflict on the node: ${conflict.conflictUUID.trim('"')}\n")
+                textArea.append("   - Description: ${conflict.conflictMessage.trim('"')}\n")
+                textArea.append("   - Conflicting Transformation: ${conflict.conflictTransformationMessage}\n")
+                val relevantInfo = getRelevantInfo(conflictedTransformation)
+                if(relevantInfo.isNotEmpty()) {
+                    textArea.append("   - Additional Information:\n")
+                    relevantInfo.forEach{ (key, value) ->
+                        textArea.append("       $key: $value\n")
+                    }
+                }
             }
-            textArea.append("\n")
+            textArea.append("------------------------------------------------------\n\n")
+        }
+    }
+
+    // Customizable Transformation Info View
+    private fun getRelevantInfo(transformation: JsonObject): Map<String, String> {
+        return when (transformation["code"].toString().trim('"')) {
+            /**
+            "SignatureChanged" -> {
+                mapOf(
+                    "Changed Method Name to" to transformation["name"].toString(),
+                    "Changed Parameters to" to transformation["parameters"].toString()
+                )
+            }
+            **/
+
+            "AddCallable" -> {
+                mapOf(
+                    "Constructor of the method added" to transformation["constructor"].toString(),
+                    "Body of the method added" to transformation["body"].toString()
+                )
+            }
+
+            /**
+            "ReturnTypeChangedMethod" -> {
+                mapOf(
+                    "Changed Return Type to" to transformation["returnType"].toString()
+                )
+            }**/
+
+            "BodyChangedCallable" -> {
+                mapOf(
+                    //TODO Secalhar aqui podia ter o nome do metodo
+                    "Changed body to" to transformation["body"].toString()
+                )
+            }
+
+            /**
+            "RenameField" -> {
+                mapOf(
+                    "Changed Field Name to" to transformation["name"].toString()
+                )
+            }
+
+            "TypeChangedField" -> {
+                mapOf(
+                    "Changed Field Type to" to transformation["type"].toString()
+                )
+            }
+
+            "InitializerChangedField" -> {
+                mapOf(
+                    "Changed Field Initalizer to" to transformation["initializer"].toString()
+                )
+            }
+
+            "RemoveCallable", "MoveCallableIntraType", "AddField", "RemoveField" -> {
+                // TODO no RemoveField dava jeito ter o nome do metodo que foi removido, posso mudar na serializaçao
+                emptyMap()
+            }
+            **/
+            else -> emptyMap()
         }
     }
 

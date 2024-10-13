@@ -126,17 +126,20 @@ class Server(port: Int) {
             conflicts.forEach { (clientHandler, conflicts) ->
                 val tempMap = mutableMapOf<String, Set<ConflictInfo>>()
                 val conflictInfoSet = conflicts.map { conflict ->
+                    println(conflict.first.getText())
                     ConflictInfo(
                         "Conflict between ${(conflict.first.toJson()["code"]).toString().trim('"')} and ${conflict.second.toJson()["code"].toString().trim('"')}",
-                        conflict.first.toJson()["uuid"].toString(), //TODO verificar este UUID
-                        conflict.second.toJson()["body"].toString()
+                        conflict.first.getNode().uuid.toString(),
+                        conflict.second.toJson(),
+                        conflict.second.getText()
                     )
                 }.toSet()
                 val conflictInfoSetOpposite = conflicts.map { conflict ->
                     ConflictInfo(
                         "Conflict between ${conflict.first.toJson()["code"].toString().trim('"')} and ${conflict.second.toJson()["code"].toString().trim('"')}",
-                        conflict.first.toJson()["uuid"].toString(), //TODO verificar este UUID
-                        conflict.first.toJson()["body"].toString()
+                        conflict.second.getNode().uuid.toString(),
+                        conflict.first.toJson(),
+                        conflict.first.getText()
                     )
                 }.toSet()
                 tempMap[this.clientID] = conflictInfoSetOpposite
