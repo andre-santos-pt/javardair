@@ -2,9 +2,11 @@ package pt.iscte.javardise.demo
 
 import com.github.javaparser.JavaParser
 import com.github.javaparser.StaticJavaParser
+import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.FieldDeclaration
 import com.github.javaparser.ast.body.Parameter
+import com.github.javaparser.ast.body.VariableDeclarator
 import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.type.Type
 import kotlinx.serialization.json.*
@@ -12,6 +14,7 @@ import model.Project
 import model.UUID
 import model.transformations.*
 import model.uuid
+import java.util.*
 
 // map a transformation to a json object
     fun Transformation.toJson(): JsonObject {
@@ -53,8 +56,12 @@ import model.uuid
 
         is AddField -> {
             fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
-            val fieldDeclaration = getNode() as FieldDeclaration
-            fields["field"] = JsonPrimitive(fieldDeclaration.toString())
+
+            val fieldDeclaration = getNode()
+            fields["type"] = JsonPrimitive(fieldDeclaration.elementType.toString())
+            fields["name"] = JsonPrimitive(fieldDeclaration.variables[0].name.toString())
+            fields["modifiers"] = JsonPrimitive(fieldDeclaration.modifiers.joinToString(" ") { it.keyword.toString() })
+            fields["initalizer"] = JsonPrimitive(fieldDeclaration.variables[0].initializer.toString())
         }
 
         is RemoveField -> {
@@ -132,15 +139,35 @@ fun JsonObject.toTransformation(project: Project): Transformation {
                 project.getMethodByUUID(UUID(field("uuid")))!!,
             )
 
-        /**
-        AddField::class.java.simpleName ->
+
+        AddField::class.java.simpleName -> {
             AddField(
                 project,
                 project.getTypeByUUID(UUID(field("owner-uuid")))!!,
-                //TODO é suposto eu dar parse aqui.. mas nao ha nenhuma funcao para isso - parseFieldDeclaration??
+                //TODO build FieldDeclaration
+                FieldDeclaration().apply {
+                    val variable = VariableDeclarator().apply {
+                        type = StaticJavaParser.parseType(field("type"))
+                        name = SimpleName(field("name"))
+                    }
 
+                    if (field("initalizer").isNotEmpty()) {
+                        variable.setInitializer(StaticJavaParser.parseExpression(field("initalizer")))
+                    }
+
+
+                    addVariable(variable)
+                    val modifiers = field("modifiers")
+                    if (modifiers.isNotEmpty()) {
+                        modifiers.split(" ").forEach { modifier ->
+                            addModifier(Modifier.Keyword.valueOf(modifier.uppercase(Locale.getDefault())))
+                        }
+                    }
+                }
             )
-        **/
+        }
+
+
 
         RemoveField::class.java.simpleName ->
             RemoveField(
