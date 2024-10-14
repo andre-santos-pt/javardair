@@ -107,9 +107,8 @@ class SubmitChanges : Action {
                 "You cannot submit your changes due to conflicts.",
                 JOptionPane.WARNING_MESSAGE
             )
-
             val dialog = optionPane.createDialog("Conflicts Detected!")
-            dialog.isAlwaysOnTop = true  // Ensure the window stays in front
+            dialog.isAlwaysOnTop = true
             dialog.isVisible = true
         }
     }
