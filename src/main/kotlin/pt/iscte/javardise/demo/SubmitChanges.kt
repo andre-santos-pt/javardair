@@ -21,6 +21,8 @@ import pt.iscte.javardise.editor.CodeEditor
 import pt.iscte.javardise.editor.FileEvent
 import java.io.File
 import java.util.*
+import javax.swing.JOptionPane
+import javax.swing.SwingUtilities
 import kotlin.concurrent.thread
 
 class SubmitChanges : Action {
@@ -99,6 +101,19 @@ class SubmitChanges : Action {
         }
     }
 
+    private fun showAlertWindow() {
+        SwingUtilities.invokeLater {
+            val optionPane = JOptionPane(
+                "You cannot submit your changes due to conflicts.",
+                JOptionPane.WARNING_MESSAGE
+            )
+
+            val dialog = optionPane.createDialog("Conflicts Detected!")
+            dialog.isAlwaysOnTop = true  // Ensure the window stays in front
+            dialog.isVisible = true
+        }
+    }
+
     override fun run(editor: CodeEditor, toggle: Boolean) {
         // Sends the changes to the server with the goal to propagate it.
         if(Client.isConnected && Client.isConflictFree()) {
@@ -113,7 +128,7 @@ class SubmitChanges : Action {
                 println("Could not send message to Server ${ex.printStackTrace()}")
             }
         } else {
-            println("Can't submit changes due to conflicts.")
+            showAlertWindow()
         }
     }
 }
