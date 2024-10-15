@@ -198,6 +198,9 @@ class Server(port: Int) {
                 applyTransformationsTo(project, trans.toSet())
                 project.saveProjectTo(Path(project.getPrivatePath()))
 
+                println("Server:")
+                project.getSetOfCompilationUnit().forEach { println(it) }
+
             } catch (ex: Exception) {
                 ex.printStackTrace()
             }

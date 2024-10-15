@@ -7,6 +7,7 @@ import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.FieldDeclaration
 import com.github.javaparser.ast.body.Parameter
 import com.github.javaparser.ast.body.VariableDeclarator
+import com.github.javaparser.ast.comments.LineComment
 import com.github.javaparser.ast.expr.SimpleName
 import com.github.javaparser.ast.type.Type
 import kotlinx.serialization.json.*
@@ -36,6 +37,7 @@ import java.util.*
         is AddCallable -> {
             fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
             fields["constructor"] = JsonPrimitive(getNode().isConstructorDeclaration)
+            println(getNode().comment)
             fields["body"] = JsonPrimitive(getNode().toString())
         }
 
@@ -56,12 +58,11 @@ import java.util.*
 
         is AddField -> {
             fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
-
-            val fieldDeclaration = getNode()
-            fields["type"] = JsonPrimitive(fieldDeclaration.elementType.toString())
-            fields["name"] = JsonPrimitive(fieldDeclaration.variables[0].name.toString())
-            fields["modifiers"] = JsonPrimitive(fieldDeclaration.modifiers.joinToString(" ") { it.keyword.toString() })
-            fields["initalizer"] = JsonPrimitive(fieldDeclaration.variables[0].initializer.toString())
+            val comment = getNode().comment.orElse(null)
+            if (comment != null) {
+                fields["uuid-comment"] = JsonPrimitive(comment.content)
+            }
+            fields["newField"] = JsonPrimitive(getNode().toString())
         }
 
         is RemoveField -> {
@@ -141,32 +142,15 @@ fun JsonObject.toTransformation(project: Project): Transformation {
 
 
         AddField::class.java.simpleName -> {
+            val fieldDeclaration = StaticJavaParser.parseBodyDeclaration(field("newField")) as FieldDeclaration
+            val uuidComment = field("uuid-comment")
+            fieldDeclaration.setComment(LineComment(uuidComment))
             AddField(
                 project,
                 project.getTypeByUUID(UUID(field("owner-uuid")))!!,
-                //TODO build FieldDeclaration
-                FieldDeclaration().apply {
-                    val variable = VariableDeclarator().apply {
-                        type = StaticJavaParser.parseType(field("type"))
-                        name = SimpleName(field("name"))
-                    }
-
-                    if (field("initalizer").isNotEmpty()) {
-                        variable.setInitializer(StaticJavaParser.parseExpression(field("initalizer")))
-                    }
-
-
-                    addVariable(variable)
-                    val modifiers = field("modifiers")
-                    if (modifiers.isNotEmpty()) {
-                        modifiers.split(" ").forEach { modifier ->
-                            addModifier(Modifier.Keyword.valueOf(modifier.uppercase(Locale.getDefault())))
-                        }
-                    }
-                }
+                fieldDeclaration
             )
         }
-
 
 
         RemoveField::class.java.simpleName ->

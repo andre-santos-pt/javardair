@@ -13,6 +13,7 @@ import kotlinx.serialization.json.JsonArray
 import messages.ClientMessage
 import messages.ClientOperations
 import model.FactoryOfTransformations
+import model.setUUIDTo
 import pt.iscte.javardise.Command
 import pt.iscte.javardise.CommandKind
 import pt.iscte.javardise.CommandStack
@@ -67,11 +68,10 @@ class SubmitChanges : Action {
 
     // TODO estas funcoes deviam estar noutro ficheiro nao?
     private fun injectMemberUUIDs(cmd: Command) {
-        if (cmd.kind == CommandKind.ADD &&
-            (cmd.element is MethodDeclaration || cmd.element is FieldDeclaration))
-            (cmd.element as BodyDeclaration<*>).setComment(
-                LineComment(UUID.randomUUID().toString())
-            )
+        if (cmd.kind == CommandKind.ADD && (cmd.element is MethodDeclaration || cmd.element is FieldDeclaration)) {
+            val uuidAdded = LineComment(UUID.randomUUID().toString())
+            (cmd.element as BodyDeclaration<*>).setComment(uuidAdded) // aqui nao devia ser setUUIDto?
+        }
     }
 
 

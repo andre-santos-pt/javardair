@@ -190,8 +190,11 @@ object  Client {
             applyTransformationsTo(projectRoot, transRoot.toSet())
             projectRoot.saveProjectTo(Path(projectRoot.getPrivatePath()))
 
-            println("Local:")
+            println("\nLocal:")
             projectLocal.getSetOfCompilationUnit().forEach { println(it) }
+
+            println("\nRoot:")
+            projectRoot.getSetOfCompilationUnit().forEach { println(it) }
         } catch (ex: Exception) {
             println("Could not apply changes. ${ex.printStackTrace()}")        }
 
