@@ -114,6 +114,7 @@ object  Client {
         val forcedTransSerialized = forcedTrans.map { json ->
             (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot) // da erro se for Local pq em teoria o UUID e nao esta la. É aqui que esta a haver o erro de mudar um metodo adicionado
         }.toMutableSet()
+        println("forced trans -> ${forcedTrans}")
         forcedTransSerialized.forEach { println("forcedTrans: ${it.toJson()}") }
 
 
@@ -174,11 +175,18 @@ object  Client {
 
     private fun applyChanges(serializedTransformations: JsonArray, sender: String) {
         try {
+            projectLocal.initializeAllIndexes()
+            //projectRoot.initializeAllIndexes()
+
+            println("\nLocal Antes de Aplicar a transformação:")
+            projectLocal.getSetOfCompilationUnit().forEach { println(it) }
+
             val transRoot = serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot)
             }
 
             if(sender != clientID.toString()) {
+
                 val transLocal = serializedTransformations.map { json ->
                     (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectLocal) // aqui dava erro tambem quando se edita um metodo que foi adicionado (no client q o adicionou)
                 }
@@ -186,9 +194,15 @@ object  Client {
                 Display.getDefault().syncExec {
                     applyTransformationsTo(projectLocal, transLocal.toSet())
                 }
+
+                println("\nLocal Depois de aplicar transformação:")
+                projectLocal.getSetOfCompilationUnit().forEach { println(it) }
             }
+
             applyTransformationsTo(projectRoot, transRoot.toSet())
             projectRoot.saveProjectTo(Path(projectRoot.getPrivatePath()))
+
+            //projectLocal.initializeAllIndexes()
 
             println("\nLocal:")
             projectLocal.getSetOfCompilationUnit().forEach { println(it) }

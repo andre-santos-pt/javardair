@@ -37,7 +37,10 @@ import java.util.*
         is AddCallable -> {
             fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
             fields["constructor"] = JsonPrimitive(getNode().isConstructorDeclaration)
-            println(getNode().comment)
+            //val comment = getNode().comment.orElse(null)
+            //println("comment do AddCallable -> ${getNode().comment}")
+            //println("comment.content do AddCallable -> ${comment.content}")
+            //println("uuid associado ao AdddCallable -> ${getNode().uuid}")
             fields["body"] = JsonPrimitive(getNode().toString())
         }
 
@@ -57,8 +60,12 @@ import java.util.*
         }
 
         is AddField -> {
+            println("\nA transformar o AddField em json ${getNode()}\n")
             fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
             val comment = getNode().comment.orElse(null)
+            //println("comment do AddField -> ${getNode().comment}")
+            //println("comment.content do AddField -> ${comment.content}")
+            //println("uuid associado ao AddField -> ${getNode().uuid}")
             if (comment != null) {
                 fields["uuid-comment"] = JsonPrimitive(comment.content)
             }
@@ -145,6 +152,7 @@ fun JsonObject.toTransformation(project: Project): Transformation {
             val fieldDeclaration = StaticJavaParser.parseBodyDeclaration(field("newField")) as FieldDeclaration
             val uuidComment = field("uuid-comment")
             fieldDeclaration.setComment(LineComment(uuidComment))
+            //println("\nA construir FieldDeclaration -> $fieldDeclaration\ncom comment ${fieldDeclaration.comment} e comment.content ${fieldDeclaration.comment.orElse(null).content}")
             AddField(
                 project,
                 project.getTypeByUUID(UUID(field("owner-uuid")))!!,
