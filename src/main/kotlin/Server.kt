@@ -32,6 +32,7 @@ class Server(port: Int) {
         private val writer: OutputStream = clientSocket.getOutputStream()
         private val reader: Scanner = Scanner(clientSocket.getInputStream())
         private lateinit var clientID: String
+        private lateinit var clientName: String
 
         fun run() {
             try {
@@ -56,8 +57,10 @@ class Server(port: Int) {
                 println("Received message from $clientSocket: $message")
                 when (message.op) {
                     ClientOperations.HANDSHAKE -> {
-                        clientID = message.content
-                        println(clientID)
+                        val (receivedClientID, receivedClientName) = message.content.split(",")
+                        clientID = receivedClientID
+                        clientName = receivedClientName
+                        println("$clientID : $clientName")
                     }
 
                     ClientOperations.FETCH_REQUEST -> {
@@ -141,8 +144,8 @@ class Server(port: Int) {
                         conflict.first.getText()
                     )
                 }.toSet()
-                tempMap[this.clientID] = conflictInfoSetOpposite
-                newMap[clientHandler.clientID] = conflictInfoSet
+                tempMap["${this.clientID},${this.clientName}"] = conflictInfoSetOpposite
+                newMap["${clientHandler.clientID},${clientHandler.clientName}"] = conflictInfoSet
                 val response = ServerMessage(
                     ServerOperations.NOTIFY_CONFLICTS,
                     Json.encodeToString(tempMap),

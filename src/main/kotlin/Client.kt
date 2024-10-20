@@ -34,11 +34,13 @@ object  Client {
     private lateinit var conflictsMap: ObservableConflictMap
     private lateinit var conflictView: ConflictView
     private val clientID: UUID = UUID.randomUUID() // TODO sera que este uuid devia ser criado quando a ide é aberta e nao quando o cliente se junta?
+    private lateinit var clientName: String
 
     fun open() {
         isConnected = true
         conflictsMap = ObservableConflictMap(mutableMapOf())
         conflictView = ConflictView()
+        clientName = projectLocal.getProjectRoot().root.fileName.toString().substringAfter("workspace_")
         runClient()
     }
 
@@ -274,7 +276,7 @@ object  Client {
         if(isConnected) {
             val message = ClientMessage(
                 ClientOperations.HANDSHAKE,
-                clientID.toString()
+                "$clientID,$clientName"
             )
             write(Json.encodeToString(message))
         }

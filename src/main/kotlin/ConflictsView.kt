@@ -69,11 +69,13 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
     private fun appendConflictList(conflictMap: Map<String, MutableList<ConflictInfo>>) {
         textArea.text = ""
         for ((pair, conflicts) in conflictMap) {
-            textArea.append("Pair: $pair\n")
+            //val (receivedClientID, receivedClientName) = message.content.split(",")
+
+            textArea.append("Pair: ${pair.split(",")[1]}\n")
             conflicts.forEach { conflict ->
                 var conflictedTransformation = conflict.conflictedTransformation
                 textArea.append("\nConflict Detected:\n")
-                textArea.append("   - Conflict on the node: ${conflict.conflictUUID.trim('"')}\n")
+                //textArea.append("   - Conflict on the node: ${conflict.conflictUUID.trim('"')}\n")
                 textArea.append("   - Description: ${conflict.conflictMessage.trim('"')}\n")
                 textArea.append("   - Conflicting Transformation: ${conflict.conflictTransformationMessage}\n")
                 val relevantInfo = getRelevantInfo(conflictedTransformation)

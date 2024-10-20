@@ -21,6 +21,7 @@ import model.uuid
 import pt.iscte.javardise.Command
 import pt.iscte.javardise.CommandKind
 import pt.iscte.javardise.CommandStack
+import pt.iscte.javardise.ModifyCommand
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor
 import pt.iscte.javardise.editor.FileEvent
@@ -44,6 +45,10 @@ class SubmitChanges : Action {
 
         // fires event at every editing command
         val commandObserver = { cmd: Command, _: Boolean, _: CommandStack? ->
+            if(cmd is ModifyCommand<*>) {
+                println("é modify")
+                println("target: ${cmd.target} setOperation: ${cmd.setOperation}")
+            }
             injectMemberUUIDs(cmd)
             updateTransformations()
         }
