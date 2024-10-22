@@ -60,7 +60,7 @@ import java.util.*
         }
 
         is AddField -> {
-            println("\nA transformar o AddField em json ${getNode()}\n")
+            //println("\nA transformar o AddField em json ${getNode()}\n")
             fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
             val comment = getNode().comment.orElse(null)
             //println("comment do AddField -> ${getNode().comment}")

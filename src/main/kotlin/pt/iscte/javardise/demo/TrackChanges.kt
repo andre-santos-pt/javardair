@@ -1,10 +1,10 @@
 package pt.iscte.javardise.demo
 
+import CentralizedList
 import Client
 import ObservableList
 import TransformationsView
 import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.FieldDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
@@ -15,9 +15,7 @@ import kotlinx.serialization.json.JsonArray
 import messages.ClientMessage
 import messages.ClientOperations
 import model.FactoryOfTransformations
-import model.content
 import model.setUUIDTo
-import model.uuid
 import pt.iscte.javardise.Command
 import pt.iscte.javardise.CommandKind
 import pt.iscte.javardise.CommandStack
@@ -31,11 +29,11 @@ import javax.swing.JOptionPane
 import javax.swing.SwingUtilities
 import kotlin.concurrent.thread
 
-class SubmitChanges : Action {
+class TrackChanges : Action {
     override val name: String
-        get() = "Push"
+        get() = "Track Changes"
 
-    private val transformations: ObservableList = ObservableList(mutableSetOf())
+    private val transformations: ObservableList = CentralizedList.transformations
     private val transformationsView: TransformationsView = TransformationsView()
 
 
@@ -46,8 +44,8 @@ class SubmitChanges : Action {
         // fires event at every editing command
         val commandObserver = { cmd: Command, _: Boolean, _: CommandStack? ->
             if(cmd is ModifyCommand<*>) {
-                println("é modify")
-                println("target: ${cmd.target} setOperation: ${cmd.setOperation}")
+                //println("é modify")
+                //println("target: ${cmd.target} setOperation: ${cmd.setOperation}")
             }
             injectMemberUUIDs(cmd)
             updateTransformations()
@@ -81,15 +79,15 @@ class SubmitChanges : Action {
             val uuidAdded = UUID.randomUUID().toString()
             //(cmd.element as BodyDeclaration<*>).setComment(uuidAdded) // aqui nao devia ser setUUIDto?
             (cmd.element as BodyDeclaration<*>).setUUIDTo(model.UUID(uuidAdded))
-            println("injetei UUID ${(cmd.element as BodyDeclaration<*>).uuid} no node ${(cmd.element as BodyDeclaration<*>)}")
-            println("comment = ${(cmd.element as BodyDeclaration<*>).comment}")
-            println("content = ${(cmd.element as BodyDeclaration<*>).content}")
-            println("comment.content = ${(cmd.element as BodyDeclaration<*>).comment.orElse(null).content}")
+            //println("injetei UUID ${(cmd.element as BodyDeclaration<*>).uuid} no node ${(cmd.element as BodyDeclaration<*>)}")
+            //println("comment = ${(cmd.element as BodyDeclaration<*>).comment}")
+            //println("content = ${(cmd.element as BodyDeclaration<*>).content}")
+            //println("comment.content = ${(cmd.element as BodyDeclaration<*>).comment.orElse(null).content}")
 
-            println("\n Local logo depois de injetar:")
-            Client.projectLocal.getSetOfCompilationUnit().forEach {
-                it.childNodes.forEach { node: Node -> node.childNodes.forEach { newNode: Node -> println("Node $newNode com ${newNode.comment}") } }
-            }
+            //println("\n Local logo depois de injetar:")
+            //Client.projectLocal.getSetOfCompilationUnit().forEach {
+            //    it.childNodes.forEach { node: Node -> node.childNodes.forEach { newNode: Node -> println("Node $newNode com ${newNode.comment}") } }
+            //}
         }
     }
 
@@ -100,29 +98,29 @@ class SubmitChanges : Action {
 
                 transformations.clear()
 
-                println("\n Local no update mas antes de fazer calculos:")
-                Client.projectLocal.getSetOfCompilationUnit().forEach {
-                    it.childNodes.forEach { node: Node -> node.childNodes.forEach { newNode: Node -> println("Node $newNode com ${newNode.comment}") } }
-                }
+                //println("\n Local no update mas antes de fazer calculos:")
+                //Client.projectLocal.getSetOfCompilationUnit().forEach {
+                  //  it.childNodes.forEach { node: Node -> node.childNodes.forEach { newNode: Node -> println("Node $newNode com ${newNode.comment}") } }
+                //}
 
                 val factoryOfTransformations = FactoryOfTransformations(Client.projectRoot, Client.projectLocal)
 
-                println("\nLocal dps de calcular o factory:")
-                Client.projectLocal.getSetOfCompilationUnit().forEach {
-                    it.childNodes.forEach { node: Node -> node.childNodes.forEach { newNode: Node -> println("Node $newNode com ${newNode.comment}") } }
-                }
+                //println("\nLocal dps de calcular o factory:")
+                //Client.projectLocal.getSetOfCompilationUnit().forEach {
+                 //   it.childNodes.forEach { node: Node -> node.childNodes.forEach { newNode: Node -> println("Node $newNode com ${newNode.comment}") } }
+                //}
 
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())  // é aqui que ele perde os comentarios
 
-                Client.projectLocal.initializeAllIndexes()
+                //Client.projectLocal.initializeAllIndexes()
 
 
-                println("\nLocal dps de fazer o getList:")
-                Client.projectLocal.getSetOfCompilationUnit().forEach {
-                    it.childNodes.forEach { node: Node -> node.childNodes.forEach { newNode: Node -> println("Node $newNode com ${newNode.comment} e comment.content  ${newNode.comment.orElse(null)?.content ?: "is null"}") } }
-                }
+                //println("\nLocal dps de fazer o getList:")
+                //Client.projectLocal.getSetOfCompilationUnit().forEach {
+                 //   it.childNodes.forEach { node: Node -> node.childNodes.forEach { newNode: Node -> println("Node $newNode com ${newNode.comment} e comment.content  ${newNode.comment.orElse(null)?.content ?: "is null"}") } }
+                //}
 
-                println("transformations: ${transformations.list}")
+                println("Transformation on Track Plugin: ${transformations.list}")
 
                 // Sends the changes to server everytime a change is made.
                 if(Client.isConnected) {
@@ -156,7 +154,7 @@ class SubmitChanges : Action {
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
         // Sends the changes to the server with the goal to propagate it.
-        if(Client.isConnected && Client.isConflictFree()) {
+        /**if(Client.isConnected && Client.isConflictFree()) {
             val serializedTransformations = JsonArray(transformations.map { it.toJson() })
             try {
                 val message = ClientMessage(ClientOperations.PUSH, Json.encodeToString(serializedTransformations))
@@ -169,6 +167,6 @@ class SubmitChanges : Action {
             }
         } else {
             showAlertWindow()
-        }
+        }**/
     }
 }

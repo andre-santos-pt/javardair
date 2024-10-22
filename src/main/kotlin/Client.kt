@@ -180,8 +180,8 @@ object  Client {
             projectLocal.initializeAllIndexes()
             //projectRoot.initializeAllIndexes()
 
-            println("\nLocal Antes de Aplicar a transformação:")
-            projectLocal.getSetOfCompilationUnit().forEach { println(it) }
+            //println("\nLocal Antes de Aplicar a transformação:")
+            //projectLocal.getSetOfCompilationUnit().forEach { println(it) }
 
             val transRoot = serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot)
@@ -197,8 +197,8 @@ object  Client {
                     applyTransformationsTo(projectLocal, transLocal.toSet())
                 }
 
-                println("\nLocal Depois de aplicar transformação:")
-                projectLocal.getSetOfCompilationUnit().forEach { println(it) }
+                //println("\nLocal Depois de aplicar transformação:")
+                //projectLocal.getSetOfCompilationUnit().forEach { println(it) }
             }
 
             applyTransformationsTo(projectRoot, transRoot.toSet())
@@ -206,11 +206,11 @@ object  Client {
 
             //projectLocal.initializeAllIndexes()
 
-            println("\nLocal:")
-            projectLocal.getSetOfCompilationUnit().forEach { println(it) }
+            //println("\nLocal:")
+            //projectLocal.getSetOfCompilationUnit().forEach { println(it) }
 
-            println("\nRoot:")
-            projectRoot.getSetOfCompilationUnit().forEach { println(it) }
+            //println("\nRoot:")
+            //projectRoot.getSetOfCompilationUnit().forEach { println(it) }
         } catch (ex: Exception) {
             println("Could not apply changes. ${ex.printStackTrace()}")        }
 
