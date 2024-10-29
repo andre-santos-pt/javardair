@@ -103,20 +103,20 @@ object  Client {
 
     // safe mechanism to deal with the case of user making a change while receiving a PROPAGATE message
     private fun checkChanges(forcedTrans: JsonArray, sender: String) {
-        println("in checkChanges")
+        //println("in checkChanges")
 
         // get current changes
         val currentTrans = mutableSetOf<Transformation>()
         val factoryOfTransformations = FactoryOfTransformations(projectRoot, projectLocal)
         currentTrans.addAll(factoryOfTransformations.getListOfAllTransformations())
-        currentTrans.forEach { println("currentTrans: ${it.toJson()}") }
+        //currentTrans.forEach { println("currentTrans: ${it.toJson()}") }
 
 
         // check if conflicts exist between current changes and trans being forced into
         val forcedTransSerialized = forcedTrans.map { json ->
             (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot) // da erro se for Local pq em teoria o UUID e nao esta la. É aqui que esta a haver o erro de mudar um metodo adicionado
         }.toMutableSet()
-        println("forced trans -> ${forcedTrans}")
+        //println("forced trans -> ${forcedTrans}")
         forcedTransSerialized.forEach { println("forcedTrans: ${it.toJson()}") }
 
 
@@ -124,7 +124,7 @@ object  Client {
         if(setsAreEqual(currentTrans, forcedTransSerialized)){
             // TODO VER SE ISTO ASSIM ESTA BEM, ESTA VERIFICÇAO É A UNICA COISA QUE PROTEGE O ERRO DO NO VALUE PRESENT
             // apply changes normally (to both local and root project)
-            println("os sets sao iguais")
+            //println("os sets sao iguais")
             applyChanges(forcedTrans, sender)
             updateServer()
 
@@ -176,6 +176,7 @@ object  Client {
     }
 
     private fun applyChanges(serializedTransformations: JsonArray, sender: String) {
+        //todo pq é aqui eu serializo duas trans diferentes?
         try {
             projectLocal.initializeAllIndexes()
             //projectRoot.initializeAllIndexes()

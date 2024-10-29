@@ -169,7 +169,7 @@ class Server(port: Int) {
                 clientsInfo.map { (otherClient, otherTrans) ->
                     if(otherClient != client) {
                         conflicts[otherClient] = getConflicts(trans, otherTrans)
-                        println("Conflito com $otherClient -> ${conflicts[otherClient]}")
+                        //println("Conflito com $otherClient -> ${conflicts[otherClient]}")
                     }
                 }
                 return conflicts
@@ -199,10 +199,7 @@ class Server(port: Int) {
                     (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
                 }
                 applyTransformationsTo(project, trans.toSet())
-                project.saveProjectTo(Path(project.getPrivatePath()))
-
-                println("Server:")
-                project.getSetOfCompilationUnit().forEach { println(it) }
+                project.saveProjectTo(Path(project.getPrivatePath()))   
 
             } catch (ex: Exception) {
                 ex.printStackTrace()

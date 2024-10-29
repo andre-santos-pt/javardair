@@ -62,8 +62,22 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
         textArea.wrapStyleWord = true
 
         add(JScrollPane(textArea))
-        setLocationRelativeTo(null)
+        //setLocationRelativeTo(null)
+        setLocationAtBottomRight()
         showView()
+    }
+
+    private fun setLocationAtBottomRight() {
+        val owner = this.owner // Get the parent window
+        if (owner is JFrame) {
+            val ownerBounds = owner.bounds
+            val x = ownerBounds.x + ownerBounds.width - width - 10 // 10 pixels padding from the right
+            val y = ownerBounds.y + ownerBounds.height - height - 10 // 10 pixels padding from the bottom
+            setLocation(x, y)
+        } else {
+            // Default position if there is no owner
+            setLocationRelativeTo(null)
+        }
     }
 
     private fun appendConflictList(conflictMap: Map<String, MutableList<ConflictInfo>>) {

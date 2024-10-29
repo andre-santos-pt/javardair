@@ -4,17 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="">
+    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="setup file for debugging added">
+      <change afterPath="$PROJECT_DIR$/.idea/discord.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/Test.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/ConflictInfo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/ConflictInfo.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Client.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Client.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/ConflictsView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/ConflictsView.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/Server.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Server.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Trans.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Trans.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/TransformationList.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/TransformationList.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Bot.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Bot.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/services/pt.iscte.javardise.editor.Action" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/services/pt.iscte.javardise.editor.Action" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/workspace_client1/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client1/Test.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/workspace_client1/root/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client1/root/Test.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/workspace_client2/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client2/Test.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/workspace_client2/root/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client2/root/Test.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/workspace_client3/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client3/Test.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/workspace_client3/root/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client3/root/Test.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -41,6 +46,13 @@
       </state>
     </system>
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin Class" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
@@ -60,16 +72,24 @@
   &quot;keyToString&quot;: {
     &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
     &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
     &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
+    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;discord-application&quot;,
     &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
   }
 }</component>
-  <component name="RunManager" selected="Kotlin.ServerKt">
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\uhfon\OneDrive\Documents\javardair" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Compound.runDemo">
     <configuration name="javardair [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -148,11 +168,84 @@
       <workItem from="1728558877689" duration="1547000" />
       <workItem from="1728587802179" duration="2751000" />
       <workItem from="1728594431948" duration="595000" />
-      <workItem from="1728768490147" duration="6796000" />
+      <workItem from="1728768490147" duration="7279000" />
+      <workItem from="1728827874838" duration="14483000" />
+      <workItem from="1728894268811" duration="11682000" />
+      <workItem from="1729632740877" duration="89000" />
+      <workItem from="1729632839080" duration="2846000" />
+      <workItem from="1729635719788" duration="9782000" />
+      <workItem from="1729685388849" duration="6613000" />
     </task>
+    <task id="LOCAL-00001" summary="Cleaned up a bit Conflict View window">
+      <option name="closed" value="true" />
+      <created>1728776325794</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1728776325794</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Cleaned up Conflict and Transformation Visualization">
+      <option name="closed" value="true" />
+      <created>1728849228766</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1728849228766</updated>
+    </task>
+    <task id="LOCAL-00003" summary="added popup window to alert user of conflicts">
+      <option name="closed" value="true" />
+      <created>1728897738482</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1728897738482</updated>
+    </task>
+    <task id="LOCAL-00004" summary="fixes popup window">
+      <option name="closed" value="true" />
+      <created>1728897775787</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1728897775787</updated>
+    </task>
+    <task id="LOCAL-00005" summary="AddField transformation serialization added">
+      <option name="closed" value="true" />
+      <created>1728913925926</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1728913925926</updated>
+    </task>
+    <task id="LOCAL-00006" summary="list of tracked transformations is now centralized">
+      <option name="closed" value="true" />
+      <created>1729636518105</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1729636518105</updated>
+    </task>
+    <task id="LOCAL-00007" summary="setup file for debugging added">
+      <option name="closed" value="true" />
+      <created>1729636544208</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1729636544208</updated>
+    </task>
+    <option name="localTasksCounter" value="8" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <MESSAGE value="Cleaned up a bit Conflict View window" />
+    <MESSAGE value="Cleaned up Conflict and Transformation Visualization" />
+    <MESSAGE value="added popup window to alert user of conflicts" />
+    <MESSAGE value="fixes popup window" />
+    <MESSAGE value="AddField transformation serialization added" />
+    <MESSAGE value="list of tracked transformations is now centralized" />
+    <MESSAGE value="setup file for debugging added" />
+    <option name="LAST_COMMIT_MESSAGE" value="setup file for debugging added" />
   </component>
 </project>
