@@ -5,7 +5,6 @@ import model.uuid
 import java.awt.Dimension
 import javax.swing.*
 
-// TODO tornas estas interfaces globais, porque uso algo muito igual no Transformation List
 interface ConflictObservable {
     fun notifyObservers()
     fun addObserver(o: ConflictsObserver?)
@@ -62,20 +61,18 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
         textArea.wrapStyleWord = true
 
         add(JScrollPane(textArea))
-        //setLocationRelativeTo(null)
         setLocationAtBottomRight()
         showView()
     }
 
     private fun setLocationAtBottomRight() {
-        val owner = this.owner // Get the parent window
+        val owner = this.owner
         if (owner is JFrame) {
             val ownerBounds = owner.bounds
-            val x = ownerBounds.x + ownerBounds.width - width - 10 // 10 pixels padding from the right
-            val y = ownerBounds.y + ownerBounds.height - height - 10 // 10 pixels padding from the bottom
+            val x = ownerBounds.x + ownerBounds.width - width - 10
+            val y = ownerBounds.y + ownerBounds.height - height - 10
             setLocation(x, y)
         } else {
-            // Default position if there is no owner
             setLocationRelativeTo(null)
         }
     }
@@ -83,13 +80,11 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
     private fun appendConflictList(conflictMap: Map<String, MutableList<ConflictInfo>>) {
         textArea.text = ""
         for ((pair, conflicts) in conflictMap) {
-            //val (receivedClientID, receivedClientName) = message.content.split(",")
 
             textArea.append("Pair: ${pair.split(",")[1]}\n")
             conflicts.forEach { conflict ->
                 var conflictedTransformation = conflict.conflictedTransformation
                 textArea.append("\nConflict Detected:\n")
-                //textArea.append("   - Conflict on the node: ${conflict.conflictUUID.trim('"')}\n")
                 textArea.append("   - Description: ${conflict.conflictMessage.trim('"')}\n")
                 textArea.append("   - Conflicting Transformation: ${conflict.conflictTransformationMessage}\n")
                 val relevantInfo = getRelevantInfo(conflictedTransformation)
@@ -132,7 +127,6 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
 
             "BodyChangedCallable" -> {
                 mapOf(
-                    //TODO Secalhar aqui podia ter o nome do metodo
                     "Changed body to" to transformation["body"].toString()
                 )
             }
@@ -157,7 +151,6 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
             }
 
             "RemoveCallable", "MoveCallableIntraType", "AddField", "RemoveField" -> {
-                // TODO no RemoveField dava jeito ter o nome do metodo que foi removido, posso mudar na serializaçao
                 emptyMap()
             }
             **/

@@ -43,10 +43,6 @@ class TrackChanges : Action {
 
         // fires event at every editing command
         val commandObserver = { cmd: Command, _: Boolean, _: CommandStack? ->
-            if(cmd is ModifyCommand<*>) {
-                //println("é modify")
-                //println("target: ${cmd.target} setOperation: ${cmd.setOperation}")
-            }
             injectMemberUUIDs(cmd)
             updateTransformations()
         }
@@ -77,17 +73,7 @@ class TrackChanges : Action {
     private fun injectMemberUUIDs(cmd: Command) {
         if (cmd.kind == CommandKind.ADD && (cmd.element is MethodDeclaration || cmd.element is FieldDeclaration)) {
             val uuidAdded = UUID.randomUUID().toString()
-            //(cmd.element as BodyDeclaration<*>).setComment(uuidAdded) // aqui nao devia ser setUUIDto?
             (cmd.element as BodyDeclaration<*>).setUUIDTo(model.UUID(uuidAdded))
-            //println("injetei UUID ${(cmd.element as BodyDeclaration<*>).uuid} no node ${(cmd.element as BodyDeclaration<*>)}")
-            //println("comment = ${(cmd.element as BodyDeclaration<*>).comment}")
-            //println("content = ${(cmd.element as BodyDeclaration<*>).content}")
-            //println("comment.content = ${(cmd.element as BodyDeclaration<*>).comment.orElse(null).content}")
-
-            //println("\n Local logo depois de injetar:")
-            //Client.projectLocal.getSetOfCompilationUnit().forEach {
-            //    it.childNodes.forEach { node: Node -> node.childNodes.forEach { newNode: Node -> println("Node $newNode com ${newNode.comment}") } }
-            //}
         }
     }
 
@@ -97,37 +83,13 @@ class TrackChanges : Action {
             synchronized(transformations) {
 
                 transformations.clear()
-
-                //println("\n Local no update mas antes de fazer calculos:")
-                //Client.projectLocal.getSetOfCompilationUnit().forEach {
-                  //  it.childNodes.forEach { node: Node -> node.childNodes.forEach { newNode: Node -> println("Node $newNode com ${newNode.comment}") } }
-                //}
-
                 val factoryOfTransformations = FactoryOfTransformations(Client.projectRoot, Client.projectLocal)
-
-                //println("\nLocal dps de calcular o factory:")
-                //Client.projectLocal.getSetOfCompilationUnit().forEach {
-                 //   it.childNodes.forEach { node: Node -> node.childNodes.forEach { newNode: Node -> println("Node $newNode com ${newNode.comment}") } }
-                //}
-
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations())  // é aqui que ele perde os comentarios
-
-                //Client.projectLocal.initializeAllIndexes()
-
-
-                //println("\nLocal dps de fazer o getList:")
-                //Client.projectLocal.getSetOfCompilationUnit().forEach {
-                 //   it.childNodes.forEach { node: Node -> node.childNodes.forEach { newNode: Node -> println("Node $newNode com ${newNode.comment} e comment.content  ${newNode.comment.orElse(null)?.content ?: "is null"}") } }
-                //}
-
-                println("Transformation on Track Plugin: ${transformations.list}")
-
                 // Sends the changes to server everytime a change is made.
                 if(Client.isConnected) {
                     val serializedTransformations = JsonArray(transformations.map { it.toJson() })
                     try {
                         val message = ClientMessage(ClientOperations.UPDATE, Json.encodeToString(serializedTransformations))
-                        println("Sending changes automatically: $message")
                         Client.write(Json.encodeToString(message))
 
                     } catch (ex: Exception) {
@@ -153,7 +115,6 @@ class TrackChanges : Action {
     }
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
-        // Sends the changes to the server with the goal to propagate it.
         /**if(Client.isConnected && Client.isConflictFree()) {
             val serializedTransformations = JsonArray(transformations.map { it.toJson() })
             try {

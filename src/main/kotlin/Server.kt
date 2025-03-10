@@ -54,7 +54,6 @@ class Server(port: Int) {
             while (true) {
                 val text = reader.nextLine()
                 val message = Json.decodeFromString<ClientMessage>(text) // The server will only receive messages from the client.
-                println("Received message from $clientSocket: $message")
                 when (message.op) {
                     ClientOperations.HANDSHAKE -> {
                         val (receivedClientID, receivedClientName) = message.content.split(",")
@@ -74,7 +73,6 @@ class Server(port: Int) {
                         }
                         if (clientsInfo.size > 1) {
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
-                            println("Conflitos: $conflicts")
                             notifyConflicts(conflicts)
                         }
                     }
@@ -120,7 +118,6 @@ class Server(port: Int) {
             }
         }
 
-        // TODO onde é que devo meter as threads? Uma thread para fazer esta tarefa toda, ou iniciar threads so para enviar as mensagens?
         private fun notifyConflicts(conflicts: MutableMap<ClientHandler, Set<Conflict>>) {
             // Criar um novo MutableMap para lidar com o facto de ClientHandler e Conflict nao serem Serilaizble
             val newMap: MutableMap<String, Set<ConflictInfo>> = mutableMapOf()
@@ -165,11 +162,9 @@ class Server(port: Int) {
         private fun checkForConflicts(client: ClientHandler, trans: JsonArray): MutableMap<ClientHandler, Set<Conflict>> {
             val conflicts: MutableMap<ClientHandler, Set<Conflict>> = mutableMapOf()
             synchronized(clientsInfoLock) {
-                // TODO talvez fazer uma thread para cada uma iteraçao do for
                 clientsInfo.map { (otherClient, otherTrans) ->
                     if(otherClient != client) {
                         conflicts[otherClient] = getConflicts(trans, otherTrans)
-                        //println("Conflito com $otherClient -> ${conflicts[otherClient]}")
                     }
                 }
                 return conflicts
@@ -208,7 +203,6 @@ class Server(port: Int) {
 
         private fun propagateChanges(trans: String) {
             try {
-                println("Propagating changes to all users.")
                 clientsInfo.keys.forEach {
                     val response = ServerMessage(
                         ServerOperations.PROPAGATE,

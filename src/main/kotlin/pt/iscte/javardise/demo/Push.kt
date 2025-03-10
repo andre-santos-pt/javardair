@@ -50,16 +50,6 @@ class Push : Action {
 
     }
 
-    private fun updateTransformations() {
-        /**thread {
-            synchronized(transformations) {
-                transformations.clear()
-                val factoryOfTransformations = FactoryOfTransformations(Client.projectRoot, Client.projectLocal)
-                transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
-            }
-        }**/
-    }
-
     private fun showAlertWindow() {
         SwingUtilities.invokeLater {
             val optionPane = JOptionPane(
@@ -75,11 +65,9 @@ class Push : Action {
     override fun run(editor: CodeEditor, toggle: Boolean) {
         // Sends the changes to the server with the goal to propagate it.
         if(Client.isConnected && Client.isConflictFree()) {
-            println("Transformation on Push: ${transformations.list}")
             val serializedTransformations = JsonArray(transformations.map { it.toJson() })
             try {
                 val message = ClientMessage(ClientOperations.PUSH, Json.encodeToString(serializedTransformations))
-                println("Sending changes manually: $message")
                 Client.write(Json.encodeToString(message))
                 transformations.clear()
 

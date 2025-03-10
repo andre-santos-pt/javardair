@@ -11,7 +11,7 @@
       <option name="taskNames">
         <list>
           <option value="run" />
-          <option value="--args=&quot;workspace_client1&quot;" />
+          <option value="--args=&quot;workspace_DeveloperA&quot;" />
         </list>
       </option>
       <option name="vmOptions" />

@@ -109,6 +109,12 @@ class Bot : Action {
         }
     }**/
 
+    /**fun FieldDeclaration.changeInitalizerField(initializer: String) {
+        Display.getDefault().syncExec {
+            commands.modifyCommand()
+        }
+    }**/
+
 
     private fun applyChanges(editor: CodeEditor) {
         when(editor.folder) {
@@ -120,50 +126,86 @@ class Bot : Action {
 
     private fun editWorkspaceOne(editor: CodeEditor) {
         thread {
+            val connectToServer = ConnectToServer()
+            val push = Push()
+            val forcePush = ForcePush()
 
-            // Add a new method and field in this workspace
-            type.addMethod("newMethodWorkspaceOne", "void", "System.out.println(\"Hello from workspace one\");")
-            sleep(1000)
-            type.addField("int", "counter", "0", listOf(Modifier.Keyword.PUBLIC, Modifier.Keyword.STATIC))
+            // Connecting to the server
+            connectToServer.run(editor, true)
+
+            sleep(15000)
+
+            // Add a new method that calls "testMethod" -> SHOWS HOW IT DOESNT SHOW CONFLICT WITH CLIENT 2 EVEN THO ITS CALLING A METHOD THATS GONNA BE RENAMED BY CLIENT2 AND UPDATES REFERENCE
+            val workspaceOneMethod = type.addMethod("worskpaceOneMethod", "String", "return testMethod(\"Hello World!\");")
+            sleep(20000)
+            push.run(editor, true)
+
             sleep(10000)
-            // Delete a method that may be modified in workspace two
-            type.deleteMethod("method")
+
+            // Change method "changableMethod" ->  WILL CHANGE METHOD AND SHOW CONFLICT WITH CLIENT3 USE THAT WILL ALSO CHANGE BODY
+            val changableMethod = type.getMethodsByName("changableMethod")[0]
+            changableMethod.addStatement("String b = \"Changed the body! Will cause conflict\";")
+
+            sleep(20000)
+
+            // Changes method "workspaceOneMethod" -> WILL SHOW CONFLICT WITH CLIENT2 BC IT TRIES TO DELETE
+            workspaceOneMethod.addParam("int", "paramInt")
+
+
+
         }
     }
 
     private fun editWorkspaceTwo(editor: CodeEditor) {
         thread {
-            // This workspace will first add a method, then rename it, and eventually modify it
-            val m = type.addMethod("method", "void", "System.out.println(\"Initial method\");")
+            val connectToServer = ConnectToServer()
+            val push = Push()
+            val forcePush = ForcePush()
+
+            // Connecting to the server
+            connectToServer.run(editor, true)
+
             sleep(10000)
-            m.rename("newNameMethod") // Rename method
-            sleep(10000)
-            m.addParam("int", "b") // Add a parameter
-            sleep(10000)
-            m.addStatement("System.out.println(b);") // Add a statement using the parameter
-            // This should show how the other workspace deleting this method leads to a conflict
+
+            // Rename existent method "testMethod" and Push changes -> SHOWS HOW IT UPDATES ALL CALLS OF THE METHOD (EVEN WHEN CLIENT 1 IS TRYING TO CALL THE METHOD)
+            val testMethod = type.getMethodsByName("testMethod")[0]
+            testMethod.rename("renamedMethod")
+            sleep(15000)
+            push.run(editor, true)
+
+            sleep(35000)
+
+            // Deletes existent method "workspaceOneMethod" -> Shows conflict when CLIETN1 tries to edit the same method
+            type.deleteMethod("workspaceOneMethod")
+
+
+
         }
     }
 
     private fun editWorkspaceThree(editor: CodeEditor) {
         thread {
-            // Modify an existing method 'test' (assume it's already present)
-            val m = type.getMethodsByName("test")[0]
-            sleep(10000)
-            m.addParam("int", "x") // Add a parameter to the 'test' method
-            sleep(10000)
-            m.addStatement("String conflito = \"0\";") // Add a new statement
-            sleep(10000)
-            // Add a new field with the same name as the one added in workspace one to cause a conflict
-            type.addField("int", "counter", "5", listOf(Modifier.Keyword.PUBLIC))
+            val connectToServer = ConnectToServer()
+            val push = Push()
+            val forcePush = ForcePush()
+
+            // Connecting to the server
+            connectToServer.run(editor, true)
+
+            sleep(50000)
+
+            // Change method "changableMethod" ->  WILL CHANGE METHOD AND SHOW CONFLICT WITH CLIENT 1 USE THAT WILL ALSO CHANGE BODY
+            val changableMethod = type.getMethodsByName("changableMethod")[0]
+            changableMethod.addStatement("int var = 10;")
+
+            sleep(5000)
+
+            forcePush.run(editor, true) // -> MOSTRA O FORCE PUSH
+
+
         }
 
     }
-
-    /**
-     * Testar tambem com apagar coisas quando estao a ser usadas
-     * adicionar rename
-     */
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
         applyChanges(editor)

@@ -60,25 +60,9 @@ class TransformationsView() : JFrame("Transformations"), Observer {
         textArea.lineWrap = true
         textArea.wrapStyleWord = true
 
-        //appendTransformationList()
-
         add(textArea)
         setLocationRelativeTo(null)
-        //setLocationAtBottomLeft()
         showView()
-    }
-
-    private fun setLocationAtBottomLeft() {
-        val owner = this.owner // Get the parent window
-        if (owner is JFrame) {
-            val ownerBounds = owner.bounds
-            val x = ownerBounds.x + 10 // 10 pixels padding from the left
-            val y = ownerBounds.y + ownerBounds.height - height - 10 // 10 pixels padding from the bottom
-            setLocation(x, y)
-        } else {
-            // Default position if there is no owner
-            setLocationRelativeTo(null)
-        }
     }
 
     private fun appendTransformationList(transformation: MutableSet<Transformation>) {

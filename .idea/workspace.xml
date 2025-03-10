@@ -5,21 +5,22 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="setup file for debugging added">
-      <change afterPath="$PROJECT_DIR$/.idea/discord.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/javardair_client1_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/javardair_client1_.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/javardair_client2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/javardair_client2.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/server/Test.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/Test.java" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/Client.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Client.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/ConflictsView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/ConflictsView.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Server.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Server.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/TransformationList.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/TransformationList.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Bot.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Bot.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/services/pt.iscte.javardise.editor.Action" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/services/pt.iscte.javardise.editor.Action" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client1/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client1/Test.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client1/root/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client1/root/Test.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client2/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client2/Test.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client2/root/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client2/root/Test.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client3/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client3/Test.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client3/root/Test.java" beforeDir="false" afterPath="$PROJECT_DIR$/workspace_client3/root/Test.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/ForcePush.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/ForcePush.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Push.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Push.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/TrackChanges.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/TrackChanges.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Trans.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Trans.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/workspace_client1/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/workspace_client1/root/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/workspace_client2/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/workspace_client2/root/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/workspace_client3/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/workspace_client3/root/Test.java" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -50,6 +51,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Kotlin Class" />
+        <option value="Class" />
       </list>
     </option>
   </component>
@@ -89,7 +91,7 @@
       <recent name="C:\Users\uhfon\OneDrive\Documents\javardair" />
     </key>
   </component>
-  <component name="RunManager" selected="Compound.runDemo">
+  <component name="RunManager" selected="Gradle.javardair_client2">
     <configuration name="javardair [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -141,6 +143,15 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <list>
+      <item itemvalue="Compound.runDemo" />
+      <item itemvalue="Gradle.javardair_client1 " />
+      <item itemvalue="Gradle.javardair_client2" />
+      <item itemvalue="Gradle.javardair_client3" />
+      <item itemvalue="Gradle.javardair [build]" />
+      <item itemvalue="Gradle.javardair [clean]" />
+      <item itemvalue="Kotlin.ServerKt" />
+    </list>
     <recent_temporary>
       <list>
         <item itemvalue="Gradle.javardair [build]" />
@@ -175,6 +186,18 @@
       <workItem from="1729632839080" duration="2846000" />
       <workItem from="1729635719788" duration="9782000" />
       <workItem from="1729685388849" duration="6613000" />
+      <workItem from="1730344336046" duration="54000" />
+      <workItem from="1732058043976" duration="1802000" />
+      <workItem from="1732093583741" duration="2380000" />
+      <workItem from="1732098702469" duration="1315000" />
+      <workItem from="1732112282337" duration="1134000" />
+      <workItem from="1732467326432" duration="1020000" />
+      <workItem from="1732875177902" duration="553000" />
+      <workItem from="1732875754749" duration="46000" />
+      <workItem from="1732878704164" duration="623000" />
+      <workItem from="1733478887772" duration="447000" />
+      <workItem from="1734470363641" duration="93000" />
+      <workItem from="1741614153404" duration="714000" />
     </task>
     <task id="LOCAL-00001" summary="Cleaned up a bit Conflict View window">
       <option name="closed" value="true" />

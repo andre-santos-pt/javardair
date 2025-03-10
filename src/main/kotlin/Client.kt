@@ -46,7 +46,6 @@ object  Client {
 
     private fun runClient() {
         try {
-            println("Client $clientID")
             connectToServer()
             conflictsMap.addObserver(conflictView)
         } catch (ex: Exception) {
@@ -76,7 +75,6 @@ object  Client {
                 val text = reader.nextLine()
                 // The client will only receive messages from the server
                 val message = Json.decodeFromString<ServerMessage>(text)
-                println("Received message: $message")
                 when(message.op) {
                     ServerOperations.FETCH_RESPONSE -> {
                         updateRootFiles(Json.decodeFromString(message.content))
@@ -103,48 +101,34 @@ object  Client {
 
     // safe mechanism to deal with the case of user making a change while receiving a PROPAGATE message
     private fun checkChanges(forcedTrans: JsonArray, sender: String) {
-        //println("in checkChanges")
-
         // get current changes
         val currentTrans = mutableSetOf<Transformation>()
         val factoryOfTransformations = FactoryOfTransformations(projectRoot, projectLocal)
         currentTrans.addAll(factoryOfTransformations.getListOfAllTransformations())
-        //currentTrans.forEach { println("currentTrans: ${it.toJson()}") }
 
 
         // check if conflicts exist between current changes and trans being forced into
         val forcedTransSerialized = forcedTrans.map { json ->
             (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot) // da erro se for Local pq em teoria o UUID e nao esta la. É aqui que esta a haver o erro de mudar um metodo adicionado
         }.toMutableSet()
-        //println("forced trans -> ${forcedTrans}")
         forcedTransSerialized.forEach { println("forcedTrans: ${it.toJson()}") }
 
+        applyChanges(forcedTrans, sender)
 
-        // TODO talvez antes de fazer a verificaçao, aplicar a trans que veio ao root
         if(setsAreEqual(currentTrans, forcedTransSerialized)){
-            // TODO VER SE ISTO ASSIM ESTA BEM, ESTA VERIFICÇAO É A UNICA COISA QUE PROTEGE O ERRO DO NO VALUE PRESENT
-            // apply changes normally (to both local and root project)
-            //println("os sets sao iguais")
-            applyChanges(forcedTrans, sender)
             updateServer()
 
         } else {
-            println("os sets nao sao iguais")
             val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(forcedTransSerialized, currentTrans)
             var conflicts = getConflicts(projectLocal, redundancyFreeSetOfTransformations)
-            println(conflicts)
 
             // apply changes normally (to both local and root project)
-            // TODO ISTO TEM PROBLEMAS SE FOR O CLIENTE QUE MANDOU O PROPAGATE E SE FOR ELE QUE FIZER UMA MUDANÇA??????
-            applyChanges(forcedTrans, sender)
 
             // apply the current changes to the local only
             if(conflicts.isNotEmpty()) {
-                println("existe conflitos, a aplicar a versao original ao local")
                 // TODO Verificar se ele depois vai ver as difs bem
                 Display.getDefault().syncExec {
                     applyTransformationsTo(projectLocal, currentTrans.toSet())
-                    //projectLocal.saveProjectTo(Path(projectLocal.getPrivatePath()))
                 }
             }
             updateServer()
@@ -155,9 +139,7 @@ object  Client {
         if (set1.size != set2.size) return false
 
         val list1 = set1.map { it.toJson().toString() }.sorted()
-        println(list1)
         val list2 = set2.map { it.toJson().toString() }.sorted()
-        println(list2)
 
         return list1 == list2
     }
@@ -176,13 +158,8 @@ object  Client {
     }
 
     private fun applyChanges(serializedTransformations: JsonArray, sender: String) {
-        //todo pq é aqui eu serializo duas trans diferentes?
         try {
             projectLocal.initializeAllIndexes()
-            //projectRoot.initializeAllIndexes()
-
-            //println("\nLocal Antes de Aplicar a transformação:")
-            //projectLocal.getSetOfCompilationUnit().forEach { println(it) }
 
             val transRoot = serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot)
@@ -197,21 +174,10 @@ object  Client {
                 Display.getDefault().syncExec {
                     applyTransformationsTo(projectLocal, transLocal.toSet())
                 }
-
-                //println("\nLocal Depois de aplicar transformação:")
-                //projectLocal.getSetOfCompilationUnit().forEach { println(it) }
             }
 
             applyTransformationsTo(projectRoot, transRoot.toSet())
             projectRoot.saveProjectTo(Path(projectRoot.getPrivatePath()))
-
-            //projectLocal.initializeAllIndexes()
-
-            //println("\nLocal:")
-            //projectLocal.getSetOfCompilationUnit().forEach { println(it) }
-
-            //println("\nRoot:")
-            //projectRoot.getSetOfCompilationUnit().forEach { println(it) }
         } catch (ex: Exception) {
             println("Could not apply changes. ${ex.printStackTrace()}")        }
 
@@ -222,13 +188,11 @@ object  Client {
         val transformations: MutableSet<Transformation> = mutableSetOf()
         val factoryOfTransformations = FactoryOfTransformations(projectRoot, projectLocal)
         transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
-        println("Lista de dif : $transformations")
 
         if(isConnected) {
             val tempTrans = JsonArray(transformations.map { it.toJson() })
             try {
                 val message = ClientMessage(ClientOperations.UPDATE, Json.encodeToString(tempTrans))
-                println("Sending changes after updating: $message")
                 write(Json.encodeToString(message))
 
             } catch (ex: Exception) {
@@ -248,10 +212,6 @@ object  Client {
             file.writeBytes(decodedContent)
         }
 
-        // Debug para ver se as mudanças estao a ser aplicadas bem no ficheiro do root. Aqui ja devia ter a atualizaçao mas nao tem. Mas se eu depois disto abrir o ficheiro Root, ja aparece as mudanças
-        //projectRoot.getSetOfCompilationUnit().forEach { println(it) }
-
-        //updateServer()
     }
 
     private fun requestFiles() {
@@ -262,7 +222,6 @@ object  Client {
     }
 
     private fun notifyConflicts(conflicts: MutableMap<String, Set<ConflictInfo>>) {
-        println("Hashmap recebido: $conflicts")
         conflicts.forEach { (client, conflictSet) ->
             conflictsMap[client] = conflictSet.toMutableList()
             conflictsMap.notifyObservers()

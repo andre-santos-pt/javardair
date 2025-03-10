@@ -61,11 +61,9 @@ class ForcePush : Action {
     override fun run(editor: CodeEditor, toggle: Boolean) {
         // Sends the changes to the server with the goal to propagate it.
         if(Client.isConnected) {
-            println("Transformations on Force Push: $transformations")
             val serializedTransformations = JsonArray(transformations.map { it.toJson() })
             try {
                 val message = ClientMessage(ClientOperations.FORCE_PUSH, Json.encodeToString(serializedTransformations))
-                println("Sending changes manually: $message")
                 Client.write(Json.encodeToString(message))
                 transformations.clear()
 
