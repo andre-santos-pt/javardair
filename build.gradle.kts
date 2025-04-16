@@ -7,8 +7,15 @@ plugins {
 group = "pt.iscte"
 version = "1.0-SNAPSHOT"
 
+val mac = System.getProperty("os.name").lowercase().contains("mac")
 val win = System.getProperty("os.name").lowercase().contains("windows")
 
+val os = if (mac)
+    "macos"
+else if (win)
+    "windows"
+else
+    "linux"
 
 repositories {
     mavenCentral()
@@ -21,7 +28,7 @@ dependencies {
     if(win)
         implementation(files("libs/javardise-win.jar"))
     else
-        implementation(files("libs/javardise-mac.jar"))
+        implementation(files("libs/javardise-macos-1.2.0.jar"))
     //implementation(files("libs/compilation.jar"))
     implementation(files("libs/jaid.jar"))
 }
@@ -38,4 +45,30 @@ tasks.test {
 
 kotlin {
     jvmToolchain(17)
+}
+
+tasks {
+    register<Jar>("fatJar") {
+        group = "distribution"
+        archiveFileName.set("javardair.jar")
+        destinationDirectory.set(layout.buildDirectory.dir("dist"))
+        dependsOn.addAll(
+            listOf(
+                "compileJava",
+                "compileKotlin",
+                "processResources"
+            )
+        )
+        archiveClassifier.set(os)
+
+        duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+        // manifest { attributes(mapOf("Main-Class" to application.mainClass)) } // Provided we set it up in the application plugin configuration
+        val sourcesMain = sourceSets.main.get()
+        val contents = configurations.runtimeClasspath.get()
+            .filter { !it.name.contains("junit") && !it.name.contains("opentest") }
+            .map { if (it.isDirectory) it else zipTree(it) } + sourcesMain.output
+        from(contents) {
+            exclude("**/*.RSA","**/*.SF","**/*.DSA")
+        }
+    }
 }
