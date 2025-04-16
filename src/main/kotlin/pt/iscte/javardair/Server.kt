@@ -1,16 +1,17 @@
-import Client.getPrivatePath
-import com.google.gson.Gson
+package pt.iscte.javardair
+
+import pt.iscte.javardair.Client.getPrivatePath
+import pt.iscte.javardair.messages.ConflictInfo
+import pt.iscte.javardair.messages.FileContent
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
-import messages.ClientMessage
-import messages.ClientOperations
-import messages.ServerMessage
-import messages.ServerOperations
+import pt.iscte.javardair.messages.ClientMessage
+import pt.iscte.javardair.messages.ClientOperations
+import pt.iscte.javardair.messages.ServerMessage
+import pt.iscte.javardair.messages.ServerOperations
 import model.*
 import model.conflictDetection.Conflict
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
-import pt.iscte.javardise.demo.toJson
-import pt.iscte.javardise.demo.toTransformation
 import java.io.*
 import java.net.ServerSocket
 import java.net.Socket
@@ -20,13 +21,34 @@ import java.util.*
 import kotlin.concurrent.thread
 import kotlin.io.path.Path
 
-fun main() {
-    Server(8080)
+fun main(args: Array<String>) {
+    Server(8081, args.first()).launch()
 }
-class Server(port: Int) {
-    private lateinit var project: Project
+
+class Server(val port: Int, val trunkPath: String) {
+    private val project: Project
     private val clientsInfo: MutableMap<ClientHandler, JsonArray> = mutableMapOf()
     private val clientsInfoLock = Any()
+
+    init {
+        project = Project(trunkPath)
+        File(trunkPath).walk(FileWalkDirection.TOP_DOWN).forEach {
+           println(it)
+        }
+        launch()
+    }
+
+    fun launch() {
+        val serverSocket = ServerSocket(port)
+        println("Server started on port $port")
+        while (true) {
+            val clientSocket = serverSocket.accept()
+            println("Client connected: ${clientSocket.port}")
+            val client = ClientHandler(clientSocket)
+            clientsInfo[client] = JsonArray(emptyList())
+            thread { client.run() }
+        }
+    }
 
     inner class ClientHandler(private val clientSocket: Socket) {
         private val writer: OutputStream = clientSocket.getOutputStream()
@@ -122,12 +144,18 @@ class Server(port: Int) {
             // Criar um novo MutableMap para lidar com o facto de ClientHandler e Conflict nao serem Serilaizble
             val newMap: MutableMap<String, Set<ConflictInfo>> = mutableMapOf()
 
-            // Transformar Map<ClientHandler, List<Conflict> em Map<String, List<ConflictInfo>
+            // Transformar Map<ClientHandler, List<Conflict> em Map<String, List<pt.iscte.javardair.messages.ConflictInfo>
             conflicts.forEach { (clientHandler, conflicts) ->
                 val tempMap = mutableMapOf<String, Set<ConflictInfo>>()
                 val conflictInfoSet = conflicts.map { conflict ->
                     ConflictInfo(
-                        "Conflict between ${(conflict.first.toJson()["code"]).toString().trim('"')} and ${conflict.second.toJson()["code"].toString().trim('"')}",
+                        "Conflict between ${
+                            (conflict.first.toJson()["code"]).toString()
+                                .trim('"')
+                        } and ${
+                            conflict.second.toJson()["code"].toString()
+                                .trim('"')
+                        }",
                         conflict.first.getNode().uuid.toString(),
                         conflict.second.toJson(),
                         conflict.second.getText()
@@ -135,7 +163,12 @@ class Server(port: Int) {
                 }.toSet()
                 val conflictInfoSetOpposite = conflicts.map { conflict ->
                     ConflictInfo(
-                        "Conflict between ${conflict.first.toJson()["code"].toString().trim('"')} and ${conflict.second.toJson()["code"].toString().trim('"')}",
+                        "Conflict between ${
+                            conflict.first.toJson()["code"].toString().trim('"')
+                        } and ${
+                            conflict.second.toJson()["code"].toString()
+                                .trim('"')
+                        }",
                         conflict.second.getNode().uuid.toString(),
                         conflict.first.toJson(),
                         conflict.first.getText()
@@ -225,10 +258,12 @@ class Server(port: Int) {
             files?.forEach {
                 if (it.isFile) {
                     val content = Base64.getEncoder().encodeToString(Files.readAllBytes(it.toPath()))
-                    fileListTemp.add(FileContent(
-                        it.name,
-                        content
-                    ))
+                    fileListTemp.add(
+                        FileContent(
+                            it.name,
+                            content
+                        )
+                    )
                 }
             }
 
@@ -243,47 +278,6 @@ class Server(port: Int) {
             )
 
             write(Json.encodeToString(message))
-        }
-
-    }
-
-    private fun loadFiles() {
-        writeFile("server/Test.java", """
-                //9e30e98a-36db-47f4-836c-16c390a1d2d7
-                package test;
-
-                //13c9f311-0d07-46aa-8591-ef22c6ab8e49
-                class Test {
-
-                    //d0779f95-d537-4501-b708-fc50747e6616
-                    void method(int param) {
-
-                    }
-                }
-        """.trimIndent())
-    }
-
-    private fun writeFile(path: String, src:String) {
-        val file = File(path)
-        if(!Files.exists(file.toPath())) {
-            Files.createDirectories(file.parentFile.toPath());
-            PrintWriter(file).use { out ->
-                out.println(src)
-            }
-        }
-        project = Project(file.parentFile.path)
-    }
-
-    init {
-        loadFiles()
-        val serverSocket = ServerSocket(port)
-        println("Server started on port $port")
-        while (true) {
-            val clientSocket = serverSocket.accept()
-            println("Client connected: ${clientSocket.port}")
-            val client = ClientHandler(clientSocket)
-            clientsInfo[client] = JsonArray(emptyList())
-            thread { client.run() }
         }
     }
 }

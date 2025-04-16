@@ -1,5 +1,4 @@
-pt.iscte.javardise.demo.ConnectToServer
-pt.iscte.javardise.demo.TrackChanges
-pt.iscte.javardise.demo.Push
-pt.iscte.javardise.demo.ForcePush
-pt.iscte.javardise.demo.Bot
+pt.iscte.javardair.actions.ConnectToServer
+pt.iscte.javardair.actions.TrackChanges
+pt.iscte.javardair.actions.Push
+pt.iscte.javardair.actions.ForcePush

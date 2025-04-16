@@ -3,8 +3,8 @@ import kotlinx.serialization.json.*
 import model.*
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import pt.iscte.javardise.demo.toJson
-import pt.iscte.javardise.demo.toTransformation
+import pt.iscte.javardair.toJson
+import pt.iscte.javardair.toTransformation
 import java.io.File
 import java.io.PrintWriter
 import java.nio.file.Files

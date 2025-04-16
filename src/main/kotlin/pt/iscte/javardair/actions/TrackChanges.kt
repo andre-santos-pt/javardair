@@ -1,9 +1,9 @@
-package pt.iscte.javardise.demo
+package pt.iscte.javardair.actions
 
-import CentralizedList
-import Client
-import ObservableList
-import TransformationsView
+import pt.iscte.javardair.CentralizedList
+import pt.iscte.javardair.Client
+import pt.iscte.javardair.ObservableList
+import pt.iscte.javardair.TransformationsView
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.FieldDeclaration
@@ -12,14 +12,14 @@ import com.github.javaparser.ast.comments.LineComment
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
-import messages.ClientMessage
-import messages.ClientOperations
+import pt.iscte.javardair.messages.ClientMessage
+import pt.iscte.javardair.messages.ClientOperations
 import model.FactoryOfTransformations
 import model.setUUIDTo
 import pt.iscte.javardise.Command
 import pt.iscte.javardise.CommandKind
 import pt.iscte.javardise.CommandStack
-import pt.iscte.javardise.ModifyCommand
+import pt.iscte.javardair.toJson
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor
 import pt.iscte.javardise.editor.FileEvent

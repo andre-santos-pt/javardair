@@ -1,17 +1,14 @@
+package pt.iscte.javardair
+
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
-import messages.ClientMessage
-import messages.ClientOperations
-import messages.ServerMessage
-import messages.ServerOperations
 import model.*
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
 import model.transformations.Transformation
 import org.eclipse.swt.widgets.Display
-import pt.iscte.javardise.demo.toJson
-import pt.iscte.javardise.demo.toTransformation
+import pt.iscte.javardair.messages.*
 import java.io.File
 import java.io.OutputStream
 import java.net.Socket
@@ -109,7 +106,9 @@ object  Client {
 
         // check if conflicts exist between current changes and trans being forced into
         val forcedTransSerialized = forcedTrans.map { json ->
-            (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot) // da erro se for Local pq em teoria o UUID e nao esta la. É aqui que esta a haver o erro de mudar um metodo adicionado
+            (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
+                projectRoot
+            ) // da erro se for Local pq em teoria o UUID e nao esta la. É aqui que esta a haver o erro de mudar um metodo adicionado
         }.toMutableSet()
         forcedTransSerialized.forEach { println("forcedTrans: ${it.toJson()}") }
 
@@ -162,13 +161,17 @@ object  Client {
             projectLocal.initializeAllIndexes()
 
             val transRoot = serializedTransformations.map { json ->
-                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectRoot)
+                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
+                    projectRoot
+                )
             }
 
             if(sender != clientID.toString()) {
 
                 val transLocal = serializedTransformations.map { json ->
-                    (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(projectLocal) // aqui dava erro tambem quando se edita um metodo que foi adicionado (no client q o adicionou)
+                    (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
+                        projectLocal
+                    ) // aqui dava erro tambem quando se edita um metodo que foi adicionado (no client q o adicionou)
                 }
 
                 Display.getDefault().syncExec {

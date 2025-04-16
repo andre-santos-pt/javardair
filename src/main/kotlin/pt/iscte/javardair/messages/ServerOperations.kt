@@ -1,4 +1,4 @@
-package messages
+package pt.iscte.javardair.messages
 
 /**
  * Types of messages that the Server can send.

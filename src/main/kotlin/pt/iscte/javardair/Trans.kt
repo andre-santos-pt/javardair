@@ -1,21 +1,16 @@
-package pt.iscte.javardise.demo
+package pt.iscte.javardair
 
-import com.github.javaparser.JavaParser
 import com.github.javaparser.StaticJavaParser
-import com.github.javaparser.ast.Modifier
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.FieldDeclaration
 import com.github.javaparser.ast.body.Parameter
-import com.github.javaparser.ast.body.VariableDeclarator
 import com.github.javaparser.ast.comments.LineComment
 import com.github.javaparser.ast.expr.SimpleName
-import com.github.javaparser.ast.type.Type
 import kotlinx.serialization.json.*
 import model.Project
 import model.UUID
 import model.transformations.*
 import model.uuid
-import java.util.*
 
 // map a transformation to a json object
     fun Transformation.toJson(): JsonObject {

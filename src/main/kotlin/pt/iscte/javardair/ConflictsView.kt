@@ -1,7 +1,7 @@
-import com.github.javaparser.ast.body.FieldDeclaration
+package pt.iscte.javardair
+
 import kotlinx.serialization.json.*
-import model.transformations.*
-import model.uuid
+import pt.iscte.javardair.messages.ConflictInfo
 import java.awt.Dimension
 import javax.swing.*
 
@@ -12,7 +12,8 @@ interface ConflictObservable {
 interface ConflictsObserver {
     fun update(map: Map<String, MutableList<ConflictInfo>>)}
 
-class ObservableConflictMap(val map: MutableMap<String, MutableList<ConflictInfo>>) : MutableMap<String, MutableList<ConflictInfo>> by map, ConflictObservable {
+class ObservableConflictMap(val map: MutableMap<String, MutableList<ConflictInfo>>) : MutableMap<String, MutableList<ConflictInfo>> by map,
+    ConflictObservable {
     private val observers: MutableSet<ConflictsObserver> = mutableSetOf()
 
     override fun put(key: String, value: MutableList<ConflictInfo>): MutableList<ConflictInfo>? {

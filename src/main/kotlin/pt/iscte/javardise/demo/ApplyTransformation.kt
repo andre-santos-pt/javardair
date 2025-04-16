@@ -7,6 +7,7 @@ import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import model.Project
+import pt.iscte.javardair.toTransformation
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor
 import kotlin.io.path.Path

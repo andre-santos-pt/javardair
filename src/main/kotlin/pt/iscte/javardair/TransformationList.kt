@@ -1,9 +1,10 @@
+package pt.iscte.javardair
+
 import model.transformations.Transformation
 import java.awt.Dimension
 import javax.swing.BoxLayout
 import javax.swing.JFrame
 import javax.swing.JTextArea
-import kotlin.concurrent.thread
 
 interface Observable {
     fun notifyObservers()
@@ -14,7 +15,8 @@ interface Observer {
     fun update(list: MutableSet<Transformation>)
 }
 
-class ObservableList(val list: MutableSet<Transformation>): MutableSet<Transformation> by list, Observable {
+class ObservableList(val list: MutableSet<Transformation>): MutableSet<Transformation> by list,
+    Observable {
     private var observers: MutableSet<Observer> = mutableSetOf()
     override fun add(element: Transformation): Boolean {
         val r = list.add(element)

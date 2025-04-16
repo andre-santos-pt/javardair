@@ -1,4 +1,4 @@
-package pt.iscte.javardise.demo
+package pt.iscte.javardair.actions
 
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.Modifier
