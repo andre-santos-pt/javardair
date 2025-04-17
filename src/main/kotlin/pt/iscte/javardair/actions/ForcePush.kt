@@ -25,34 +25,6 @@ class ForcePush : Action {
 
     private val transformations: ObservableList = CentralizedList.transformations
 
-
-    override fun init(editor: CodeEditor) {
-        //updateTransformations()
-
-        // fires event at every editing command
-        val commandObserver = { cmd: Command, _: Boolean, _: CommandStack? ->
-            //updateTransformations()
-        }
-        editor.addCommandObserver(commandObserver)
-
-        val fileObserver = { _: File, event: FileEvent, unit: CompilationUnit? ->
-           //updateTransformations()
-        }
-        editor.addFileObserver(fileObserver)
-
-
-    }
-
-    private fun updateTransformations() {
-        thread {
-            synchronized(transformations) {
-                transformations.clear()
-                val factoryOfTransformations = FactoryOfTransformations(Client.projectRoot, Client.projectLocal)
-                transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
-            }
-        }
-    }
-
     override fun run(editor: CodeEditor, toggle: Boolean) {
         // Sends the changes to the server with the goal to propagate it.
         if(Client.isConnected) {
@@ -60,7 +32,7 @@ class ForcePush : Action {
             try {
                 val message = ClientMessage(ClientOperations.FORCE_PUSH, Json.encodeToString(serializedTransformations))
                 Client.write(Json.encodeToString(message))
-                transformations.clear()
+                CentralizedList.updateTransformations()
 
             } catch (ex: Exception) {
                 println("Could not send message to Server ${ex.printStackTrace()}")

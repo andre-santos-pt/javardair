@@ -1,5 +1,10 @@
 package pt.iscte.javardair
 
+import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.MemoryTypeSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
+import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -19,32 +24,53 @@ import kotlin.concurrent.thread
 import kotlin.io.path.Path
 import kotlin.reflect.jvm.isAccessible
 
-object  Client {
-    private const val address: String = "localhost" // TODO mudar
-    private const val port: Int = 8080 // TODO mudar
+const val trunkFolder: String = ".trunk"
+
+object Client {
+    private const val address: String = "localhost" // TODO mudar arg
+    private const val port: Int = 8080 // TODO mudar arg
     private lateinit var socket: Socket
     private lateinit var reader: Scanner
     private lateinit var writer: OutputStream
     internal lateinit var projectLocal: Project
-    internal lateinit var projectRoot: Project
+    internal lateinit var projectTrunk: Project
     var isConnected = false
     private lateinit var conflictsMap: ObservableConflictMap
-    private lateinit var conflictView: ConflictView
+    //private lateinit var conflictView: ConflictView
     private val clientID: UUID = UUID.randomUUID() // TODO sera que este uuid devia ser criado quando a ide é aberta e nao quando o cliente se junta?
     private lateinit var clientName: String
 
-    fun open() {
+    fun open(editorPath: File, allCompilationUnits: List<CompilationUnit>) {
+        val memoryTypeSolver = MemoryTypeSolver()
+
+        val trunkDir = File(editorPath, trunkFolder)
+        if(!trunkDir.exists())
+            trunkDir.mkdirs()
+
+        projectTrunk = Project(trunkDir.absolutePath)
+        projectLocal = Project(
+            editorPath.absolutePath,
+            SymbolSolverCollectionStrategy().collect(
+                Path(editorPath.absolutePath)
+            ),
+            null,
+            allCompilationUnits.toMutableList(),
+            CombinedTypeSolver(ReflectionTypeSolver(false), memoryTypeSolver),
+            memoryTypeSolver,
+            true,
+            true
+        )
         isConnected = true
         conflictsMap = ObservableConflictMap(mutableMapOf())
-        conflictView = ConflictView()
-        clientName = projectLocal.getProjectRoot().root.fileName.toString().substringAfter("workspace_")
+        //conflictView = ConflictView()
+        clientName = projectLocal.getProjectRoot().root.fileName.toString().substringAfter("workspace_") // TODO mudar
         runClient()
     }
 
     private fun runClient() {
         try {
             connectToServer()
-            conflictsMap.addObserver(conflictView)
+            //conflictsMap.addObserver(conflictView)
         } catch (ex: Exception) {
             println("Cannot connect to the server ${ex.printStackTrace()}")
         }
@@ -100,19 +126,19 @@ object  Client {
     private fun checkChanges(forcedTrans: JsonArray, sender: String) {
         // get current changes
         val currentTrans = mutableSetOf<Transformation>()
-        val factoryOfTransformations = FactoryOfTransformations(projectRoot, projectLocal)
+        val factoryOfTransformations = FactoryOfTransformations(projectTrunk, projectLocal)
         currentTrans.addAll(factoryOfTransformations.getListOfAllTransformations())
-
 
         // check if conflicts exist between current changes and trans being forced into
         val forcedTransSerialized = forcedTrans.map { json ->
             (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
-                projectRoot
+                projectTrunk
             ) // da erro se for Local pq em teoria o UUID e nao esta la. É aqui que esta a haver o erro de mudar um metodo adicionado
         }.toMutableSet()
         forcedTransSerialized.forEach { println("forcedTrans: ${it.toJson()}") }
 
         applyChanges(forcedTrans, sender)
+        CentralizedList.updateTransformations()
 
         if(setsAreEqual(currentTrans, forcedTransSerialized)){
             updateServer()
@@ -162,12 +188,11 @@ object  Client {
 
             val transRoot = serializedTransformations.map { json ->
                 (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
-                    projectRoot
+                    projectTrunk
                 )
             }
 
             if(sender != clientID.toString()) {
-
                 val transLocal = serializedTransformations.map { json ->
                     (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
                         projectLocal
@@ -179,8 +204,8 @@ object  Client {
                 }
             }
 
-            applyTransformationsTo(projectRoot, transRoot.toSet())
-            projectRoot.saveProjectTo(Path(projectRoot.getPrivatePath()))
+            applyTransformationsTo(projectTrunk, transRoot.toSet())
+            projectTrunk.saveProjectTo(Path(projectTrunk.getPrivatePath()))
         } catch (ex: Exception) {
             println("Could not apply changes. ${ex.printStackTrace()}")        }
 
@@ -189,7 +214,7 @@ object  Client {
     // send current transformation list to the server for consistency matters
     private fun updateServer() {
         val transformations: MutableSet<Transformation> = mutableSetOf()
-        val factoryOfTransformations = FactoryOfTransformations(projectRoot, projectLocal)
+        val factoryOfTransformations = FactoryOfTransformations(projectTrunk, projectLocal)
         transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
 
         if(isConnected) {
@@ -205,16 +230,17 @@ object  Client {
     }
     private fun updateRootFiles(fileList: List<FileContent>) {
         // Get dir from current client
-        val rootDir = File(projectRoot.getProjectRoot().root.toString())
+        val rootDir = File(projectTrunk.getProjectRoot().root.toString())
 
         // Update/Create files
         fileList.forEach {
-            val filePath = "$rootDir\\${it.fileName}"
+            val filePath = "$rootDir${File.separator}${it.fileName}"
             val file = File(filePath)
             val decodedContent = Base64.getDecoder().decode(it.fileContent)
             file.writeBytes(decodedContent)
         }
-
+        CentralizedList.updateTransformations()
+        //projectTrunk = Project(trunkDir.absolutePath)
     }
 
     private fun requestFiles() {

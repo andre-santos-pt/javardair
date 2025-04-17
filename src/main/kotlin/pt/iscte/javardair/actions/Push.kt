@@ -6,6 +6,8 @@ import com.github.javaparser.ast.CompilationUnit
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import org.eclipse.swt.widgets.Dialog
+import org.eclipse.swt.widgets.Display
 import pt.iscte.javardair.messages.ClientMessage
 import pt.iscte.javardair.messages.ClientOperations
 import pt.iscte.javardair.Client
@@ -25,50 +27,32 @@ class Push : Action {
 
     private val transformations: ObservableList = CentralizedList.transformations
 
-
-    override fun init(editor: CodeEditor) {
-        //updateTransformations()
-
-        // fires event at every editing command
-        val commandObserver = { cmd: Command, _: Boolean, _: CommandStack? ->
-            //updateTransformations()
-        }
-        editor.addCommandObserver(commandObserver)
-
-        val fileObserver = { _: File, event: FileEvent, unit: CompilationUnit? ->
-            //updateTransformations()
-        }
-        editor.addFileObserver(fileObserver)
-
-
-    }
-
-    private fun showAlertWindow() {
+    // TODO to SWT
+    private fun showAlertWindow(msg: String) {
         SwingUtilities.invokeLater {
             val optionPane = JOptionPane(
-                "You cannot submit your changes due to conflicts.",
+                msg,
                 JOptionPane.WARNING_MESSAGE
             )
-            val dialog = optionPane.createDialog("Conflicts Detected!")
+            val dialog = optionPane.createDialog("Push failed")
             dialog.isAlwaysOnTop = true
             dialog.isVisible = true
         }
     }
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
-        // Sends the changes to the server with the goal to propagate it.
-        if(Client.isConnected && Client.isConflictFree()) {
+        if(!Client.isConnected)
+            showAlertWindow("Not connected")
+        else if(!Client.isConflictFree())
+            showAlertWindow("There are conflicts")
+        else {
             val serializedTransformations = JsonArray(transformations.map { it.toJson() })
             try {
                 val message = ClientMessage(ClientOperations.PUSH, Json.encodeToString(serializedTransformations))
                 Client.write(Json.encodeToString(message))
-                transformations.clear()
-
             } catch (ex: Exception) {
                 println("Could not send message to Server ${ex.printStackTrace()}")
             }
-        } else {
-            showAlertWindow() // mudar aqui para isto so acontecer se so tiver conflitos
         }
     }
 }
