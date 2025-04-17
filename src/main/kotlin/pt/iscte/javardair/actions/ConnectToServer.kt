@@ -8,7 +8,7 @@ import com.github.javaparser.ast.comments.LineComment
 import model.setUUIDTo
 import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Label
-import pt.iscte.javardair.CentralizedList
+import pt.iscte.javardair.TrunkDelta
 import pt.iscte.javardair.Client
 import pt.iscte.javardair.TrackChangesWindow
 import pt.iscte.javardise.Command
@@ -52,21 +52,23 @@ class ConnectToServer : Action {
 //        )
 
         val trans =  TrackChangesWindow(editor)
-        CentralizedList.addObserver(trans)
+        TrunkDelta.addObserver {
+            trans.updateTable(it)
+        }
         trans.open()
         //updateTransformations()
 
         // fires event at every editing command
         val commandObserver = { cmd: Command, _: Boolean, _: CommandStack? ->
             injectMemberUUIDs(cmd)
-            CentralizedList.updateTransformations()
+            TrunkDelta.updateTransformations()
         }
         editor.addCommandObserver(commandObserver)
 
         val fileObserver = { _: File, event: FileEvent, unit: CompilationUnit? ->
             if(event == FileEvent.CREATE && unit != null)
                 injectClassUUIDs(unit)
-            CentralizedList.updateTransformations()
+            TrunkDelta.updateTransformations()
         }
         editor.addFileObserver(fileObserver)
 

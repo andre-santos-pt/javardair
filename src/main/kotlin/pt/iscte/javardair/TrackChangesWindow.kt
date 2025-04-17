@@ -12,7 +12,7 @@ import pt.iscte.javardise.editor.CodeEditor
 import java.io.File
 
 
-class TrackChangesWindow(val editor: CodeEditor) : Observer {
+class TrackChangesWindow(val editor: CodeEditor) {
     val shell = Shell(Display.getDefault())
     val table = Table(
         shell,
@@ -56,7 +56,7 @@ class TrackChangesWindow(val editor: CodeEditor) : Observer {
         shell.open()
     }
 
-    override fun update(list: MutableSet<Transformation>) {
+    fun updateTable(list: List<Transformation>) {
         Display.getDefault().asyncExec {
             table.items.forEach { it.dispose() }
             for (t in list) {

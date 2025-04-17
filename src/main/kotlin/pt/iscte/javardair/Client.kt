@@ -138,7 +138,7 @@ object Client {
         forcedTransSerialized.forEach { println("forcedTrans: ${it.toJson()}") }
 
         applyChanges(forcedTrans, sender)
-        CentralizedList.updateTransformations()
+        TrunkDelta.updateTransformations()
 
         if(setsAreEqual(currentTrans, forcedTransSerialized)){
             updateServer()
@@ -239,7 +239,7 @@ object Client {
             val decodedContent = Base64.getDecoder().decode(it.fileContent)
             file.writeBytes(decodedContent)
         }
-        CentralizedList.updateTransformations()
+        TrunkDelta.updateTransformations()
         //projectTrunk = Project(trunkDir.absolutePath)
     }
 

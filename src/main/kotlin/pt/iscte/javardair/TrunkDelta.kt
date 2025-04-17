@@ -4,12 +4,17 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import model.FactoryOfTransformations
+import model.transformations.Transformation
 import pt.iscte.javardair.messages.ClientMessage
 import pt.iscte.javardair.messages.ClientOperations
 import kotlin.concurrent.thread
 
-object CentralizedList {
-    val transformations: ObservableList = ObservableList(mutableSetOf())
+object TrunkDelta {
+    private val transformations: ObservableList<Transformation> = ObservableList()
+
+    fun addObserver(observer: (List<Transformation>) -> Unit) {
+        transformations.addObserver(observer)
+    }
 
     fun updateTransformations() {
         thread {
@@ -33,7 +38,7 @@ object CentralizedList {
         }
     }
 
-    fun addObserver(observer: Observer) {
-        transformations.addObserver(observer)
-    }
+    fun serializeTransformations(): JsonArray = JsonArray(transformations.map { it.toJson() })
+
+    fun serializeTransformations(indexes: List<Int>): JsonArray = JsonArray(indexes.map { transformations[it].toJson() })
 }
