@@ -25,6 +25,10 @@ object TrunkDelta {
         transformations.addObserver(observer)
     }
 
+    fun addConflictObserver(observer: ConflictsObserver) {
+        conflictsMap.addObserver(observer)
+    }
+
     fun updateTransformations() {
         thread {
             synchronized(transformations) {

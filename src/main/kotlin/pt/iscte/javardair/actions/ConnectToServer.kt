@@ -1,22 +1,27 @@
 package pt.iscte.javardair.actions
 
 import com.github.javaparser.ast.CompilationUnit
+import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.FieldDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.comments.LineComment
 import model.setUUIDTo
+import model.uuid
 import org.eclipse.swt.SWT
+import org.eclipse.swt.widgets.Display
 import org.eclipse.swt.widgets.Label
-import pt.iscte.javardair.TrunkDelta
-import pt.iscte.javardair.Client
-import pt.iscte.javardair.TrackChangesWindow
-import pt.iscte.javardise.Command
-import pt.iscte.javardise.CommandKind
-import pt.iscte.javardise.CommandStack
+import pt.iscte.javardair.*
+import pt.iscte.javardair.messages.ConflictInfo
+import pt.iscte.javardise.*
+import pt.iscte.javardise.basewidgets.ICodeDecoration
+import pt.iscte.javardise.basewidgets.addMark
+import pt.iscte.javardise.basewidgets.addNote
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor
 import pt.iscte.javardise.editor.FileEvent
+import pt.iscte.javardise.external.findChild
+import pt.iscte.javardise.external.getOrNull
 import java.io.File
 import java.util.*
 
@@ -29,28 +34,10 @@ class ConnectToServer : Action {
     override val toggle: Boolean
         get() = true
 
+//    override val toggleDefault: Boolean
+//        get() = true
+
     override fun init(editor: CodeEditor) {
-
-//        val memoryTypeSolver = MemoryTypeSolver()
-//
-//        val trunkDir = File(editor.folder, trunkFolder)
-//        if(!trunkDir.exists())
-//            trunkDir.mkdirs()
-//
-//        Client.projectTrunk = Project(trunkDir.absolutePath)
-//        Client.projectLocal = Project(
-//            editor.folder.absolutePath.toString(),
-//            SymbolSolverCollectionStrategy().collect(
-//                Path(editor.folder.absolutePath)
-//            ),
-//            null,
-//            editor.allCompilationUnits().toMutableList(),
-//            CombinedTypeSolver(ReflectionTypeSolver(false), memoryTypeSolver),
-//            memoryTypeSolver,
-//            true,
-//            true
-//        )
-
         val trans =  TrackChangesWindow(editor)
         TrunkDelta.addObserver {
             trans.updateTable(it)
@@ -58,8 +45,11 @@ class ConnectToServer : Action {
         trans.open()
         //updateTransformations()
 
+        addConflictMarks(editor)
+
         // fires event at every editing command
         val commandObserver = { cmd: Command, _: Boolean, _: CommandStack? ->
+            println("Command: ${cmd}")
             injectMemberUUIDs(cmd)
             TrunkDelta.updateTransformations()
         }
@@ -72,13 +62,52 @@ class ConnectToServer : Action {
         }
         editor.addFileObserver(fileObserver)
 
-        editor.display.shells.firstOrNull()?.let {
-            Label(it, SWT.BORDER).text = "TEST"
-            it.requestLayout()
-        }
+//        editor.display.shells.firstOrNull()?.let {
+//            Label(it, SWT.BORDER).text = "TEST"
+//            it.requestLayout()
+//        }
 
         // TODO add/remove file -> update project
         // TODO add file -> inject UUID
+    }
+
+    fun Node.getUuidFromComment(): String? {
+        return comment.getOrNull?.let {
+            when (it) {
+                is LineComment -> it.content.trim()
+                else -> null
+            }
+        }
+    }
+
+    private fun addConflictMarks(editor: CodeEditor) {
+        TrunkDelta.addConflictObserver(object : ConflictsObserver {
+            val marks = mutableListOf<ICodeDecoration<*>>()
+
+            override fun update(map: Map<String, MutableList<ConflictInfo>>) {
+                Display.getDefault().asyncExec {
+                    marks.forEach { it.delete() }
+                    marks.clear()
+                    map.values.forEach { list ->
+                        list.forEach { c ->
+                            val uuid = c.conflictUUID
+                            val control =
+                                editor.classOnFocus?.findChild { (it.data as? Node)?.getUuidFromComment() == uuid }
+                            println("Control: $control")
+                            if (control != null) {
+                                val m = control.addMark(
+                                    Display.getDefault()
+                                        .getSystemColor(SWT.COLOR_RED),
+                                    c.conflictMessage
+                                )
+                                marks.add(m)
+                                m.show()
+                            }
+                        }
+                    }
+                }
+            }
+        })
     }
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
@@ -86,6 +115,13 @@ class ConnectToServer : Action {
             Client.open(editor.folder, editor.allCompilationUnits())
         } else {
             Client.close()
+        }
+        editor.classOnFocus?.let {
+            val m = it.getChildOnFocus()?.addNote(
+                "TEST!!",
+                ICodeDecoration.Location.TOP
+            )
+            m?.show()
         }
     }
 
