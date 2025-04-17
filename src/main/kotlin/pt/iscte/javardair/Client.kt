@@ -9,36 +9,58 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonObject
-import model.*
+import model.FactoryOfTransformations
+import model.Project
+import model.applyTransformationsTo
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
+import model.getConflicts
 import model.transformations.Transformation
 import org.eclipse.swt.widgets.Display
 import pt.iscte.javardair.messages.*
 import java.io.File
+import java.io.FileInputStream
 import java.io.OutputStream
 import java.net.Socket
 import java.nio.charset.Charset
 import java.util.*
-import java.util.UUID
 import kotlin.concurrent.thread
 import kotlin.io.path.Path
 import kotlin.reflect.jvm.isAccessible
 
+
 const val trunkFolder: String = ".trunk"
+const val configurationFile: String = ".javardair"
+
+const val serverProperty: String = "SERVER"
+const val portProperty: String = "PORT"
+const val clientProperty: String = "CLIENT-ID"
 
 object Client {
-    private const val address: String = "localhost" // TODO mudar arg
-    private const val port: Int = 8080 // TODO mudar arg
+    private val address: String
+    private val port: Int
     private lateinit var socket: Socket
     private lateinit var reader: Scanner
     private lateinit var writer: OutputStream
     internal lateinit var projectLocal: Project
     internal lateinit var projectTrunk: Project
     var isConnected = false
-    //private lateinit var conflictsMap: ObservableConflictMap
-    //private lateinit var conflictView: ConflictView
     private val clientID: UUID = UUID.randomUUID() // TODO sera que este uuid devia ser criado quando a ide é aberta e nao quando o cliente se junta?
-    private lateinit var clientName: String
+    private val clientName: String
+
+    init {
+        val props = Properties()
+        try {
+            FileInputStream(configurationFile).use { fis ->
+                props.load(fis)
+            }
+        }
+        catch (_: Exception) {
+
+        }
+        address = props.getProperty(serverProperty) ?: "localhost"
+        port = props.getProperty(portProperty)?.toInt() ?: 8080
+        clientName = props.getProperty(clientProperty) ?: "client-${this.hashCode() % 100}"
+    }
 
     fun open(editorPath: File, allCompilationUnits: List<CompilationUnit>) {
         val memoryTypeSolver = MemoryTypeSolver()
@@ -61,16 +83,12 @@ object Client {
             true
         )
         isConnected = true
-       // conflictsMap = ObservableConflictMap(mutableMapOf())
-        //conflictView = ConflictView()
-        clientName = projectLocal.getProjectRoot().root.fileName.toString().substringAfter("workspace_") // TODO mudar
         runClient()
     }
 
     private fun runClient() {
         try {
             connectToServer()
-            //conflictsMap.addObserver(conflictView)
         } catch (ex: Exception) {
             println("Cannot connect to the server ${ex.printStackTrace()}")
         }

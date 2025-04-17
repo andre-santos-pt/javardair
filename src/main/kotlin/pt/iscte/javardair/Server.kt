@@ -22,7 +22,7 @@ import kotlin.concurrent.thread
 import kotlin.io.path.Path
 
 fun main(args: Array<String>) {
-    Server(8080, args.first()).launch()
+    Server(args[1].toInt(), args.first()).launch()
 }
 
 class Server(val port: Int, val trunkPath: String) {
