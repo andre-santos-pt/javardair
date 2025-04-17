@@ -3,6 +3,8 @@ package pt.iscte.javardair
 import model.transformations.SignatureChanged
 import model.transformations.Transformation
 import org.eclipse.swt.SWT
+import org.eclipse.swt.events.ControlAdapter
+import org.eclipse.swt.events.ControlEvent
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.widgets.*
@@ -11,7 +13,7 @@ import java.io.File
 
 
 class TrackChangesWindow(val editor: CodeEditor) {
-    val shell = Shell(Display.getDefault())
+    val shell = Shell(Display.getDefault(), SWT.NO_TRIM or SWT.ON_TOP)
     val table = Table(
         shell,
         SWT.CHECK or SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL
@@ -32,9 +34,32 @@ class TrackChangesWindow(val editor: CodeEditor) {
         Image(Display.getDefault(), it)
     }
 
+    init {
+        val mainShell = editor.display.shells.first()
+        mainShell.addControlListener(object : ControlAdapter() {
+            override fun controlMoved(e: ControlEvent) {
+                println("move")
+                updateFollowerPosition()
+            }
+
+            override fun controlResized(e: ControlEvent) {
+                updateFollowerPosition()
+            }
+
+            private fun updateFollowerPosition() {
+                val y = mainShell.location.y + mainShell.size.y - 200
+                shell.setLocation(mainShell.location.x + 10, y)
+                shell.setSize(
+                    mainShell.size.x - 20,
+                    200
+                )
+            }
+        })
+    }
+
     fun open() {
         shell.text = "Javardair: ${editor.folder}"
-        shell.setSize(400, 500)
+        shell.setSize(600, 400)
         shell.layout = FillLayout()
 
         table.headerVisible = true
