@@ -1,13 +1,11 @@
 package pt.iscte.javardair
 
+import model.transformations.SignatureChanged
 import model.transformations.Transformation
 import org.eclipse.swt.SWT
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.layout.FillLayout
-import org.eclipse.swt.widgets.Display
-import org.eclipse.swt.widgets.Shell
-import org.eclipse.swt.widgets.Table
-import org.eclipse.swt.widgets.TableItem
+import org.eclipse.swt.widgets.*
 import pt.iscte.javardise.editor.CodeEditor
 import java.io.File
 
@@ -19,31 +17,34 @@ class TrackChangesWindow(val editor: CodeEditor) {
         SWT.CHECK or SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL
     )
 
-    val plus = this::class.java.getClassLoader().getResourceAsStream("icons${File.separator}plus.png")?.let {
+    val plus = this::class.java.getClassLoader()
+        .getResourceAsStream("icons${File.separator}plus.png")?.let {
         Image(Display.getDefault(), it)
     }
 
-    val minus = this::class.java.getClassLoader().getResourceAsStream("icons${File.separator}minus.png")?.let {
+    val minus = this::class.java.getClassLoader()
+        .getResourceAsStream("icons${File.separator}minus.png")?.let {
         Image(Display.getDefault(), it)
     }
 
-    val edit = this::class.java.getClassLoader().getResourceAsStream("icons${File.separator}edit.png")?.let {
+    val edit = this::class.java.getClassLoader()
+        .getResourceAsStream("icons${File.separator}edit.png")?.let {
         Image(Display.getDefault(), it)
     }
 
     fun open() {
-        shell.text = "Javardair"
-        shell.setSize(400, 300)
+        shell.text = "Javardair: ${editor.folder}"
+        shell.setSize(400, 500)
         shell.layout = FillLayout()
 
-        table.headerVisible = false
+        table.headerVisible = true
         table.linesVisible = true
-//        val columnTitles = arrayOf("Push", "Transformation", "Info")
-//        for (title in columnTitles) {
-//            val column = TableColumn(table, SWT.NONE)
-//            column.setText(title)
-//            column.width = 200
-//        }
+        val columnTitles = arrayOf("Transformation", "type", "Conflict")
+        for (title in columnTitles) {
+            val column = TableColumn(table, SWT.NONE)
+            column.setText(title)
+            column.width = 200
+        }
 
 //        table.addSelectionListener(object : SelectionAdapter() {
 //            override fun widgetSelected(e: SelectionEvent) {
@@ -61,10 +62,20 @@ class TrackChangesWindow(val editor: CodeEditor) {
             table.items.forEach { it.dispose() }
             for (t in list) {
                 val item = TableItem(table, SWT.NONE)
-                item.setImage(0, transIcon(t))
-                item.setText(arrayOf(t.getText(), "${t::class.simpleName}"))
+                item.setImage(0, t.icon())
+                item.setText(
+                    arrayOf(
+                        t.message(),
+                        "${t::class.simpleName}",
+                        TrunkDelta.getConflictMessage(t)
+                    )
+                )
 //                item.text = t.getText() + " (${t::class.simpleName})"
 //                item.image = transIcon(t)
+                if (TrunkDelta.hasConflict(t))
+                    item.foreground =
+                        Display.getDefault().getSystemColor(SWT.COLOR_RED)
+
                 item.data = t.getNode()
 
             }
@@ -72,13 +83,24 @@ class TrackChangesWindow(val editor: CodeEditor) {
         }
     }
 
-    private fun transIcon(transformation: Transformation): Image? {
-        return when(transformation.getText().split(" ")[0]) {
+    private fun Transformation.icon(): Image? {
+        return when (getText().split(" ")[0]) {
             "ADD" -> plus
             "REMOVE" -> minus
             "RENAME", "CHANGE" -> edit
             else -> null
+        }
+    }
 
+    private fun Transformation.message(): String {
+        return when (this) {
+            is SignatureChanged -> if(nameChanged())
+                "rename: ${getNode().name} to ${getNewName()}"
+            else if(parametersChanged())
+                "parameters changed: ${getNode().parameters} parameters to ${getNewParameters()}"
+            else
+                getText()
+            else -> getText()
         }
     }
 }

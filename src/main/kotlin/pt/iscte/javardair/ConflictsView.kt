@@ -12,7 +12,8 @@ interface ConflictObservable {
 interface ConflictsObserver {
     fun update(map: Map<String, MutableList<ConflictInfo>>)}
 
-class ObservableConflictMap(val map: MutableMap<String, MutableList<ConflictInfo>>) : MutableMap<String, MutableList<ConflictInfo>> by map,
+class ObservableConflictMap(val map: MutableMap<String, MutableList<ConflictInfo>>)
+    : MutableMap<String, MutableList<ConflictInfo>> by map,
     ConflictObservable {
     private val observers: MutableSet<ConflictsObserver> = mutableSetOf()
 
@@ -84,10 +85,10 @@ class ConflictView : JFrame("Conflict Viewer"), ConflictsObserver {
 
             textArea.append("Pair: ${pair.split(",")[1]}\n")
             conflicts.forEach { conflict ->
-                var conflictedTransformation = conflict.conflictedTransformation
+                var conflictedTransformation = conflict.conflictingTransformation
                 textArea.append("\nConflict Detected:\n")
                 textArea.append("   - Description: ${conflict.conflictMessage.trim('"')}\n")
-                textArea.append("   - Conflicting Transformation: ${conflict.conflictTransformationMessage}\n")
+               // textArea.append("   - Conflicting Transformation: ${conflict.conflictTransformationMessage}\n")
                 val relevantInfo = getRelevantInfo(conflictedTransformation)
                 if(relevantInfo.isNotEmpty()) {
                     textArea.append("   - Additional Information:\n")

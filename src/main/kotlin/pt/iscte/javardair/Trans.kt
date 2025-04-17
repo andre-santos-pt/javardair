@@ -17,7 +17,7 @@ import model.uuid
     val fields = mutableMapOf<String, JsonElement>("code" to JsonPrimitive(this::class.java.simpleName))
     when (this) {
 
-        // TODO AddFile
+        // TODO AddFile, RemoveFile
 
         is SignatureChanged -> {
             fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
@@ -103,6 +103,8 @@ fun JsonObject.toTransformation(project: Project): Transformation {
         this[name]?.jsonPrimitive?.content ?: throw Exception("Field $name not found")
 
     return when (val code = field("code")) {
+
+        // TODO AddFile, RemoveFile
 
         SignatureChanged::class.java.simpleName ->
             SignatureChanged(

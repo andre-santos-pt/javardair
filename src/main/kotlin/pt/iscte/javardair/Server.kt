@@ -60,7 +60,7 @@ class Server(val port: Int, val trunkPath: String) {
             try {
                 serve()
             } catch (ex: Exception) {
-                println("${clientSocket.port } closed the connection due to ${ex.printStackTrace()}")
+                println("${clientSocket.port } closed the connection due to ${ex.message}")
             } finally {
                 try {
                     clientSocket.close()
@@ -141,6 +141,7 @@ class Server(val port: Int, val trunkPath: String) {
         }
 
         private fun notifyConflicts(conflicts: MutableMap<ClientHandler, Set<Conflict>>) {
+
             // Criar um novo MutableMap para lidar com o facto de ClientHandler e Conflict nao serem Serilaizble
             val newMap: MutableMap<String, Set<ConflictInfo>> = mutableMapOf()
 
@@ -157,8 +158,8 @@ class Server(val port: Int, val trunkPath: String) {
                                 .trim('"')
                         }",
                         conflict.first.getNode().uuid.toString(),
-                        conflict.second.toJson(),
-                        conflict.second.getText()
+                        conflict.second.toJson()
+//                        conflict.second.getText()
                     )
                 }.toSet()
                 val conflictInfoSetOpposite = conflicts.map { conflict ->
@@ -170,8 +171,8 @@ class Server(val port: Int, val trunkPath: String) {
                                 .trim('"')
                         }",
                         conflict.second.getNode().uuid.toString(),
-                        conflict.first.toJson(),
-                        conflict.first.getText()
+                        conflict.first.toJson()
+//                        conflict.first.getText()
                     )
                 }.toSet()
                 tempMap["${this.clientID},${this.clientName}"] = conflictInfoSetOpposite

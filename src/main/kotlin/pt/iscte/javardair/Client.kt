@@ -35,7 +35,7 @@ object Client {
     internal lateinit var projectLocal: Project
     internal lateinit var projectTrunk: Project
     var isConnected = false
-    private lateinit var conflictsMap: ObservableConflictMap
+    //private lateinit var conflictsMap: ObservableConflictMap
     //private lateinit var conflictView: ConflictView
     private val clientID: UUID = UUID.randomUUID() // TODO sera que este uuid devia ser criado quando a ide é aberta e nao quando o cliente se junta?
     private lateinit var clientName: String
@@ -61,7 +61,7 @@ object Client {
             true
         )
         isConnected = true
-        conflictsMap = ObservableConflictMap(mutableMapOf())
+       // conflictsMap = ObservableConflictMap(mutableMapOf())
         //conflictView = ConflictView()
         clientName = projectLocal.getProjectRoot().root.fileName.toString().substringAfter("workspace_") // TODO mudar
         runClient()
@@ -113,7 +113,8 @@ object Client {
                     }
 
                     ServerOperations.NOTIFY_CONFLICTS -> {
-                        notifyConflicts(Json.decodeFromString(message.content))
+                        TrunkDelta.updateConflicts(Json.decodeFromString(message.content))
+//                        notifyConflicts(Json.decodeFromString(message.content))
                     }
                 }
             }
@@ -145,7 +146,7 @@ object Client {
 
         } else {
             val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(forcedTransSerialized, currentTrans)
-            var conflicts = getConflicts(projectLocal, redundancyFreeSetOfTransformations)
+            val conflicts = getConflicts(projectLocal, redundancyFreeSetOfTransformations)
 
             // apply changes normally (to both local and root project)
 
@@ -250,16 +251,16 @@ object Client {
        }
     }
 
-    private fun notifyConflicts(conflicts: MutableMap<String, Set<ConflictInfo>>) {
-        conflicts.forEach { (client, conflictSet) ->
-            conflictsMap[client] = conflictSet.toMutableList()
-            conflictsMap.notifyObservers()
-        }
-    }
-
-    fun isConflictFree(): Boolean {
-        return conflictsMap.all { it.value.isEmpty() }
-    }
+//    private fun notifyConflicts(conflicts: MutableMap<String, Set<ConflictInfo>>) {
+//        conflicts.forEach { (client, conflictSet) ->
+//            conflictsMap[client] = conflictSet.toMutableList()
+//            conflictsMap.notifyObservers()
+//        }
+//    }
+//
+//    fun isConflictFree(): Boolean {
+//        return conflictsMap.all { it.value.isEmpty() }
+//    }
 
     private fun sendHandshakeMessage() {
         if(isConnected) {

@@ -31,7 +31,7 @@ class Push : Action {
     override fun run(editor: CodeEditor, toggle: Boolean) {
         if(!Client.isConnected)
             showAlertWindow("Not connected")
-        else if(!Client.isConflictFree())
+        else if(!TrunkDelta.isConflictFree())
             showAlertWindow("There are conflicts")
         else {
             val serializedTransformations = TrunkDelta.serializeTransformations()

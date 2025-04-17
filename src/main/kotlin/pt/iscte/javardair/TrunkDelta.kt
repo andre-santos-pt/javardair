@@ -5,12 +5,21 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import model.FactoryOfTransformations
 import model.transformations.Transformation
+import model.uuid
 import pt.iscte.javardair.messages.ClientMessage
 import pt.iscte.javardair.messages.ClientOperations
+import pt.iscte.javardair.messages.ConflictInfo
 import kotlin.concurrent.thread
+
+data class TranformationConflict(
+    val transformation: Transformation,
+    val conflictInfo: ConflictInfo
+)
 
 object TrunkDelta {
     private val transformations: ObservableList<Transformation> = ObservableList()
+
+    private val conflictsMap: ObservableConflictMap = ObservableConflictMap(mutableMapOf())
 
     fun addObserver(observer: (List<Transformation>) -> Unit) {
         transformations.addObserver(observer)
@@ -38,7 +47,30 @@ object TrunkDelta {
         }
     }
 
+    fun updateConflicts(conflicts: MutableMap<String, Set<ConflictInfo>>) {
+        conflicts.forEach { (client, conflictSet) ->
+            conflictsMap[client] = conflictSet.toMutableList()
+            conflictsMap.notifyObservers()
+            println(conflictSet)
+        }
+    }
+
+    fun isConflictFree(): Boolean {
+        return conflictsMap.isEmpty()
+    }
+
+    fun hasConflict(transformation: Transformation): Boolean{
+        return conflictsMap.values.any { it.any { it.conflictUUID == transformation.getNode().uuid.toString() } }
+    }
+
+    fun getConflictMessage(transformation: Transformation): String {
+        return conflictsMap.values.find { it.find { it.conflictUUID == transformation.getNode().uuid.toString() } != null }
+            ?.joinToString { it.conflictMessage }
+            ?: ""
+    }
+
     fun serializeTransformations(): JsonArray = JsonArray(transformations.map { it.toJson() })
 
     fun serializeTransformations(indexes: List<Int>): JsonArray = JsonArray(indexes.map { transformations[it].toJson() })
+
 }
