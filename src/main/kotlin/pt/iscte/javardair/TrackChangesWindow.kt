@@ -1,15 +1,24 @@
 package pt.iscte.javardair
 
-import model.transformations.SignatureChanged
-import model.transformations.Transformation
+import com.github.javaparser.ast.Node
+import com.github.javaparser.ast.body.CallableDeclaration
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
+import com.github.javaparser.ast.body.ConstructorDeclaration
+import com.github.javaparser.ast.body.FieldDeclaration
+import com.github.javaparser.ast.body.MethodDeclaration
+import model.transformations.*
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.ControlAdapter
 import org.eclipse.swt.events.ControlEvent
+import org.eclipse.swt.events.SelectionAdapter
+import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.graphics.Image
+import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.widgets.*
 import pt.iscte.javardise.editor.CodeEditor
 import java.io.File
+import kotlin.reflect.KClass
 
 
 class TrackChangesWindow(val editor: CodeEditor) {
@@ -41,6 +50,7 @@ class TrackChangesWindow(val editor: CodeEditor) {
     private fun stickToMainWindow() {
         val mainShell = editor.display.shells.first()
         mainShell.text = "Javardair: " + ClientProperties.clientName
+        mainShell.size = Point(600,600)
         mainShell.addControlListener(object : ControlAdapter() {
             override fun controlMoved(e: ControlEvent) {
                 updateFollowerPosition()
@@ -69,11 +79,19 @@ class TrackChangesWindow(val editor: CodeEditor) {
 
         table.headerVisible = true
         table.linesVisible = true
+        table.addSelectionListener(object : SelectionAdapter() {
+            override fun widgetSelected(e: SelectionEvent) {
+                println("Selected item: ${e.item}")
+                if(table.selection.isNotEmpty())
+                    println(table.selection.get(0).data)
+            }
+        })
+
         val columnTitles = arrayOf("Transformation", "Conflict")
         for (title in columnTitles) {
             val column = TableColumn(table, SWT.NONE)
             column.setText(title)
-            column.width = 200
+            column.width = 300
         }
 
 //        table.addSelectionListener(object : SelectionAdapter() {
@@ -96,10 +114,10 @@ class TrackChangesWindow(val editor: CodeEditor) {
                 item.setText(
                     arrayOf(
                         t.message(),
-                        "${t::class.simpleName}",
                         TrunkDelta.getConflictMessage(t)
                     )
                 )
+                item.data = t::class.simpleName
 //                item.text = t.getText() + " (${t::class.simpleName})"
 //                item.image = transIcon(t)
                 if (TrunkDelta.hasConflict(t))
@@ -125,12 +143,41 @@ class TrackChangesWindow(val editor: CodeEditor) {
     private fun Transformation.message(): String {
         return when (this) {
             is SignatureChanged -> if(nameChanged())
-                "rename: ${getNode().name} to ${getNewName()}"
+                "rename ${getNode().asString()} ${getNode().name} to '${getNewName()}'"
             else if(parametersChanged())
                 "parameters changed: ${getNode().parameters} parameters to ${getNewParameters()}"
             else
                 getText()
+            is AddCallable, is BodyChangedCallable, is RemoveCallable -> {
+                val callable = this.getPrivateField("callable") as CallableDeclaration<*>
+                callable.asString()
+            }
             else -> getText()
         }
     }
+
+    private fun CallableDeclaration<*>.asString(): String {
+        return when (this) {
+            is ConstructorDeclaration ->
+                "contructor(${parameters.joinToString { it.typeAsString }})"
+            is MethodDeclaration ->
+                "method ${nameAsString}(${parameters.joinToString { it.typeAsString }})"
+            else -> TODO()
+        }
+    }
+    private fun Node.asString(): String {
+        return this::class.asString()
+    }
+
+    private fun KClass<*>.asString(): String =
+        when (this) {
+            ClassOrInterfaceDeclaration::class -> if((this as ClassOrInterfaceDeclaration).isInterface)
+                "interface"
+            else
+                "class"
+            FieldDeclaration::class -> "field"
+            ConstructorDeclaration::class -> "constructor"
+            MethodDeclaration::class -> "method"
+            else -> this::class.simpleName ?: this.toString()
+        }
 }

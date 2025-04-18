@@ -169,13 +169,6 @@ object Client {
         }
     }
 
-    // temp hack
-    fun Project.getPrivatePath(): String {
-        val f = this::class.members.find { it.name == "path" }
-        f!!.isAccessible = true
-        return f.call(this).toString()
-    }
-
     private fun applyChanges(serializedTransformations: JsonArray, sender: String) {
         try {
             projectLocal.initializeAllIndexes()

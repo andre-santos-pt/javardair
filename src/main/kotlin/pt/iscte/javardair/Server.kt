@@ -1,6 +1,5 @@
 package pt.iscte.javardair
 
-import pt.iscte.javardair.Client.getPrivatePath
 import pt.iscte.javardair.messages.ConflictInfo
 import pt.iscte.javardair.messages.FileContent
 import kotlinx.serialization.encodeToString
