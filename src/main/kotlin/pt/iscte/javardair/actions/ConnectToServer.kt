@@ -38,6 +38,7 @@ class ConnectToServer : Action {
 //        get() = true
 
     override fun init(editor: CodeEditor) {
+        ClientProperties.load(editor.folder.absolutePath)
         val trans =  TrackChangesWindow(editor)
         TrunkDelta.addObserver {
             trans.updateTable(it)
@@ -93,7 +94,6 @@ class ConnectToServer : Action {
                             val uuid = c.conflictUUID
                             val control =
                                 editor.classOnFocus?.findChild { (it.data as? Node)?.getUuidFromComment() == uuid }
-                            println("Control: $control")
                             if (control != null) {
                                 val m = control.addMark(
                                     Display.getDefault()

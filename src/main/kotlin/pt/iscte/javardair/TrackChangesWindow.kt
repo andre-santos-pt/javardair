@@ -13,7 +13,7 @@ import java.io.File
 
 
 class TrackChangesWindow(val editor: CodeEditor) {
-    val shell = Shell(Display.getDefault(), SWT.NO_TRIM or SWT.ON_TOP)
+    val shell = Shell(Display.getDefault(), SWT.NO_TRIM  or SWT.ON_TOP)
     val table = Table(
         shell,
         SWT.CHECK or SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL
@@ -35,10 +35,14 @@ class TrackChangesWindow(val editor: CodeEditor) {
     }
 
     init {
+       stickToMainWindow()
+    }
+
+    private fun stickToMainWindow() {
         val mainShell = editor.display.shells.first()
+        mainShell.text = "Javardair: " + ClientProperties.clientName
         mainShell.addControlListener(object : ControlAdapter() {
             override fun controlMoved(e: ControlEvent) {
-                println("move")
                 updateFollowerPosition()
             }
 
@@ -57,6 +61,7 @@ class TrackChangesWindow(val editor: CodeEditor) {
         })
     }
 
+
     fun open() {
         shell.text = "Javardair: ${editor.folder}"
         shell.setSize(600, 400)
@@ -64,7 +69,7 @@ class TrackChangesWindow(val editor: CodeEditor) {
 
         table.headerVisible = true
         table.linesVisible = true
-        val columnTitles = arrayOf("Transformation", "type", "Conflict")
+        val columnTitles = arrayOf("Transformation", "Conflict")
         for (title in columnTitles) {
             val column = TableColumn(table, SWT.NONE)
             column.setText(title)

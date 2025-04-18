@@ -28,16 +28,7 @@ import kotlin.io.path.Path
 import kotlin.reflect.jvm.isAccessible
 
 
-const val trunkFolder: String = ".trunk"
-const val configurationFile: String = ".javardair"
-
-const val serverProperty: String = "SERVER"
-const val portProperty: String = "PORT"
-const val clientProperty: String = "CLIENT-ID"
-
 object Client {
-    private val address: String
-    private val port: Int
     private lateinit var socket: Socket
     private lateinit var reader: Scanner
     private lateinit var writer: OutputStream
@@ -45,27 +36,11 @@ object Client {
     internal lateinit var projectTrunk: Project
     var isConnected = false
     private val clientID: UUID = UUID.randomUUID() // TODO sera que este uuid devia ser criado quando a ide é aberta e nao quando o cliente se junta?
-    private val clientName: String
-
-    init {
-        val props = Properties()
-        try {
-            FileInputStream(configurationFile).use { fis ->
-                props.load(fis)
-            }
-        }
-        catch (_: Exception) {
-
-        }
-        address = props.getProperty(serverProperty) ?: "localhost"
-        port = props.getProperty(portProperty)?.toInt() ?: 8080
-        clientName = props.getProperty(clientProperty) ?: "client-${this.hashCode() % 100}"
-    }
 
     fun open(editorPath: File, allCompilationUnits: List<CompilationUnit>) {
         val memoryTypeSolver = MemoryTypeSolver()
 
-        val trunkDir = File(editorPath, trunkFolder)
+        val trunkDir = File(editorPath, ClientProperties.trunkFolder)
         if(!trunkDir.exists())
             trunkDir.mkdirs()
 
@@ -95,7 +70,7 @@ object Client {
     }
 
     private fun connectToServer() {
-        socket = Socket(address, port)
+        socket = Socket(ClientProperties.address, ClientProperties.port)
         reader = Scanner(socket.getInputStream())
         writer = socket.getOutputStream()
         thread {
@@ -284,7 +259,7 @@ object Client {
         if(isConnected) {
             val message = ClientMessage(
                 ClientOperations.HANDSHAKE,
-                "$clientID,$clientName"
+                "$clientID,${ClientProperties.clientName}"
             )
             write(Json.encodeToString(message))
         }
