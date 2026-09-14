@@ -2,6 +2,8 @@ package pt.iscte.javardair
 
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.NodeList
+import com.github.javaparser.ast.body.CallableDeclaration
+import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
 import com.github.javaparser.ast.body.FieldDeclaration
 import com.github.javaparser.ast.body.Parameter
 import com.github.javaparser.ast.comments.LineComment
@@ -86,11 +88,12 @@ import model.uuid
             fields["initializer"] = JsonPrimitive(getNewInitializer().toString())
         }
 
-        is MoveCallableIntraType -> {
-            fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
-            fields["order-index"] = JsonPrimitive(getOrderIndex())
-
-        }
+        // TODO MoveCallableIntraType
+//        is MoveCallableIntraType -> {
+//            fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
+//            fields["location-index"] = JsonPrimitive(this.getPrivateField("locationIndex") as Int)
+//            fields["order-index"] = JsonPrimitive(getOrderIndex())
+//        }
 
     }
     return JsonObject(fields)
@@ -156,7 +159,6 @@ fun JsonObject.toTransformation(project: Project): Transformation {
             )
         }
 
-
         RemoveField::class.java.simpleName ->
             RemoveField(
                 project.getTypeByUUID(UUID(field("owner-uuid")))!!,
@@ -179,12 +181,17 @@ fun JsonObject.toTransformation(project: Project): Transformation {
                 project.getFieldByUUID(UUID(field("uuid")))!!,
                 StaticJavaParser.parseExpression(field("initializer"))
             )
-        /**
-         * MoveCallableIntraType::class.java.simpleName ->
-            MoveCallableIntraType(
 
-            )
-        **/
+        // TODO MoveCallableIntraType
+//         MoveCallableIntraType::class.java.simpleName -> {
+//             val callable = project.getElementByUUID(UUID(field("uuid"))) as CallableDeclaration<*>
+//             //val callable.parentNode.get() as ClassOrInterfaceDeclaration
+//             MoveCallableIntraType(callable, field("location-index").toInt(), field("order-index").toInt()
+//
+//             )
+//         }
+
+
 
         else -> throw Exception("Transformation not found $code")
     }

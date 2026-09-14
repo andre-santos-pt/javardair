@@ -23,9 +23,8 @@ object ClientProperties {
                 props.load(fis)
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            println("Could not load properties file: ${e.message}")
         }
-        println(props)
         address = props.getProperty(serverProperty) ?: "localhost"
         port = props.getProperty(portProperty)?.toInt() ?: 8080
         clientName = props.getProperty(clientProperty)

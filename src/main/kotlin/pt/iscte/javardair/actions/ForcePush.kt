@@ -16,18 +16,18 @@ class ForcePush : Action {
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
         // Sends the changes to the server with the goal to propagate it.
-        if(Client.isConnected) {
-            val serializedTransformations = TrunkDelta.serializeTransformations()
-            try {
-                val message = ClientMessage(ClientOperations.FORCE_PUSH, Json.encodeToString(serializedTransformations))
-                Client.write(Json.encodeToString(message))
-                TrunkDelta.updateTransformations()
-
-            } catch (ex: Exception) {
-                println("Could not send message to Server ${ex.printStackTrace()}")
-            }
-        } else {
-            println("Not connected to the server.")
-        }
+//        if(Client.isConnected) {
+//            val serializedTransformations = TrunkDelta.serializeTransformations()
+//            try {
+//                val message = ClientMessage(ClientOperations.FORCE_PUSH, Json.encodeToString(serializedTransformations))
+//                Client.write(Json.encodeToString(message))
+//                TrunkDelta.updateTransformations()
+//
+//            } catch (ex: Exception) {
+//                println("Could not send message to Server ${ex.printStackTrace()}")
+//            }
+//        } else {
+//            println("Not connected to the server.")
+//        }
     }
 }

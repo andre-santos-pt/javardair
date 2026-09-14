@@ -5,6 +5,7 @@ import kotlinx.serialization.json.JsonObject
 
 @Serializable
 data class ConflictInfo(
+    val collaborator: String,
     val conflictMessage: String,
     //val transformationPair: Pair<JsonObject, JsonObject>
     val conflictUUID: String,

@@ -6,6 +6,7 @@ import kotlinx.serialization.json.Json
 import pt.iscte.javardair.messages.ClientMessage
 import pt.iscte.javardair.messages.ClientOperations
 import pt.iscte.javardair.Client
+import pt.iscte.javardair.EventBroker
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor
 import javax.swing.JOptionPane
@@ -14,6 +15,11 @@ import javax.swing.SwingUtilities
 class Push : Action {
     override val name: String
         get() = "Push"
+
+    override fun init(editor: CodeEditor) {
+        //
+    // EventBroker.subscribe()
+    }
 
     // TODO to SWT
     private fun showAlertWindow(msg: String) {
@@ -29,18 +35,18 @@ class Push : Action {
     }
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
-        if(!Client.isConnected)
-            showAlertWindow("Not connected")
-        else if(!TrunkDelta.isConflictFree())
-            showAlertWindow("There are conflicts")
-        else {
-            val serializedTransformations = TrunkDelta.serializeTransformations()
-            try {
-                val message = ClientMessage(ClientOperations.PUSH, Json.encodeToString(serializedTransformations))
-                Client.write(Json.encodeToString(message))
-            } catch (ex: Exception) {
-                println("Could not send message to Server ${ex.printStackTrace()}")
-            }
-        }
+//        if(!Client.isConnected)
+//            showAlertWindow("Not connected")
+//        else if(!TrunkDelta.isConflictFree())
+//            showAlertWindow("There are conflicts")
+//        else {
+//            val serializedTransformations = TrunkDelta.serializeTransformations()
+//            try {
+//                val message = ClientMessage(ClientOperations.PUSH, Json.encodeToString(serializedTransformations))
+//                Client.write(Json.encodeToString(message))
+//            } catch (ex: Exception) {
+//                println("Could not send message to Server ${ex.printStackTrace()}")
+//            }
+//        }
     }
 }

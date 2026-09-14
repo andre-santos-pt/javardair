@@ -21,7 +21,25 @@ import kotlin.concurrent.thread
 import kotlin.io.path.Path
 
 fun main(args: Array<String>) {
-    Server(args[1].toInt(), args.first()).launch()
+    if(args.isEmpty()) {
+        println("Usage: java -jar javardair.jar <port> [<trunkPath>]")
+        return
+    }
+    val port = args[0].toIntOrNull()
+    if (port == null || port !in 1..65535) {
+        println("Invalid port number: ${args[0]}. Port must be an integer between 1 and 65535.")
+        return
+    }
+    val trunkPath = if(args.size == 2) args[1] else System.getProperty("user.dir")
+    if (!File(trunkPath).exists()) {
+        println("Working directory does not exist: $trunkPath")
+        return
+    }
+    if(!File(trunkPath).isDirectory) {
+        println("Working directory is not a directory: $trunkPath")
+        return
+    }
+    Server(port, trunkPath).launch()
 }
 
 class Server(val port: Int, val trunkPath: String) {
@@ -31,15 +49,12 @@ class Server(val port: Int, val trunkPath: String) {
 
     init {
         project = Project(trunkPath)
-        File(trunkPath).walk(FileWalkDirection.TOP_DOWN).forEach {
-           println(it)
-        }
         launch()
     }
 
     fun launch() {
         val serverSocket = ServerSocket(port)
-        println("Server started on port $port")
+        println("Javardair Server started on port $port")
         while (true) {
             val clientSocket = serverSocket.accept()
             println("Client connected: ${clientSocket.port}")
@@ -94,7 +109,7 @@ class Server(val port: Int, val trunkPath: String) {
                         }
                         if (clientsInfo.size > 1) {
                             val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
-                            notifyConflicts(conflicts)
+                            notifyConflicts(this, conflicts)
                         }
                     }
 
@@ -111,7 +126,7 @@ class Server(val port: Int, val trunkPath: String) {
                                 propagateChanges(message.content)
                             } else {
                                 // Notify clients for the specific conflicts.
-                                notifyConflicts(conflicts)
+                                notifyConflicts(this, conflicts)
                             }
                         }
                         else {
@@ -139,7 +154,7 @@ class Server(val port: Int, val trunkPath: String) {
             }
         }
 
-        private fun notifyConflicts(conflicts: MutableMap<ClientHandler, Set<Conflict>>) {
+        private fun notifyConflicts(client: ClientHandler, conflicts: MutableMap<ClientHandler, Set<Conflict>>) {
 
             // Criar um novo MutableMap para lidar com o facto de ClientHandler e Conflict nao serem Serilaizble
             val newMap: MutableMap<String, Set<ConflictInfo>> = mutableMapOf()
@@ -149,13 +164,15 @@ class Server(val port: Int, val trunkPath: String) {
                 val tempMap = mutableMapOf<String, Set<ConflictInfo>>()
                 val conflictInfoSet = conflicts.map { conflict ->
                     ConflictInfo(
-                        "Conflict between ${
-                            (conflict.first.toJson()["code"]).toString()
-                                .trim('"')
-                        } and ${
-                            conflict.second.toJson()["code"].toString()
-                                .trim('"')
-                        }",
+                        clientHandler.clientName,
+                        conflict.message,
+//                        "Conflict between ${
+//                            (conflict.first.toJson()["code"]).toString()
+//                                .trim('"')
+//                        } and ${
+//                            conflict.second.toJson()["code"].toString()
+//                                .trim('"')
+//                        }",
                         conflict.first.getNode().uuid.toString(),
                         conflict.second.toJson()
 //                        conflict.second.getText()
@@ -163,12 +180,14 @@ class Server(val port: Int, val trunkPath: String) {
                 }.toSet()
                 val conflictInfoSetOpposite = conflicts.map { conflict ->
                     ConflictInfo(
-                        "Conflict between ${
-                            conflict.first.toJson()["code"].toString().trim('"')
-                        } and ${
-                            conflict.second.toJson()["code"].toString()
-                                .trim('"')
-                        }",
+                        client.clientName,
+                        conflict.message,
+//                        "Conflict between ${
+//                            conflict.first.toJson()["code"].toString().trim('"')
+//                        } and ${
+//                            conflict.second.toJson()["code"].toString()
+//                                .trim('"')
+//                        }",
                         conflict.second.getNode().uuid.toString(),
                         conflict.first.toJson()
 //                        conflict.first.getText()
@@ -268,8 +287,6 @@ class Server(val port: Int, val trunkPath: String) {
             }
 
             val fileList = Json.encodeToString(fileListTemp)
-
-            println(fileList)
 
             val message = ServerMessage(
                 ServerOperations.FETCH_RESPONSE,

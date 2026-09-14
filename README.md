@@ -1,4 +1,27 @@
-# Setup
+# Run
+There are two types of components: a server and a client. The server is responsible for managing the shared code base and the clients connect to the server for editing the files.
+
+## Server
+The following command will start the server. The optional trunk path argument can be used to specify a local path to a trunk folder. If not provided, the server will consider the execution directory as the root of the code base (trunk).
+```
+java -jar javardair.jar <port> [<trunk-path>]
+```
+
+## Clients
+A client can be started with the following command, which will launch the editor. Due to the use of the SWT GUI library, the runtime argument **-XstartOnFirstThread** is necessary if executing on Mac OS. On load, the client will not attempt to connect to the server.
+```
+java -cp javardair.jar [-XstartOnFirstThread] pt.iscte.javardise.editor.MainKt
+```
+To connect to a server, the user must click the *Connect*. The server address and port are expected to be given on the **.javardair** file, located in the root directory where the editor was launched. The file should have the following format:
+
+```
+SERVER=localhost
+PORT=8080
+CLIENT-ID=Joe Programmer
+```
+
+
+# Build
 The build is expecting JAR files in a *libs* folder.
 
 get them here:
@@ -8,12 +31,8 @@ and here:
 https://github.com/adrts-iscte/Jaid/releases/tag/1.0
 
 
-# Run
-When running, a prompt for the workspace folder will popup.
+# Known issues
 
-Select *testWorkspace* from the repo. It contains a *.base* folder with the purpose of holding a base copy of the project.
-
-
-## About Jaid
+> This prototype is a work in progress. It is not yet stable and contains bugs and limitations.
 
 > transformation extractions do not work well with files without package declaration

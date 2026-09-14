@@ -18,18 +18,16 @@ import model.transformations.Transformation
 import org.eclipse.swt.widgets.Display
 import pt.iscte.javardair.messages.*
 import java.io.File
-import java.io.FileInputStream
 import java.io.OutputStream
 import java.net.Socket
 import java.nio.charset.Charset
 import java.util.*
 import kotlin.concurrent.thread
 import kotlin.io.path.Path
-import kotlin.reflect.jvm.isAccessible
 
 
 object Client {
-    private lateinit var socket: Socket
+    private var socket: Socket? = null
     private lateinit var reader: Scanner
     private lateinit var writer: OutputStream
     internal lateinit var projectLocal: Project
@@ -58,34 +56,45 @@ object Client {
             true
         )
         isConnected = true
-        runClient()
-    }
-
-    private fun runClient() {
         try {
             connectToServer()
         } catch (ex: Exception) {
-            println("Cannot connect to the server ${ex.printStackTrace()}")
+            println("${ClientProperties.clientName}: Cannot connect to the server on port ${ClientProperties.port}")
         }
     }
 
     private fun connectToServer() {
         socket = Socket(ClientProperties.address, ClientProperties.port)
-        reader = Scanner(socket.getInputStream())
-        writer = socket.getOutputStream()
-        thread {
-            sendHandshakeMessage()
-            requestFiles()
-            dealWithServer()
+        socket?.let { socket ->
+            reader = Scanner(socket.getInputStream())
+            writer = socket.getOutputStream()
+            thread {
+                sendHandshakeMessage()
+                requestFiles()
+                dealWithServer()
+            }
         }
     }
 
     fun close() {
-        socket.close()
+        socket?.close()
         isConnected = false
     }
 
     private fun dealWithServer() {
+        TrunkDelta.addObserver {
+            if(isConnected) {
+                val serializedTransformations = JsonArray(it.map { it.toJson() })
+                try {
+                    val message = ClientMessage(ClientOperations.UPDATE, Json.encodeToString(serializedTransformations))
+                    write(Json.encodeToString(message))
+                    println("update: $message")
+                } catch (ex: Exception) {
+                    println("Could not send message to Server ${ex.printStackTrace()}")
+                }
+            }
+        }
+
         try {
             while (isConnected) {
                 val text = reader.nextLine()
@@ -112,7 +121,7 @@ object Client {
                 }
             }
         } catch (ex: Exception) {
-            println("Disconnected from server: ${ex.printStackTrace()}")
+            println("Disconnected from server at ${ClientProperties.address}:${ClientProperties.port}")
         }
     }
 
@@ -169,7 +178,7 @@ object Client {
         }
     }
 
-    private fun applyChanges(serializedTransformations: JsonArray, sender: String) {
+    private fun applyChanges(serializedTransformations: JsonArray, sender: String?) {
         try {
             projectLocal.initializeAllIndexes()
 
@@ -195,7 +204,21 @@ object Client {
             projectTrunk.saveProjectTo(Path(projectTrunk.getPrivatePath()))
         } catch (ex: Exception) {
             println("Could not apply changes. ${ex.printStackTrace()}")        }
+    }
 
+    private fun applyChangesLocal(serializedTransformations: JsonArray) {
+        try {
+            projectLocal.initializeAllIndexes()
+            val transRoot = serializedTransformations.map { json ->
+                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
+                    projectLocal
+                )
+            }
+            println("LOCAL : " + transRoot)
+            applyTransformationsTo(projectLocal, transRoot.toSet())
+            projectLocal.saveProjectTo(Path(projectLocal.getPrivatePath()))
+        } catch (ex: Exception) {
+            println("Could not apply changes. ${ex.printStackTrace()}")        }
     }
 
     // send current transformation list to the server for consistency matters
@@ -237,17 +260,6 @@ object Client {
        }
     }
 
-//    private fun notifyConflicts(conflicts: MutableMap<String, Set<ConflictInfo>>) {
-//        conflicts.forEach { (client, conflictSet) ->
-//            conflictsMap[client] = conflictSet.toMutableList()
-//            conflictsMap.notifyObservers()
-//        }
-//    }
-//
-//    fun isConflictFree(): Boolean {
-//        return conflictsMap.all { it.value.isEmpty() }
-//    }
-
     private fun sendHandshakeMessage() {
         if(isConnected) {
             val message = ClientMessage(
@@ -256,6 +268,31 @@ object Client {
             )
             write(Json.encodeToString(message))
         }
+    }
+
+    fun push(transformations: List<Transformation>) {
+        if (!isConnected)
+            throw RuntimeException("Not connected")
+        else if (transformations.any { TrunkDelta.hasConflict(it) })
+            throw RuntimeException("There are conflicts in the transformation set")
+        else {
+            val serializedTransformations =  JsonArray(transformations.map { it.toJson() })
+            try {
+                val message = ClientMessage(
+                    ClientOperations.PUSH,
+                    Json.encodeToString(serializedTransformations)
+                )
+                write(Json.encodeToString(message))
+            } catch (ex: Exception) {
+                ex.printStackTrace()
+                throw RuntimeException("Could not send PUSH to Server")
+            }
+        }
+    }
+
+    fun acceptChanges(conflict: ConflictInfo) {
+        applyChangesLocal(JsonArray(listOf(conflict.conflictingTransformation)))
+        TrunkDelta.updateTransformations()
     }
 }
 

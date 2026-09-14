@@ -4,23 +4,29 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="setup file for debugging added">
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/javardair_client1_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/javardair_client1_.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/javardair_client2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/javardair_client2.xml" afterDir="false" />
+    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="Util.kt to access private fields of Jaid">
+      <change afterPath="$PROJECT_DIR$/.idea/PMDPlugin.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/copilot.data.migration.ask2agent.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/javardair_client1_.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/javardair_clientB.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/javardair_client2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/javardair_clientA2.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/javardair_client3.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/javardair_clientA.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/runDemo.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/runDemo.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/Test.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/Client.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/Client.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Bot.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Bot.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/ForcePush.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/ForcePush.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Push.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Push.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/TrackChanges.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/TrackChanges.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Trans.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/Trans.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client1/Test.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client1/root/Test.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client2/Test.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client2/root/Test.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client3/Test.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workspace_client3/root/Test.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Client.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Client.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/ClientProperties.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/ClientProperties.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/ConflictsView.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Server.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Server.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/TrackChangesWindow.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/TrackChangesWindow.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Trans.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Trans.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/TrunkDelta.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/TrunkDelta.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/ConnectToServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/ConnectToServer.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/ForcePush.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/ForcePush.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/Push.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/Push.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/messages/ConflictInfo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/messages/ConflictInfo.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/services/pt.iscte.javardise.editor.Action" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/services/pt.iscte.javardise.editor.Action" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,7 +46,29 @@
         </task>
         <projects_view>
           <tree_state>
-            <expand />
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="javardair" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="javardair" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="javardair" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="application" type="c8890929:TasksNode$1" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="javardair" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="distribution" type="c8890929:TasksNode$1" />
+              </path>
+            </expand>
             <select />
           </tree_state>
         </projects_view>
@@ -50,16 +78,34 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
-        <option value="Kotlin Class" />
         <option value="Class" />
+        <option value="Kotlin File" />
+        <option value="Kotlin Class" />
       </list>
     </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;andre-santos-pt&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/andre-santos-pt/javardair.git&quot;,
+    &quot;accountId&quot;: &quot;b71e21aa-28d4-4eea-91e6-0d5dd00ad26f&quot;
+  }
+}</component>
+  <component name="GradleScriptDefinitionsStorage" workingDir="$PROJECT_DIR$" gradleHome="$USER_HOME$/.gradle/wrapper/dists/gradle-8.2-bin/bbg7u40eoinfdyxsxr3z4i7ta/gradle-8.2" javaHome="/Library/Java/JavaVirtualMachines/jdk-17.0.2.jdk/Contents/Home" gradleVersion="8.2" />
   <component name="MarkdownSettingsMigration">
     <option name="stateVersion" value="1" />
+  </component>
+  <component name="McpProjectServerCommands">
+    <commands />
+    <urls />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -70,28 +116,74 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;discord-application&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Gradle.Build javardair.executor": "Run",
+    "Gradle.javardair [:CheckBoxListWithIcons.main()].executor": "Run",
+    "Gradle.javardair [:pt.iscte.javardair.ServerKt.main()].executor": "Run",
+    "Gradle.javardair [fatJar].executor": "Run",
+    "Gradle.javardair [jar].executor": "Run",
+    "Gradle.javardair [run].executor": "Run",
+    "Gradle.javardair_client1 .executor": "Run",
+    "Gradle.javardair_client2.executor": "Run",
+    "Gradle.javardair_client3.executor": "Run",
+    "Gradle.javardair_clientA.executor": "Run",
+    "Gradle.javardair_clientB.executor": "Run",
+    "Kotlin.Client1.executor": "Run",
+    "Kotlin.ServerKt.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "SONARLINT_PRECOMMIT_ANALYSIS": "false",
+    "WebServerToolWindowFactoryState": "false",
+    "git-widget-placeholder": "master",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/andresantos/git/javardair/workspaceB",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Libraries",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.46896553",
+    "settings.editor.selected.configurable": "discord-application",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/workspaceB" />
+      <recent name="$PROJECT_DIR$/workspaceB/.trunk" />
+      <recent name="$PROJECT_DIR$/workspaceA" />
+      <recent name="$PROJECT_DIR$/workspaceA/.trunk" />
+      <recent name="$PROJECT_DIR$/workspace2" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/src/main/resources/icons" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/workspace1" />
+      <recent name="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair" />
       <recent name="C:\Users\uhfon\OneDrive\Documents\javardair" />
     </key>
+    <key name="MoveKotlinTopLevelDeclarationsDialog.RECENTS_KEY">
+      <recent name="pt.iscte.javardair.actions" />
+      <recent name="pt.iscte.javardair.messages" />
+    </key>
   </component>
-  <component name="RunManager" selected="Gradle.javardair_client2">
+  <component name="RunManager" selected="Gradle.javardair [fatJar]">
+    <configuration name="CheckBoxListWithIcons" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="CheckBoxListWithIcons" />
+      <module name="javardair.main" />
+      <option name="VM_PARAMETERS" value="-XstartOnFirstThread" />
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <configuration name="javardair [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -110,11 +202,39 @@
       </ExternalSystemSettings>
       <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
       <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
       <DebugAllEnabled>false</DebugAllEnabled>
       <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
       <method v="2" />
     </configuration>
-    <configuration name="javardair [clean]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="javardair [fatJar]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="fatJar" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="javardair [jar]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
@@ -125,39 +245,81 @@
         </option>
         <option name="taskNames">
           <list>
-            <option value="clean" />
+            <option value="jar" />
           </list>
         </option>
         <option name="vmOptions" />
       </ExternalSystemSettings>
       <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
       <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
       <DebugAllEnabled>false</DebugAllEnabled>
       <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
+    <configuration name="javardair [run]" type="GradleRunConfiguration" factoryName="Gradle">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="run" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
       <method v="2" />
     </configuration>
     <configuration name="ServerKt" type="JetRunConfigurationType" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="ServerKt" />
+      <option name="MAIN_CLASS_NAME" value="pt.iscte.javardair.ServerKt" />
       <module name="javardair.main" />
+      <option name="PROGRAM_PARAMETERS" value="8080 server" />
+      <shortenClasspath name="NONE" />
       <method v="2">
         <option name="Make" enabled="true" />
       </method>
     </configuration>
     <list>
+      <item itemvalue="Application.CheckBoxListWithIcons" />
       <item itemvalue="Compound.runDemo" />
-      <item itemvalue="Gradle.javardair_client1 " />
-      <item itemvalue="Gradle.javardair_client2" />
-      <item itemvalue="Gradle.javardair_client3" />
+      <item itemvalue="Gradle.javardair_clientB" />
+      <item itemvalue="Gradle.javardair_clientA" />
+      <item itemvalue="Gradle.javardair [run]" />
+      <item itemvalue="Gradle.javardair [fatJar]" />
+      <item itemvalue="Gradle.javardair [jar]" />
       <item itemvalue="Gradle.javardair [build]" />
-      <item itemvalue="Gradle.javardair [clean]" />
       <item itemvalue="Kotlin.ServerKt" />
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Gradle.javardair [fatJar]" />
+        <item itemvalue="Gradle.javardair [jar]" />
         <item itemvalue="Gradle.javardair [build]" />
-        <item itemvalue="Gradle.javardair [clean]" />
+        <item itemvalue="Application.CheckBoxListWithIcons" />
       </list>
     </recent_temporary>
+  </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-30f59d01ecdd-26cb7f24e5b0-intellij.indexing.shared.core-IU-253.29346.138" />
+        <option value="bundled-js-predefined-d6986cc7102b-9b0f141eb926-JavaScript-IU-253.29346.138" />
+      </set>
+    </attachedChunks>
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
@@ -198,6 +360,16 @@
       <workItem from="1733478887772" duration="447000" />
       <workItem from="1734470363641" duration="93000" />
       <workItem from="1741614153404" duration="714000" />
+      <workItem from="1744809708344" duration="198000" />
+      <workItem from="1744809917501" duration="39456000" />
+      <workItem from="1745402171405" duration="29714000" />
+      <workItem from="1745914177442" duration="1065000" />
+      <workItem from="1747121876600" duration="19000" />
+      <workItem from="1747984142880" duration="4217000" />
+      <workItem from="1750407107308" duration="21000" />
+      <workItem from="1784646973351" duration="9516000" />
+      <workItem from="1789050059574" duration="7373000" />
+      <workItem from="1789388594080" duration="10528000" />
     </task>
     <task id="LOCAL-00001" summary="Cleaned up a bit Conflict View window">
       <option name="closed" value="true" />
@@ -255,7 +427,87 @@
       <option name="project" value="LOCAL" />
       <updated>1729636544208</updated>
     </task>
-    <option name="localTasksCounter" value="8" />
+    <task id="LOCAL-00008" summary="fatJar gradle + launch.sh">
+      <option name="closed" value="true" />
+      <created>1744811021298</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1744811021298</updated>
+    </task>
+    <task id="LOCAL-00009" summary="refactor:&#10;- packages&#10;- server launch">
+      <option name="closed" value="true" />
+      <created>1744812247142</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1744812247142</updated>
+    </task>
+    <task id="LOCAL-00010" summary="- major refactor and path bug fixes (\ /)&#10;- new transformations window&#10;- dropped track changes action">
+      <option name="closed" value="true" />
+      <created>1744873208811</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1744873208811</updated>
+    </task>
+    <task id="LOCAL-00011" summary="- changed ObservableList&#10;- TrunkDelta renamed CentralizedList.kt">
+      <option name="closed" value="true" />
+      <created>1744874820568</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1744874820568</updated>
+    </task>
+    <task id="LOCAL-00012" summary="- conflicts marked in red">
+      <option name="closed" value="true" />
+      <created>1744886527482</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1744886527482</updated>
+    </task>
+    <task id="LOCAL-00013" summary="- configuration file in Client&#10;- server address/port in Server args">
+      <option name="closed" value="true" />
+      <created>1744919071962</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1744919071962</updated>
+    </task>
+    <task id="LOCAL-00014" summary="track window attached">
+      <option name="closed" value="true" />
+      <created>1744925906287</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1744925906288</updated>
+    </task>
+    <task id="LOCAL-00015" summary="first version of marking conflicts">
+      <option name="closed" value="true" />
+      <created>1744925956621</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1744925956621</updated>
+    </task>
+    <task id="LOCAL-00016" summary="client properties class">
+      <option name="closed" value="true" />
+      <created>1744972244846</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1744972244846</updated>
+    </task>
+    <task id="LOCAL-00017" summary="Util.kt to access private fields of Jaid">
+      <option name="closed" value="true" />
+      <created>1744974569698</created>
+      <option name="number" value="00017" />
+      <option name="presentableId" value="LOCAL-00017" />
+      <option name="project" value="LOCAL" />
+      <updated>1744974569698</updated>
+    </task>
+    <option name="localTasksCounter" value="18" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -269,6 +521,24 @@
     <MESSAGE value="AddField transformation serialization added" />
     <MESSAGE value="list of tracked transformations is now centralized" />
     <MESSAGE value="setup file for debugging added" />
-    <option name="LAST_COMMIT_MESSAGE" value="setup file for debugging added" />
+    <MESSAGE value="fatJar gradle + launch.sh" />
+    <MESSAGE value="refactor:&#10;- packages&#10;- server launch" />
+    <MESSAGE value="- major refactor and path bug fixes (\ /)&#10;- new transformations window&#10;- dropped track changes action" />
+    <MESSAGE value="- changed ObservableList&#10;- TrunkDelta renamed CentralizedList.kt" />
+    <MESSAGE value="- conflicts marked in red" />
+    <MESSAGE value="- configuration file in Client&#10;- server address/port in Server args" />
+    <MESSAGE value="track window attached" />
+    <MESSAGE value="first version of marking conflicts" />
+    <MESSAGE value="client properties class" />
+    <MESSAGE value="Util.kt to access private fields of Jaid" />
+    <option name="LAST_COMMIT_MESSAGE" value="Util.kt to access private fields of Jaid" />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
   </component>
 </project>
