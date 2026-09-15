@@ -1,11 +1,11 @@
 plugins {
-    kotlin("jvm") version "1.9.22"
+    kotlin("jvm") version "2.3.20"
+    kotlin("plugin.serialization") version "2.3.20"
     application
-    kotlin("plugin.serialization") version "1.9.22"
 }
 
 group = "pt.iscte"
-version = "1.0-SNAPSHOT"
+version = "0.2"
 
 val mac = System.getProperty("os.name").lowercase().contains("mac")
 val win = System.getProperty("os.name").lowercase().contains("windows")
@@ -23,14 +23,14 @@ repositories {
 
 dependencies {
     testImplementation(kotlin("test"))
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
     implementation(kotlin("reflect"))
     if(win)
         implementation(files("libs/javardise-win.jar"))
     else
         implementation(files("libs/javardise-macos-1.2.0.jar"))
-    //implementation(files("libs/compilation.jar"))
-    implementation(files("libs/jaid.jar"))
+    implementation(files("libs/compilation.jar"))
+    implementation(files("libs/jaid-1.1.jar"))
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")
 }
 
 application {
@@ -44,13 +44,13 @@ tasks.test {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(23)
 }
 
 tasks {
     register<Jar>("fatJar") {
         group = "distribution"
-        archiveFileName.set("javardair.jar")
+        //archiveFileName.set("javardair.jar")
         destinationDirectory.set(layout.buildDirectory.dir("dist"))
         dependsOn.addAll(
             listOf(

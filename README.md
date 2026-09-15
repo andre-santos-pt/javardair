@@ -1,3 +1,7 @@
+# Javardise
+
+This is a prototype of a collaborative Java IDE, built on top of the Jaid framework. It allows multiple users to edit the same code base asynchronously, but with synchronous integration.
+
 # Run
 There are two types of components: a server and a client. The server is responsible for managing the shared code base and the clients connect to the server for editing the files.
 
