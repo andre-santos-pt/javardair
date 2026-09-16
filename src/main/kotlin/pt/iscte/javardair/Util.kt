@@ -12,9 +12,3 @@ fun Any.getPrivateField(name: String): Any? {
         return f.call(this)
     }
 }
-
-//fun Project.getPrivatePath(): String {
-//    val f = this::class.members.find { it.name == "path" }
-//    f!!.isAccessible = true
-//    return f.call(this).toString()
-//}

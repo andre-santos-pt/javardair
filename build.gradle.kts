@@ -62,7 +62,7 @@ tasks {
         archiveClassifier.set(os)
 
         duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-        manifest { attributes(mapOf("Main-Class" to "pt.iscte.javardair.ServerKt")) }
+        manifest { attributes(mapOf("Main-Class" to "pt.iscte.javardair.server.ServerKt")) }
         val sourcesMain = sourceSets.main.get()
         val contents = configurations.runtimeClasspath.get()
             .filter { !it.name.contains("junit") && !it.name.contains("opentest") }

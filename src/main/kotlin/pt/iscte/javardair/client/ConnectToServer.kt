@@ -1,4 +1,4 @@
-package pt.iscte.javardair
+package pt.iscte.javardair.client
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.Node
@@ -9,7 +9,9 @@ import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.layout.RowLayout
 import org.eclipse.swt.widgets.*
-import pt.iscte.javardair.messages.ConflictInfo
+import pt.iscte.javardair.injectClassUUIDs
+import pt.iscte.javardair.injectMemberUUIDs
+import pt.iscte.javardair.server.ConflictInfo
 import pt.iscte.javardise.*
 import pt.iscte.javardise.basewidgets.ICodeDecoration
 import pt.iscte.javardise.basewidgets.addMark

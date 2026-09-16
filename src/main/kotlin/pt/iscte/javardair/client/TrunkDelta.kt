@@ -1,9 +1,10 @@
-package pt.iscte.javardair
+package pt.iscte.javardair.client
 
 import model.FactoryOfTransformations
 import model.transformations.Transformation
 import model.uuid
-import pt.iscte.javardair.messages.ConflictInfo
+import pt.iscte.javardair.ObservableMap
+import pt.iscte.javardair.server.ConflictInfo
 import kotlin.concurrent.thread
 
 

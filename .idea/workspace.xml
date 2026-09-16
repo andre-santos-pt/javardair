@@ -4,26 +4,25 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="gradle 8.5">
+    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="major client refactoring">
       <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Client.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Client.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/ClientProperties.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/ClientProperties.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Server.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Server.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/TrackChangesWindow.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/TrackChangesWindow.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Trans.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Jaid.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/TrunkDelta.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/TrunkDelta.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Client.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/Client.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/ClientProperties.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ClientProperties.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/ConnectToServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ConnectToServer.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/ObservableList.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ObservableList.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Server.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/Server.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/TrackChangesWindow.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrackChangesView.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/TrunkDelta.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrunkDelta.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Util.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Util.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/Bot.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/Bot.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/ConnectToServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/ConnectToServer.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/ForcePush.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/ForcePush.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/Push.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/actions/Push.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/messages/ClientMessage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/messages/ClientMessage.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/messages/ClientOperations.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/messages/ClientOperation.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardise/demo/ApplyTransformation.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/messages/ClientMessage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ClientMessage.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/messages/ClientOperation.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ClientOperation.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/messages/ConflictInfo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/ConflictInfo.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/messages/FileContent.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/FileContent.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/messages/ServerMessage.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/ServerMessage.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/messages/ServerOperations.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/ServerOperation.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/META-INF/services/pt.iscte.javardise.editor.Action" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/META-INF/services/pt.iscte.javardise.editor.Action" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -117,60 +116,60 @@
   <component name="NextEditCompletionFeaturesState">
     <decayedCancelled>
       <entry key="MS100" value="1.0" />
-      <entry key="MS500" value="1.0000000000000056" />
-      <entry key="S2" value="1.0004114965614286" />
-      <entry key="S5" value="1.0815930576106931" />
-      <entry key="S10" value="1.569795189109856" />
-      <entry key="S30" value="3.782490916348703" />
-      <entry key="S60" value="5.720031988295278" />
-      <entry key="M2" value="7.738048197171655" />
-      <entry key="M5" value="10.774751343568113" />
-      <entry key="M10" value="15.269064326902248" />
-      <entry key="M15" value="21.49588978014584" />
-      <entry key="M30" value="44.61062373931663" />
-      <entry key="H1" value="84.67014585586367" />
-      <entry key="H2" value="129.18704062231862" />
-      <entry key="H4" value="164.25529458594977" />
-      <entry key="D1" value="203.69345460109577" />
-      <entry key="W1" value="211.63787179938927" />
+      <entry key="MS500" value="1.0000007147787102" />
+      <entry key="S2" value="1.0290765518231042" />
+      <entry key="S5" value="1.243017666808976" />
+      <entry key="S10" value="1.5183822792301969" />
+      <entry key="S30" value="2.7463082340352916" />
+      <entry key="S60" value="4.314557098039618" />
+      <entry key="M2" value="6.12549378939989" />
+      <entry key="M5" value="9.059652839065551" />
+      <entry key="M10" value="11.362532164224824" />
+      <entry key="M15" value="13.110718075863602" />
+      <entry key="M30" value="22.272548565049284" />
+      <entry key="H1" value="52.01680590439413" />
+      <entry key="H2" value="102.62559564997657" />
+      <entry key="H4" value="153.64160630625767" />
+      <entry key="D1" value="221.48015981667308" />
+      <entry key="W1" value="236.400902880687" />
     </decayedCancelled>
     <decayedSelected>
-      <entry key="MS100" value="1.259663636327518E-69" />
-      <entry key="MS500" value="1.6598107091654202E-14" />
-      <entry key="S2" value="3.8218100091160417E-4" />
-      <entry key="S5" value="0.05589372507593355" />
-      <entry key="S10" value="0.3230333972974253" />
-      <entry key="S30" value="1.1075578356525897" />
-      <entry key="S60" value="1.7614552557039296" />
-      <entry key="M2" value="2.826704587495699" />
-      <entry key="M5" value="4.897825784636715" />
-      <entry key="M10" value="7.113013728870698" />
-      <entry key="M15" value="9.43925180999341" />
-      <entry key="M30" value="16.791491659960645" />
-      <entry key="H1" value="27.26577999932978" />
-      <entry key="H2" value="37.09948721347768" />
-      <entry key="H4" value="44.065315741978075" />
-      <entry key="D1" value="51.3486077404917" />
-      <entry key="W1" value="52.75972415760048" />
+      <entry key="MS100" value="0.0" />
+      <entry key="MS500" value="0.0" />
+      <entry key="S2" value="0.0" />
+      <entry key="S5" value="2.5020142993468822E-294" />
+      <entry key="S10" value="2.1612787892897848E-147" />
+      <entry key="S30" value="2.0869924091441075E-49" />
+      <entry key="S60" value="7.646256162121846E-25" />
+      <entry key="M2" value="1.8623831667814358E-12" />
+      <entry key="M5" value="6.569295213306161E-5" />
+      <entry key="M10" value="0.026050218460943665" />
+      <entry key="M15" value="0.22427251523295305" />
+      <entry key="M30" value="2.5882636853853547" />
+      <entry key="H1" value="10.704775078874263" />
+      <entry key="H2" value="23.24597236096008" />
+      <entry key="H4" value="34.88082846511741" />
+      <entry key="D1" value="49.38673591160586" />
+      <entry key="W1" value="52.46692470853339" />
     </decayedSelected>
     <decayedShown>
-      <entry key="MS100" value="5.870554033970428E-7" />
-      <entry key="MS500" value="0.05671994720732898" />
-      <entry key="S2" value="0.48856749317622217" />
-      <entry key="S5" value="0.8606082834393883" />
-      <entry key="S10" value="1.628298684221421" />
-      <entry key="S30" value="4.606631830428016" />
-      <entry key="S60" value="7.265841301644299" />
-      <entry key="M2" value="10.421089210499616" />
-      <entry key="M5" value="15.592212746350752" />
-      <entry key="M10" value="22.327925792827745" />
-      <entry key="M15" value="30.88865374325885" />
-      <entry key="M30" value="61.3626611366778" />
-      <entry key="H1" value="111.90499187028622" />
-      <entry key="H2" value="166.26591645741067" />
-      <entry key="H4" value="208.30850643880885" />
-      <entry key="D1" value="255.03973443060198" />
-      <entry key="W1" value="264.3972548422792" />
+      <entry key="MS100" value="0.001306569877720812" />
+      <entry key="MS500" value="0.2649884192288005" />
+      <entry key="S2" value="0.7392148313571747" />
+      <entry key="S5" value="1.0919754972000748" />
+      <entry key="S10" value="1.4252366530337859" />
+      <entry key="S30" value="2.6916552101928897" />
+      <entry key="S60" value="4.271369105148504" />
+      <entry key="M2" value="6.095081080079018" />
+      <entry key="M5" value="9.042394432329326" />
+      <entry key="M10" value="11.3778855193046" />
+      <entry key="M15" value="13.326308459611472" />
+      <entry key="M30" value="24.85056063871238" />
+      <entry key="H1" value="62.707216216182594" />
+      <entry key="H2" value="125.85749929413535" />
+      <entry key="H4" value="188.5122637209847" />
+      <entry key="D1" value="270.86455641167436" />
+      <entry key="W1" value="288.8674739794552" />
     </decayedShown>
   </component>
   <component name="ProjectColorInfo">{
@@ -188,6 +187,7 @@
     "Gradle.Upgrade Gradle wrapper.executor": "Run",
     "Gradle.javardair [:CheckBoxListWithIcons.main()].executor": "Run",
     "Gradle.javardair [:pt.iscte.javardair.ServerKt.main()].executor": "Run",
+    "Gradle.javardair [:pt.iscte.javardair.server.ServerKt.main()].executor": "Run",
     "Gradle.javardair [build].executor": "Run",
     "Gradle.javardair [clean].executor": "Run",
     "Gradle.javardair [fatJarUniversal].executor": "Run",
@@ -250,6 +250,8 @@
       <recent name="pt.iscte.javardair.messages" />
     </key>
     <key name="K2MoveDeclarationsDialog.RECENT_PACKAGE_KEY">
+      <recent name="pt.iscte.javardair.client" />
+      <recent name="pt.iscte.javardair.server" />
       <recent name="pt.iscte.javardair" />
     </key>
   </component>
@@ -407,9 +409,9 @@
     <configuration name="ServerKt" type="JetRunConfigurationType" nameIsGenerated="true">
       <option name="ALTERNATIVE_JRE_PATH" value="23" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
-      <option name="MAIN_CLASS_NAME" value="pt.iscte.javardair.ServerKt" />
+      <option name="MAIN_CLASS_NAME" value="pt.iscte.javardair.server.ServerKt" />
       <module name="javardair.main" />
-      <option name="PROGRAM_PARAMETERS" value="8080 server" />
+      <option name="PROGRAM_PARAMETERS" value="8080 TEST-server" />
       <shortenClasspath name="NONE" />
       <method v="2">
         <option name="Make" enabled="true" />
@@ -679,7 +681,23 @@
     <MESSAGE value="Util.kt to access private fields of Jaid" />
     <MESSAGE value="track view changes" />
     <MESSAGE value="gradle 8.5" />
-    <option name="LAST_COMMIT_MESSAGE" value="gradle 8.5" />
+    <MESSAGE value="major client refactoring" />
+    <option name="LAST_COMMIT_MESSAGE" value="major client refactoring" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" type="kotlin-function">
+          <url>file://$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ConnectToServer.kt</url>
+          <line>144</line>
+          <properties class="pt.iscte.javardair.client.ConnectToServer">
+            <option name="EMULATED" value="true" />
+            <option name="WATCH_EXIT" value="false" />
+          </properties>
+          <option name="timeStamp" value="1" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

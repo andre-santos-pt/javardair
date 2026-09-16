@@ -1,4 +1,4 @@
-package pt.iscte.javardair.actions
+package pt.iscte.javardair.old
 
 import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.Modifier
@@ -9,7 +9,7 @@ import com.github.javaparser.ast.body.TypeDeclaration
 import com.github.javaparser.ast.body.VariableDeclarator
 import com.github.javaparser.ast.expr.SimpleName
 import org.eclipse.swt.widgets.Display
-import pt.iscte.javardair.ConnectToServer
+import pt.iscte.javardair.client.ConnectToServer
 import pt.iscte.javardise.CommandStack
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor

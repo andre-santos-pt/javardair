@@ -1,4 +1,4 @@
-package pt.iscte.javardair
+package pt.iscte.javardair.client
 
 import java.io.File
 import java.io.FileInputStream

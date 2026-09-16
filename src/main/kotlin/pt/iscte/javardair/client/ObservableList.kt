@@ -1,4 +1,4 @@
-package pt.iscte.javardair
+package pt.iscte.javardair.client
 
 
 class ObservableList<T>(val list: MutableList<T> = mutableListOf()): MutableList<T> by list {

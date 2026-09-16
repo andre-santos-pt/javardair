@@ -1,4 +1,4 @@
-package pt.iscte.javardair
+package pt.iscte.javardair.client
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver
@@ -16,10 +16,13 @@ import model.applyTransformationsTo
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
 import model.getConflicts
 import model.transformations.Transformation
-import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Display
-import org.eclipse.swt.widgets.MessageBox
-import pt.iscte.javardair.messages.*
+import pt.iscte.javardair.server.ConflictInfo
+import pt.iscte.javardair.server.FileContent
+import pt.iscte.javardair.server.ServerMessage
+import pt.iscte.javardair.server.ServerOperation
+import pt.iscte.javardair.toJson
+import pt.iscte.javardair.toTransformation
 import java.io.File
 import java.io.OutputStream
 import java.net.Socket
@@ -136,23 +139,23 @@ object Client {
                 // The client will only receive messages from the server
                 val message = Json.decodeFromString<ServerMessage>(text)
                 when (message.op) {
-                    ServerOperations.FETCH_RESPONSE -> {
+                    ServerOperation.FETCH_RESPONSE -> {
                         updateRootFiles(Json.decodeFromString(message.content))
                     }
 
-                    ServerOperations.PROPAGATE -> {
+                    ServerOperation.PROPAGATE -> {
                         // forcar o focus a sair
                         // ver se ha conflitos com a current lista de trans
                         // se houver, guardar esta current list numa var extra
                         // aplicar as mudanças vindas do propagate
                         // aplicar as mundanças da current list
-                        checkChanges(
+                        integratePropagation(
                             Json.decodeFromString(message.content),
                             message.sender
                         )
                     }
 
-                    ServerOperations.NOTIFY_CONFLICTS -> {
+                    ServerOperation.NOTIFY_CONFLICTS -> {
                         TrunkDelta.updateConflicts(Json.decodeFromString(message.content))
                     }
                 }
@@ -188,7 +191,18 @@ object Client {
 
 
     // safe mechanism to deal with the case of user making a change while receiving a PROPAGATE message
-    private fun checkChanges(forcedTrans: JsonArray, sender: String) {
+    private fun integratePropagation(forcedTrans: JsonArray, sender: String) {
+
+        fun setsAreEqual(
+            a: Set<Transformation>,
+            b: Set<Transformation>
+        ): Boolean {
+            if (a.size != b.size) return false
+            val list1 = a.map { it.toJson().toString() }.sorted()
+            val list2 = b.map { it.toJson().toString() }.sorted()
+            return list1 == list2
+        }
+
         val currentTrans = FactoryOfTransformations(projectTrunk, projectLocal)
             .getListOfAllTransformations()
             .toMutableSet()
@@ -226,15 +240,7 @@ object Client {
         }
     }
 
-    private fun setsAreEqual(
-        a: Set<Transformation>,
-        b: Set<Transformation>
-    ): Boolean {
-        if (a.size != b.size) return false
-        val list1 = a.map { it.toJson().toString() }.sorted()
-        val list2 = b.map { it.toJson().toString() }.sorted()
-        return list1 == list2
-    }
+
 
     private fun applyChanges(
         serializedTransformations: JsonArray,
@@ -272,26 +278,6 @@ object Client {
         }
     }
 
-    private fun applyChangesLocal(serializedTransformations: JsonArray) {
-        try {
-            projectLocal.initializeAllIndexes()
-            val transRoot = serializedTransformations.map { json ->
-                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
-                    projectLocal
-                )
-            }
-            println("LOCAL: " + transRoot)
-            applyTransformationsTo(projectLocal, transRoot.toSet())
-            projectLocal.saveProjectTo(Path(projectLocal.path))
-        } catch (ex: Exception) {
-            error(
-                "Apply Changes Error",
-                "Could not apply changes: ${ex.message}",
-                ex
-            )
-        }
-    }
-
 
     // sends current transformation list to the server
     private fun updateServer() {
@@ -314,13 +300,33 @@ object Client {
             )
         else {
             val trans = JsonArray(transformations.map { it.toJson() })
-            ClientOperation.PUSH.send(trans)
+            ClientOperation.PROPAGATE.send(trans)
         }
     }
 
     fun acceptChanges(conflict: ConflictInfo) {
         applyChangesLocal(JsonArray(listOf(conflict.conflictingTransformation)))
         TrunkDelta.updateTransformations()
+    }
+
+    private fun applyChangesLocal(serializedTransformations: JsonArray) {
+        try {
+            projectLocal.initializeAllIndexes()
+            val transRoot = serializedTransformations.map { json ->
+                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
+                    projectLocal
+                )
+            }
+            println("LOCAL: " + transRoot)
+            applyTransformationsTo(projectLocal, transRoot.toSet())
+            projectLocal.saveProjectTo(Path(projectLocal.path))
+        } catch (ex: Exception) {
+            error(
+                "Apply Changes Error",
+                "Could not apply changes: ${ex.message}",
+                ex
+            )
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-package pt.iscte.javardair.messages
+package pt.iscte.javardair.server
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonObject

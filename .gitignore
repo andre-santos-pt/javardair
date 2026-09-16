@@ -43,6 +43,6 @@ bin/
 
 /libs/
 
-/server
-/workspaceA
-/workspaceB
+/TEST-server
+/TEST-workspaceA
+/TEST-workspaceB

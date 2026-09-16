@@ -1,4 +1,4 @@
-package pt.iscte.javardair.actions
+package pt.iscte.javardair.old
 
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor

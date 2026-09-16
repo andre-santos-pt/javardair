@@ -1,15 +1,13 @@
-package pt.iscte.javardair
+package pt.iscte.javardair.server
 
-import pt.iscte.javardair.messages.ConflictInfo
-import pt.iscte.javardair.messages.FileContent
 import kotlinx.serialization.json.*
-import pt.iscte.javardair.messages.ClientMessage
-import pt.iscte.javardair.messages.ClientOperation
-import pt.iscte.javardair.messages.ServerMessage
-import pt.iscte.javardair.messages.ServerOperations
+import pt.iscte.javardair.client.ClientMessage
+import pt.iscte.javardair.client.ClientOperation
 import model.*
 import model.conflictDetection.Conflict
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
+import pt.iscte.javardair.toJson
+import pt.iscte.javardair.toTransformation
 import java.io.*
 import java.net.ServerSocket
 import java.net.Socket
@@ -26,23 +24,23 @@ fun main(args: Array<String>) {
     }
     val port = args[0].toIntOrNull()
     if (port == null || port !in 1..65535) {
-        println("Invalid port number: ${args[0]}. Port must be an integer between 1 and 65535.")
+        System.err.println("Invalid port number: ${args[0]}. Port must be an integer between 1 and 65535.")
         return
     }
     val trunkPath =
         if (args.size == 2) args[1] else System.getProperty("user.dir")
     if (!File(trunkPath).exists()) {
-        println("Working directory does not exist: $trunkPath")
+        System.err.println("Working directory does not exist: $trunkPath")
         return
     }
     if (!File(trunkPath).isDirectory) {
-        println("Working directory is not a directory: $trunkPath")
+        System.err.println("Working directory is not a directory: $trunkPath")
         return
     }
-    Server(port, trunkPath).launch()
+    Server(port, File(trunkPath).absolutePath).launch()
 }
 
-class Server(val port: Int, trunkPath: String) {
+class Server(val port: Int, val trunkPath: String) {
     private val project: Project = Project(trunkPath)
     private val clientTransformations = mutableMapOf<ClientHandler, JsonArray> ()
     private val clientsLock = Any()
@@ -53,7 +51,7 @@ class Server(val port: Int, trunkPath: String) {
 
     fun launch() {
         val serverSocket = ServerSocket(port)
-        println("Javardair Server started on port $port")
+        println("Javardair Server started on port $port; trunk path: $trunkPath")
         while (true) {
             val clientSocket = serverSocket.accept()
             thread { ClientHandler(clientSocket).run() }
@@ -127,7 +125,7 @@ class Server(val port: Int, trunkPath: String) {
                         }
                     }
 
-                    ClientOperation.PUSH -> {
+                    ClientOperation.PROPAGATE -> {
                         val transformations =
                             Json.decodeFromString<JsonArray>(message.content)
                         synchronized(clientsLock) {
@@ -194,7 +192,7 @@ class Server(val port: Int, trunkPath: String) {
             val fileList = Json.encodeToString(fileListTemp)
 
             val message = ServerMessage(
-                ServerOperations.FETCH_RESPONSE,
+                ServerOperation.FETCH_RESPONSE,
                 fileList,
                 this.clientID
             )
@@ -210,7 +208,7 @@ class Server(val port: Int, trunkPath: String) {
             val newMap: MutableMap<String, Set<ConflictInfo>> =
                 mutableMapOf()
 
-            // Transformar Map<ClientHandler, List<Conflict> em Map<String, List<pt.iscte.javardair.messages.ConflictInfo>
+            // Transformar Map<ClientHandler, List<Conflict> em Map<String, List<pt.iscte.javardair.server.ConflictInfo>
             conflicts.forEach { (clientHandler, conflicts) ->
                 val tempMap = mutableMapOf<String, Set<ConflictInfo>>()
                 val conflictInfoSet = conflicts.map { conflict ->
@@ -234,14 +232,14 @@ class Server(val port: Int, trunkPath: String) {
                 newMap["${clientHandler.clientID},${clientHandler.clientName}"] =
                     conflictInfoSet
                 val response = ServerMessage(
-                    ServerOperations.NOTIFY_CONFLICTS,
+                    ServerOperation.NOTIFY_CONFLICTS,
                     Json.encodeToString(tempMap),
                     this.clientID
                 )
                 clientHandler.write(Json.encodeToString(response))
             }
             val response = ServerMessage(
-                ServerOperations.NOTIFY_CONFLICTS,
+                ServerOperation.NOTIFY_CONFLICTS,
                 Json.encodeToString(newMap),
                 this.clientID
             )
@@ -252,7 +250,7 @@ class Server(val port: Int, trunkPath: String) {
             try {
                 clientTransformations.keys.forEach {
                     val response = ServerMessage(
-                        ServerOperations.PROPAGATE,
+                        ServerOperation.PROPAGATE,
                         trans,
                         this.clientID
                     )
