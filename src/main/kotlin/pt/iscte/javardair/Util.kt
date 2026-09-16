@@ -1,6 +1,5 @@
 package pt.iscte.javardair
 
-import model.Project
 import kotlin.reflect.jvm.isAccessible
 
 
@@ -14,8 +13,8 @@ fun Any.getPrivateField(name: String): Any? {
     }
 }
 
-fun Project.getPrivatePath(): String {
-    val f = this::class.members.find { it.name == "path" }
-    f!!.isAccessible = true
-    return f.call(this).toString()
-}
+//fun Project.getPrivatePath(): String {
+//    val f = this::class.members.find { it.name == "path" }
+//    f!!.isAccessible = true
+//    return f.call(this).toString()
+//}

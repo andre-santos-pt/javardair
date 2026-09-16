@@ -9,6 +9,7 @@ import com.github.javaparser.ast.body.TypeDeclaration
 import com.github.javaparser.ast.body.VariableDeclarator
 import com.github.javaparser.ast.expr.SimpleName
 import org.eclipse.swt.widgets.Display
+import pt.iscte.javardair.ConnectToServer
 import pt.iscte.javardise.CommandStack
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor

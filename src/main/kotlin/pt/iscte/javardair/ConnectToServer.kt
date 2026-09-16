@@ -1,26 +1,17 @@
-package pt.iscte.javardair.actions
+package pt.iscte.javardair
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.Node
-import com.github.javaparser.ast.body.BodyDeclaration
-import com.github.javaparser.ast.body.FieldDeclaration
-import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.comments.LineComment
 import kotlinx.serialization.json.jsonPrimitive
-import model.setUUIDTo
 import org.eclipse.swt.SWT
-import org.eclipse.swt.events.MouseEvent
-import org.eclipse.swt.events.MouseTrackListener
 import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
-import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.RowLayout
 import org.eclipse.swt.widgets.*
-import pt.iscte.javardair.*
 import pt.iscte.javardair.messages.ConflictInfo
 import pt.iscte.javardise.*
 import pt.iscte.javardise.basewidgets.ICodeDecoration
-import pt.iscte.javardise.basewidgets.addDecoration
 import pt.iscte.javardise.basewidgets.addMark
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor
@@ -29,7 +20,6 @@ import pt.iscte.javardise.external.findChild
 import pt.iscte.javardise.external.getOrNull
 import pt.iscte.javardise.external.onClick
 import java.io.File
-import java.util.*
 
 
 class ConnectToServer : Action {
@@ -49,8 +39,6 @@ class ConnectToServer : Action {
         TrunkDelta.addConflictObserver {
             trans.updateConflicts()
         }
-        trans.open()
-
         addConflictMarks(editor)
 
         // fires event at every editing command
@@ -69,19 +57,38 @@ class ConnectToServer : Action {
         editor.addFileObserver(fileObserver)
 
         // TODO add/remove file -> update project
-        // TODO add file -> inject UUID
+
+        Client.setup(editor.folder, editor.allCompilationUnits())
     }
 
-    fun Node.getUuidFromComment(): String? {
-        return comment.getOrNull?.let {
-            when (it) {
-                is LineComment -> it.content.trim()
-                else -> null
+    override fun run(editor: CodeEditor, toggle: Boolean) {
+        if (!Client.isConnected && toggle)
+            Client.connect {
+                Display.getDefault().asyncExec {
+                    MessageBox(
+                        Display.getDefault().activeShell,
+                        SWT.ICON_ERROR or SWT.OK
+                    ).apply {
+                        text = it.title
+                        this.message = it.message
+                    }.open()
+                }
             }
-        }
+        else
+            Client.disconnect()
     }
 
     private fun addConflictMarks(editor: CodeEditor) {
+
+        fun Node.getUuidFromComment(): String? {
+            return comment.getOrNull?.let {
+                when (it) {
+                    is LineComment -> it.content.trim()
+                    else -> null
+                }
+            }
+        }
+
         val marks = mutableListOf<ICodeDecoration<*>>()
         var popupShell: Shell? = null
         TrunkDelta.addConflictObserver {
@@ -150,7 +157,6 @@ class ConnectToServer : Action {
                                         }
                                     }
                                 }
-
                                 popupShell?.location =
                                     control.toDisplay(0, control.size.y)
                                 popupShell?.pack()
@@ -159,7 +165,6 @@ class ConnectToServer : Action {
                                     popupShell?.dispose()
                                 }
                             }
-
                         }
                     }
                 }
@@ -169,30 +174,4 @@ class ConnectToServer : Action {
 
     private fun ConflictInfo.isConflictSolvable() =
         conflictingTransformation["code"].toString().matches(Regex("BodyChangedCallable|SignatureChanged"))
-
-    override fun run(editor: CodeEditor, toggle: Boolean) {
-        if (!Client.isConnected && toggle) {
-            Client.open(editor.folder, editor.allCompilationUnits())
-        } else {
-            Client.close()
-        }
-    }
-
-    // TODO estas funcoes deviam estar noutro ficheiro nao?
-    private fun injectClassUUIDs(unit: CompilationUnit) {
-        if (!unit.comment.isPresent)
-            unit.setComment(LineComment(UUID.randomUUID().toString()))
-
-        unit.types.filter { !it.comment.isPresent }.forEach {
-            it.setComment(LineComment(UUID.randomUUID().toString()))
-        }
-    }
-
-    // TODO estas funcoes deviam estar noutro ficheiro nao?
-    private fun injectMemberUUIDs(cmd: Command) {
-        if (cmd.kind == CommandKind.ADD && (cmd.element is MethodDeclaration || cmd.element is FieldDeclaration)) {
-            val uuidAdded = UUID.randomUUID().toString()
-            (cmd.element as BodyDeclaration<*>).setUUIDTo(model.UUID(uuidAdded))
-        }
-    }
 }

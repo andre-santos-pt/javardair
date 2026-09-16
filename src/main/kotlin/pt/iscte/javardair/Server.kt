@@ -2,10 +2,9 @@ package pt.iscte.javardair
 
 import pt.iscte.javardair.messages.ConflictInfo
 import pt.iscte.javardair.messages.FileContent
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.*
 import pt.iscte.javardair.messages.ClientMessage
-import pt.iscte.javardair.messages.ClientOperations
+import pt.iscte.javardair.messages.ClientOperation
 import pt.iscte.javardair.messages.ServerMessage
 import pt.iscte.javardair.messages.ServerOperations
 import model.*
@@ -21,7 +20,7 @@ import kotlin.concurrent.thread
 import kotlin.io.path.Path
 
 fun main(args: Array<String>) {
-    if(args.isEmpty()) {
+    if (args.isEmpty()) {
         println("Usage: java -jar javardair.jar <port> [<trunkPath>]")
         return
     }
@@ -30,25 +29,25 @@ fun main(args: Array<String>) {
         println("Invalid port number: ${args[0]}. Port must be an integer between 1 and 65535.")
         return
     }
-    val trunkPath = if(args.size == 2) args[1] else System.getProperty("user.dir")
+    val trunkPath =
+        if (args.size == 2) args[1] else System.getProperty("user.dir")
     if (!File(trunkPath).exists()) {
         println("Working directory does not exist: $trunkPath")
         return
     }
-    if(!File(trunkPath).isDirectory) {
+    if (!File(trunkPath).isDirectory) {
         println("Working directory is not a directory: $trunkPath")
         return
     }
     Server(port, trunkPath).launch()
 }
 
-class Server(val port: Int, val trunkPath: String) {
-    private val project: Project
-    private val clientsInfo: MutableMap<ClientHandler, JsonArray> = mutableMapOf()
-    private val clientsInfoLock = Any()
+class Server(val port: Int, trunkPath: String) {
+    private val project: Project = Project(trunkPath)
+    private val clientTransformations = mutableMapOf<ClientHandler, JsonArray> ()
+    private val clientsLock = Any()
 
     init {
-        project = Project(trunkPath)
         launch()
     }
 
@@ -57,10 +56,7 @@ class Server(val port: Int, val trunkPath: String) {
         println("Javardair Server started on port $port")
         while (true) {
             val clientSocket = serverSocket.accept()
-            println("Client connected: ${clientSocket.port}")
-            val client = ClientHandler(clientSocket)
-            clientsInfo[client] = JsonArray(emptyList())
-            thread { client.run() }
+            thread { ClientHandler(clientSocket).run() }
         }
     }
 
@@ -71,14 +67,20 @@ class Server(val port: Int, val trunkPath: String) {
         private lateinit var clientName: String
 
         fun run() {
+            println("New connection accepted on port ${clientSocket.port}")
+            synchronized(clientsLock) {
+                clientTransformations[this] = JsonArray(emptyList())
+            }
             try {
                 serve()
             } catch (ex: Exception) {
-                println("${clientSocket.port } closed the connection due to ${ex.message}")
+                println("${clientSocket.port} closed the connection due to ${ex.message}")
             } finally {
                 try {
                     clientSocket.close()
-                    clientsInfo.remove(this)
+                    synchronized(clientsLock) {
+                        clientTransformations.remove(this)
+                    }
                 } catch (ex: Exception) {
                     ex.printStackTrace()
                 }
@@ -86,67 +88,83 @@ class Server(val port: Int, val trunkPath: String) {
             }
         }
 
+        private fun write(message: String) {
+            writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
+        }
+
         private fun serve() {
             while (true) {
                 val text = reader.nextLine()
-                val message = Json.decodeFromString<ClientMessage>(text) // The server will only receive messages from the client.
+                val message = Json.decodeFromString<ClientMessage>(text)
+                println("${message.op} [${if(::clientName.isInitialized) clientName else "?"}]: ${message.content}")
                 when (message.op) {
-                    ClientOperations.HANDSHAKE -> {
-                        val (receivedClientID, receivedClientName) = message.content.split(",")
+                    ClientOperation.HANDSHAKE -> {
+                        val s = Json.decodeFromString<String>(message.content)
+                        val (receivedClientID, receivedClientName) = s.split(
+                            ","
+                        )
                         clientID = receivedClientID
                         clientName = receivedClientName
-                        println("$clientID : $clientName")
+                        println("Connected $clientName: $clientID")
+                        // TODO no answer?
                     }
 
-                    ClientOperations.FETCH_REQUEST -> {
+                    ClientOperation.FETCH_REQUEST -> {
                         sendFiles()
                     }
 
                     // Checks if there are any conflicts with the other clients.
-                    ClientOperations.UPDATE -> {
-                        synchronized(clientsInfoLock) {
-                            clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content)
+                    ClientOperation.UPDATE -> {
+                        val transformations =
+                            Json.decodeFromString<JsonArray>(message.content)
+                        synchronized(clientsLock) {
+                            clientTransformations[this] = transformations
                         }
-                        if (clientsInfo.size > 1) {
-                            val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
+                        if (clientTransformations.size > 1) {
+                            val conflicts =
+                                checkForConflicts(this, transformations)
                             notifyConflicts(this, conflicts)
                         }
                     }
 
-                    ClientOperations.PUSH -> {
-                        synchronized(clientsInfoLock) {
-                            clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content)
+                    ClientOperation.PUSH -> {
+                        val transformations =
+                            Json.decodeFromString<JsonArray>(message.content)
+                        synchronized(clientsLock) {
+                            clientTransformations[this] = transformations
                         }
-                        if (clientsInfo.size > 1) {
-                            val conflicts = checkForConflicts(this, Json.decodeFromString<JsonArray>(message.content))
-                            // If there are 0 conflicts, apply changes and propagate it.
+                        if (clientTransformations.size > 1) {
+                            // if there is more than one client connected, check for conflicts with the other clients
+                            val conflicts =
+                                checkForConflicts(this, transformations)
                             val allEmpty = conflicts.all { it.value.isEmpty() }
-                            if(allEmpty) {
-                                applyChanges(Json.decodeFromString<JsonArray>(message.content))
+                            if (allEmpty) {
+                                // If there are no conflicts, apply changes and propagate it.
+                                applyChanges(transformations)
                                 propagateChanges(message.content)
                             } else {
                                 // Notify clients for the specific conflicts.
                                 notifyConflicts(this, conflicts)
                             }
-                        }
-                        else {
-                            applyChanges(Json.decodeFromString<JsonArray>(message.content))
+                        } else {
+                            applyChanges(transformations)
                             propagateChanges(message.content)
                         }
                     }
 
-                    ClientOperations.FORCE_PUSH -> {
-                        synchronized(clientsInfoLock) {
-                            clientsInfo[this] = Json.decodeFromString<JsonArray>(message.content)
+                    // TODO
+                    ClientOperation.FORCE_PUSH -> {
+                        val transformations =
+                            Json.decodeFromString<JsonArray>(message.content)
+                        synchronized(clientsLock) {
+                            clientTransformations[this] = transformations
                         }
-                        if (clientsInfo.size > 1) {
-                            applyChanges(Json.decodeFromString<JsonArray>(message.content))
+                        if (clientTransformations.size > 1) {
+                            applyChanges(transformations)
                             propagateChanges(message.content)
-
-                        }
-                        else {
+                        } else {
                             // Nao pode haver conflitos pq é o unico que esta connectado.
-                            applyChanges(Json.decodeFromString<JsonArray>(message.content))
+                            applyChanges(transformations)
                             propagateChanges(message.content)
                         }
                     }
@@ -154,120 +172,6 @@ class Server(val port: Int, val trunkPath: String) {
             }
         }
 
-        private fun notifyConflicts(client: ClientHandler, conflicts: MutableMap<ClientHandler, Set<Conflict>>) {
-
-            // Criar um novo MutableMap para lidar com o facto de ClientHandler e Conflict nao serem Serilaizble
-            val newMap: MutableMap<String, Set<ConflictInfo>> = mutableMapOf()
-
-            // Transformar Map<ClientHandler, List<Conflict> em Map<String, List<pt.iscte.javardair.messages.ConflictInfo>
-            conflicts.forEach { (clientHandler, conflicts) ->
-                val tempMap = mutableMapOf<String, Set<ConflictInfo>>()
-                val conflictInfoSet = conflicts.map { conflict ->
-                    ConflictInfo(
-                        clientHandler.clientName,
-                        conflict.message,
-//                        "Conflict between ${
-//                            (conflict.first.toJson()["code"]).toString()
-//                                .trim('"')
-//                        } and ${
-//                            conflict.second.toJson()["code"].toString()
-//                                .trim('"')
-//                        }",
-                        conflict.first.getNode().uuid.toString(),
-                        conflict.second.toJson()
-//                        conflict.second.getText()
-                    )
-                }.toSet()
-                val conflictInfoSetOpposite = conflicts.map { conflict ->
-                    ConflictInfo(
-                        client.clientName,
-                        conflict.message,
-//                        "Conflict between ${
-//                            conflict.first.toJson()["code"].toString().trim('"')
-//                        } and ${
-//                            conflict.second.toJson()["code"].toString()
-//                                .trim('"')
-//                        }",
-                        conflict.second.getNode().uuid.toString(),
-                        conflict.first.toJson()
-//                        conflict.first.getText()
-                    )
-                }.toSet()
-                tempMap["${this.clientID},${this.clientName}"] = conflictInfoSetOpposite
-                newMap["${clientHandler.clientID},${clientHandler.clientName}"] = conflictInfoSet
-                val response = ServerMessage(
-                    ServerOperations.NOTIFY_CONFLICTS,
-                    Json.encodeToString(tempMap),
-                    this.clientID
-                )
-                clientHandler.write(Json.encodeToString(response))
-            }
-            val response = ServerMessage(
-                ServerOperations.NOTIFY_CONFLICTS,
-                Json.encodeToString(newMap),
-                this.clientID
-            )
-            write(Json.encodeToString(response))
-        }
-
-        // Returns a map with the conflict of the client with the other clients.
-        private fun checkForConflicts(client: ClientHandler, trans: JsonArray): MutableMap<ClientHandler, Set<Conflict>> {
-            val conflicts: MutableMap<ClientHandler, Set<Conflict>> = mutableMapOf()
-            synchronized(clientsInfoLock) {
-                clientsInfo.map { (otherClient, otherTrans) ->
-                    if(otherClient != client) {
-                        conflicts[otherClient] = getConflicts(trans, otherTrans)
-                    }
-                }
-                return conflicts
-            }
-        }
-
-        // Get a Set of conflicts between two List of Transformations.
-        private fun getConflicts(transA: JsonArray, transB: JsonArray): Set<Conflict> {
-            val transASerialized = transA.map { json ->
-                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
-            }.toMutableSet()
-            val transBSerialized = transB.map { json ->
-                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
-            }.toMutableSet()
-            val redundancyFreeSetOfTransformations =
-                RedundancyFreeSetOfTransformations(transASerialized, transBSerialized)
-            return getConflicts(project, redundancyFreeSetOfTransformations)
-        }
-
-        private fun write(message: String) {
-            writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
-        }
-
-        private fun applyChanges(transformations: JsonArray) {
-            try {
-                val trans = transformations.map { json ->
-                    (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(project)
-                }
-                applyTransformationsTo(project, trans.toSet())
-                project.saveProjectTo(Path(project.getPrivatePath()))   
-
-            } catch (ex: Exception) {
-                ex.printStackTrace()
-            }
-        }
-
-        private fun propagateChanges(trans: String) {
-            try {
-                clientsInfo.keys.forEach {
-                    val response = ServerMessage(
-                        ServerOperations.PROPAGATE,
-                        trans,
-                        this.clientID
-                    )
-                    it.write(Json.encodeToString(response))
-
-                }
-            } catch (ex: Exception) {
-                println("Could not send message to other clients $ex")
-            }
-        }
 
         private fun sendFiles() {
             val dir = File(project.getProjectRoot().root.toString())
@@ -276,7 +180,8 @@ class Server(val port: Int, val trunkPath: String) {
 
             files?.forEach {
                 if (it.isFile) {
-                    val content = Base64.getEncoder().encodeToString(Files.readAllBytes(it.toPath()))
+                    val content = Base64.getEncoder()
+                        .encodeToString(Files.readAllBytes(it.toPath()))
                     fileListTemp.add(
                         FileContent(
                             it.name,
@@ -293,9 +198,127 @@ class Server(val port: Int, val trunkPath: String) {
                 fileList,
                 this.clientID
             )
-
             write(Json.encodeToString(message))
+        }
+
+        private fun notifyConflicts(
+            client: ClientHandler,
+            conflicts: MutableMap<ClientHandler, Set<Conflict>>
+        ) {
+
+            // Criar um novo MutableMap para lidar com o facto de ClientHandler e Conflict nao serem Serilaizble
+            val newMap: MutableMap<String, Set<ConflictInfo>> =
+                mutableMapOf()
+
+            // Transformar Map<ClientHandler, List<Conflict> em Map<String, List<pt.iscte.javardair.messages.ConflictInfo>
+            conflicts.forEach { (clientHandler, conflicts) ->
+                val tempMap = mutableMapOf<String, Set<ConflictInfo>>()
+                val conflictInfoSet = conflicts.map { conflict ->
+                    ConflictInfo(
+                        clientHandler.clientName,
+                        conflict.message,
+                        conflict.first.getNode().uuid.toString(),
+                        conflict.second.toJson()
+                    )
+                }.toSet()
+                val conflictInfoSetOpposite = conflicts.map { conflict ->
+                    ConflictInfo(
+                        client.clientName,
+                        conflict.message,
+                        conflict.second.getNode().uuid.toString(),
+                        conflict.first.toJson()
+                    )
+                }.toSet()
+                tempMap["${this.clientID},${this.clientName}"] =
+                    conflictInfoSetOpposite
+                newMap["${clientHandler.clientID},${clientHandler.clientName}"] =
+                    conflictInfoSet
+                val response = ServerMessage(
+                    ServerOperations.NOTIFY_CONFLICTS,
+                    Json.encodeToString(tempMap),
+                    this.clientID
+                )
+                clientHandler.write(Json.encodeToString(response))
+            }
+            val response = ServerMessage(
+                ServerOperations.NOTIFY_CONFLICTS,
+                Json.encodeToString(newMap),
+                this.clientID
+            )
+            write(Json.encodeToString(response))
+        }
+
+        private fun propagateChanges(trans: String) {
+            try {
+                clientTransformations.keys.forEach {
+                    val response = ServerMessage(
+                        ServerOperations.PROPAGATE,
+                        trans,
+                        this.clientID
+                    )
+                    it.write(Json.encodeToString(response))
+                }
+            } catch (ex: Exception) {
+                println("Could not send message to other clients $ex")
+            }
+        }
+    }
+
+    // Returns a map with the conflict of the client with the other clients.
+    private fun checkForConflicts(
+        client: ClientHandler,
+        trans: JsonArray
+    ): MutableMap<ClientHandler, Set<Conflict>> {
+        val conflicts: MutableMap<ClientHandler, Set<Conflict>> =
+            mutableMapOf()
+        synchronized(clientsLock) {
+            clientTransformations.map { (otherClient, otherTrans) ->
+                if (otherClient != client) {
+                    conflicts[otherClient] =
+                        getConflicts(trans, otherTrans)
+                }
+            }
+            return conflicts
+        }
+    }
+
+    // Get a set of conflicts between two List of Transformations.
+    private fun getConflicts(
+        transA: JsonArray,
+        transB: JsonArray
+    ): Set<Conflict> {
+        val transASerialized = transA.map { json ->
+            (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
+                project
+            )
+        }.toMutableSet()
+        val transBSerialized = transB.map { json ->
+            (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
+                project
+            )
+        }.toMutableSet()
+        val redundancyFreeSetOfTransformations =
+            RedundancyFreeSetOfTransformations(
+                transASerialized,
+                transBSerialized
+            )
+        return getConflicts(project, redundancyFreeSetOfTransformations)
+    }
+
+    private fun applyChanges(transformations: JsonArray) {
+        try {
+            val trans = transformations.map { json ->
+                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
+                    project
+                )
+            }
+            applyTransformationsTo(project, trans.toSet())
+            project.saveProjectTo(Path(project.path))
+
+        } catch (ex: Exception) {
+            ex.printStackTrace()
         }
     }
 }
+
 

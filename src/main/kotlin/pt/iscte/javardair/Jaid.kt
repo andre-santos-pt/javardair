@@ -1,22 +1,27 @@
 package pt.iscte.javardair
 
 import com.github.javaparser.StaticJavaParser
+import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.NodeList
-import com.github.javaparser.ast.body.CallableDeclaration
-import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration
+import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.FieldDeclaration
+import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.body.Parameter
 import com.github.javaparser.ast.comments.LineComment
 import com.github.javaparser.ast.expr.SimpleName
 import kotlinx.serialization.json.*
 import model.Project
 import model.UUID
+import model.setUUIDTo
 import model.transformations.*
 import model.uuid
+import pt.iscte.javardise.Command
+import pt.iscte.javardise.CommandKind
 
 // map a transformation to a json object
-    fun Transformation.toJson(): JsonObject {
-    val fields = mutableMapOf<String, JsonElement>("code" to JsonPrimitive(this::class.java.simpleName))
+fun Transformation.toJson(): JsonObject {
+    val fields =
+        mutableMapOf<String, JsonElement>("code" to JsonPrimitive(this::class.java.simpleName))
     when (this) {
 
         // TODO AddFile, RemoveFile
@@ -35,8 +40,10 @@ import model.uuid
         }
 
         is AddCallable -> {
-            fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
-            fields["constructor"] = JsonPrimitive(getNode().isConstructorDeclaration)
+            fields["owner-uuid"] =
+                JsonPrimitive(getParentNode().uuid.toString())
+            fields["constructor"] =
+                JsonPrimitive(getNode().isConstructorDeclaration)
             fields["body"] = JsonPrimitive(getNode().toString())
         }
 
@@ -51,13 +58,15 @@ import model.uuid
         }
 
         is RemoveCallable -> {
-            fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
+            fields["owner-uuid"] =
+                JsonPrimitive(getParentNode().uuid.toString())
             fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
         }
 
         is AddField -> {
             //println("\nA transformar o AddField em json ${getNode()}\n")
-            fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
+            fields["owner-uuid"] =
+                JsonPrimitive(getParentNode().uuid.toString())
             val comment = getNode().comment.orElse(null)
             //println("comment do AddField -> ${getNode().comment}")
             //println("comment.content do AddField -> ${comment.content}")
@@ -69,7 +78,8 @@ import model.uuid
         }
 
         is RemoveField -> {
-            fields["owner-uuid"] = JsonPrimitive(getParentNode().uuid.toString())
+            fields["owner-uuid"] =
+                JsonPrimitive(getParentNode().uuid.toString())
             fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
         }
 
@@ -85,7 +95,8 @@ import model.uuid
 
         is InitializerChangedField -> {
             fields["uuid"] = JsonPrimitive(getNode().uuid.toString())
-            fields["initializer"] = JsonPrimitive(getNewInitializer().toString())
+            fields["initializer"] =
+                JsonPrimitive(getNewInitializer().toString())
         }
 
         // TODO MoveCallableIntraType
@@ -103,7 +114,8 @@ import model.uuid
 // deserialize a transformation from a json object
 fun JsonObject.toTransformation(project: Project): Transformation {
     fun JsonObject.field(name: String): String =
-        this[name]?.jsonPrimitive?.content ?: throw Exception("Field $name not found")
+        this[name]?.jsonPrimitive?.content
+            ?: throw Exception("Field $name not found")
 
     return when (val code = field("code")) {
 
@@ -115,7 +127,10 @@ fun JsonObject.toTransformation(project: Project): Transformation {
                 project.getMethodByUUID(UUID(field("uuid")))!!,
                 NodeList<Parameter>(this["parameters"]?.jsonArray?.map {
                     it as JsonObject
-                    Parameter(StaticJavaParser.parseType(it.field("type")), it.field("name"))
+                    Parameter(
+                        StaticJavaParser.parseType(it.field("type")),
+                        it.field("name")
+                    )
                 }),
                 SimpleName(field("name"))
             )
@@ -134,6 +149,7 @@ fun JsonObject.toTransformation(project: Project): Transformation {
                 StaticJavaParser.parseType(field("returnType"))
 
             )
+
         BodyChangedCallable::class.java.simpleName ->
             BodyChangedCallable(
                 project,
@@ -149,7 +165,8 @@ fun JsonObject.toTransformation(project: Project): Transformation {
 
 
         AddField::class.java.simpleName -> {
-            val fieldDeclaration = StaticJavaParser.parseBodyDeclaration(field("newField")) as FieldDeclaration
+            val fieldDeclaration =
+                StaticJavaParser.parseBodyDeclaration(field("newField")) as FieldDeclaration
             val uuidComment = field("uuid-comment")
             fieldDeclaration.setComment(LineComment(uuidComment))
             AddField(
@@ -164,17 +181,20 @@ fun JsonObject.toTransformation(project: Project): Transformation {
                 project.getTypeByUUID(UUID(field("owner-uuid")))!!,
                 project.getFieldByUUID(UUID(field("uuid")))!!
             )
+
         RenameField::class.java.simpleName ->
             RenameField(
                 project.getFieldByUUID(UUID(field("uuid")))!!,
                 SimpleName(field("name"))
             )
+
         TypeChangedField::class.java.simpleName ->
             TypeChangedField(
                 project,
                 project.getFieldByUUID(UUID(field("uuid")))!!,
                 StaticJavaParser.parseType(field("type"))
             )
+
         InitializerChangedField::class.java.simpleName ->
             InitializerChangedField(
                 project,
@@ -192,7 +212,25 @@ fun JsonObject.toTransformation(project: Project): Transformation {
 //         }
 
 
-
         else -> throw Exception("Transformation not found $code")
+    }
+}
+
+fun injectClassUUIDs(unit: CompilationUnit) {
+    if(!unit.packageDeclaration.isPresent)
+        unit.setPackageDeclaration("todo")
+
+    if (!unit.comment.isPresent)
+        unit.setComment(LineComment(java.util.UUID.randomUUID().toString()))
+
+    unit.types.filter { !it.comment.isPresent }.forEach {
+        it.setComment(LineComment(java.util.UUID.randomUUID().toString()))
+    }
+}
+
+fun injectMemberUUIDs(cmd: Command) {
+    if (cmd.kind == CommandKind.ADD && (cmd.element is MethodDeclaration || cmd.element is FieldDeclaration)) {
+        val uuidAdded = java.util.UUID.randomUUID().toString()
+        (cmd.element as BodyDeclaration<*>).setUUIDTo(UUID(uuidAdded))
     }
 }

@@ -12,7 +12,6 @@ import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
-import org.eclipse.swt.layout.RowData
 import org.eclipse.swt.widgets.*
 import org.eclipse.swt.widgets.Event
 import pt.iscte.javardair.messages.ConflictInfo
@@ -22,7 +21,7 @@ import kotlin.reflect.KClass
 
 
 class TrackChangesWindow(val editor: CodeEditor) {
-    val changesView = Composite(editor.display.shells.first(), SWT.BORDER)
+    val changesView = Composite(editor.getPrivateField("shell") as Shell, SWT.BORDER)
     val table = Table(
         changesView,
         SWT.CHECK or SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL
@@ -44,36 +43,36 @@ class TrackChangesWindow(val editor: CodeEditor) {
         }
 
     init {
-        //Label(editor.display.shells.first(), SWT.NONE).text = "???"
         //stickToMainWindow()
+        open()
     }
 
-    private fun stickToMainWindow() {
-        val mainShell = editor.display.shells.first()
-        mainShell.text = ClientProperties.clientName
-        mainShell.size = Point(600, 600)
-        mainShell.addControlListener(object : ControlAdapter() {
-            override fun controlMoved(e: ControlEvent) {
-                updateFollowerPosition()
-            }
+//    private fun stickToMainWindow() {
+//        val mainShell = editor.display.shells.first()
+//        mainShell.text = ClientProperties.clientName
+//        mainShell.size = Point(600, 600)
+//        mainShell.addControlListener(object : ControlAdapter() {
+//            override fun controlMoved(e: ControlEvent) {
+//                updateFollowerPosition()
+//            }
+//
+//            override fun controlResized(e: ControlEvent) {
+//                updateFollowerPosition()
+//            }
+//
+//            private fun updateFollowerPosition() {
+//                val y = mainShell.location.y + mainShell.size.y - 120
+//                changesView.setLocation(mainShell.location.x + 10, y)
+//                changesView.setSize(
+//                    mainShell.size.x - 20,
+//                    120
+//                )
+//            }
+//        })
+//    }
 
-            override fun controlResized(e: ControlEvent) {
-                updateFollowerPosition()
-            }
 
-            private fun updateFollowerPosition() {
-                val y = mainShell.location.y + mainShell.size.y - 120
-                changesView.setLocation(mainShell.location.x + 10, y)
-                changesView.setSize(
-                    mainShell.size.x - 20,
-                    120
-                )
-            }
-        })
-    }
-
-
-    fun open() {
+    private fun open() {
         editor.display.shells.first().text = "${ClientProperties.clientName}: ${editor.folder}"
         changesView.layout = FillLayout()
         changesView.layoutData = GridData(SWT.FILL, SWT.FILL, true, false)
@@ -81,7 +80,6 @@ class TrackChangesWindow(val editor: CodeEditor) {
         table.linesVisible = true
         table.addSelectionListener(object : SelectionAdapter() {
             override fun widgetSelected(e: SelectionEvent) {
-                println("Selected item: ${e.item}")
                 if (table.selection.isNotEmpty())
                     println(table.selection.get(0).data)
             }
@@ -128,12 +126,6 @@ class TrackChangesWindow(val editor: CodeEditor) {
             TODO()
         }
 
-//        val accept = MenuItem(popup, SWT.NONE)
-//        accept.text = "Accept changes from A"
-//        accept.addListener(SWT.Selection) { e ->
-//
-//        }
-
         table.menu = popup
 
         table.addListener(SWT.MenuDetect) { e: Event? ->
@@ -141,19 +133,16 @@ class TrackChangesWindow(val editor: CodeEditor) {
             if (selection.isEmpty()) {
                 push.enabled = false
                 rollback.enabled = false
-//                accept.enabled = false
             } else {
                 val selectedSet = table.items
                     .filter { it.checked }
                     .map { it.data as Transformation }
 
                 push.enabled = Client.isConnected && selectedSet.isNotEmpty() && selectedSet.none { TrunkDelta.hasConflict(it) }
-                rollback.enabled = true
-//                accept.enabled = selectedSet.any { TrunkDelta.hasConflict(it) }
+                rollback.enabled = true // TODO: check if rollback is possible
             }
         }
         changesView.requestLayout()
-        //shell.open()
     }
 
     fun updateTable(list: List<Transformation>) {
@@ -170,15 +159,11 @@ class TrackChangesWindow(val editor: CodeEditor) {
                         TrunkDelta.getConflicts(t).asText()
                     )
                 )
-//                item.text = t.getText() + " (${t::class.simpleName})"
-//                item.image = transIcon(t)
                 if (TrunkDelta.hasConflict(t))
                     item.foreground =
                         Display.getDefault().getSystemColor(SWT.COLOR_RED)
 
-
                 item.data = t
-
             }
             table.requestLayout()
         }

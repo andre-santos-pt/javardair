@@ -16,6 +16,10 @@ object TrunkDelta {
         transformations.addObserver(observer)
     }
 
+    fun removeObserver(observer: (List<Transformation>) -> Unit) {
+        transformations.removeObserver(observer)
+    }
+
     fun addConflictObserver(observer: (Map<String,List<ConflictInfo>>) -> Unit) {
         conflictsMap.addObserver(observer)
     }

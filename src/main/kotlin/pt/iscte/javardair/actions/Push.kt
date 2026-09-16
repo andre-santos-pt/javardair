@@ -1,12 +1,5 @@
 package pt.iscte.javardair.actions
 
-import pt.iscte.javardair.TrunkDelta
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import pt.iscte.javardair.messages.ClientMessage
-import pt.iscte.javardair.messages.ClientOperations
-import pt.iscte.javardair.Client
-import pt.iscte.javardair.EventBroker
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor
 import javax.swing.JOptionPane

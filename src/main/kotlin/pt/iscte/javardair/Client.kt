@@ -5,17 +5,20 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.MemoryTypeSolver
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
+import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
 import model.FactoryOfTransformations
 import model.Project
 import model.applyTransformationsTo
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
 import model.getConflicts
 import model.transformations.Transformation
+import org.eclipse.swt.SWT
 import org.eclipse.swt.widgets.Display
+import org.eclipse.swt.widgets.MessageBox
 import pt.iscte.javardair.messages.*
 import java.io.File
 import java.io.OutputStream
@@ -27,19 +30,25 @@ import kotlin.io.path.Path
 
 
 object Client {
+    internal lateinit var projectLocal: Project
+    internal lateinit var projectTrunk: Project
+
     private var socket: Socket? = null
     private lateinit var reader: Scanner
     private lateinit var writer: OutputStream
-    internal lateinit var projectLocal: Project
-    internal lateinit var projectTrunk: Project
     var isConnected = false
-    private val clientID: UUID = UUID.randomUUID() // TODO sera que este uuid devia ser criado quando a ide é aberta e nao quando o cliente se junta?
+        private set
 
-    fun open(editorPath: File, allCompilationUnits: List<CompilationUnit>) {
+    private val clientID: UUID = UUID.randomUUID()
+
+    private var errorHandler: ((ClientError) -> Unit)? = null
+
+    // setup the client offline
+    fun setup(editorPath: File, allCompilationUnits: List<CompilationUnit>) {
         val memoryTypeSolver = MemoryTypeSolver()
 
-        val trunkDir = File(editorPath, ClientProperties.trunkFolder)
-        if(!trunkDir.exists())
+        val trunkDir = File(editorPath, ClientProperties.TRUNK_FOLDER)
+        if (!trunkDir.exists())
             trunkDir.mkdirs()
 
         projectTrunk = Project(trunkDir.absolutePath)
@@ -52,55 +61,81 @@ object Client {
             allCompilationUnits.toMutableList(),
             CombinedTypeSolver(ReflectionTypeSolver(false), memoryTypeSolver),
             memoryTypeSolver,
-            true,
-            true
+            setupProject = true,
+            initializeIndexes = true
         )
-        isConnected = true
+        TrunkDelta.updateTransformations()
+    }
+
+    private val deltaObserver = { transformations: List<Transformation> ->
+        if (isConnected) {
+            val trans = JsonArray(transformations.map { it.toJson() })
+            ClientOperation.UPDATE.send(trans)
+        }
+    }
+
+    data class ClientError(val title: String, val message: String, val exception: Exception? = null)
+
+    fun connect(errorHandler: (ClientError) -> Unit) {
+        this.errorHandler = errorHandler
         try {
-            connectToServer()
-        } catch (ex: Exception) {
-            println("${ClientProperties.clientName}: Cannot connect to the server on port ${ClientProperties.port}")
-        }
-    }
-
-    private fun connectToServer() {
-        socket = Socket(ClientProperties.address, ClientProperties.port)
-        socket?.let { socket ->
-            reader = Scanner(socket.getInputStream())
-            writer = socket.getOutputStream()
-            thread {
-                sendHandshakeMessage()
-                requestFiles()
-                dealWithServer()
+            socket = Socket(ClientProperties.address, ClientProperties.port)
+            socket?.let { socket ->
+                reader = Scanner(socket.getInputStream())
+                writer = socket.getOutputStream()
+                thread {
+                    ClientOperation.HANDSHAKE.send(JsonPrimitive("$clientID,${ClientProperties.clientName}"))
+                    ClientOperation.FETCH_REQUEST.send(JsonPrimitive(null))
+                    dealWithServer()
+                }
             }
+            isConnected = true
+        } catch (ex: Exception) {
+            error(
+                "Connection Error",
+                "Cannot connect to the server at ${ClientProperties.address}:${ClientProperties.port}",
+                ex
+            )
         }
     }
 
-    fun close() {
+    fun disconnect() {
         socket?.close()
         isConnected = false
+        TrunkDelta.removeObserver(deltaObserver)
+    }
+
+    private fun error(title: String, message: String, exception: Exception? = null) {
+        errorHandler?.invoke(ClientError(title, message, exception))
+    }
+
+    fun ClientOperation.send(json: JsonElement) {
+        if (isConnected) {
+            try {
+                val message = Json.encodeToString(
+                    ClientMessage(this, Json.encodeToString(json))
+                )
+                writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
+            } catch (ex: Exception) {
+                error(this.name, ex.message ?: "Unknown error", ex)
+            }
+        } else {
+            error(
+                "Not connected",
+                "Cannot send message to server because the client is not connected."
+            )
+        }
     }
 
     private fun dealWithServer() {
-        TrunkDelta.addObserver {
-            if(isConnected) {
-                val serializedTransformations = JsonArray(it.map { it.toJson() })
-                try {
-                    val message = ClientMessage(ClientOperations.UPDATE, Json.encodeToString(serializedTransformations))
-                    write(Json.encodeToString(message))
-                    println("update: $message")
-                } catch (ex: Exception) {
-                    println("Could not send message to Server ${ex.printStackTrace()}")
-                }
-            }
-        }
+        TrunkDelta.addObserver(deltaObserver)
 
         try {
             while (isConnected) {
                 val text = reader.nextLine()
                 // The client will only receive messages from the server
                 val message = Json.decodeFromString<ServerMessage>(text)
-                when(message.op) {
+                when (message.op) {
                     ServerOperations.FETCH_RESPONSE -> {
                         updateRootFiles(Json.decodeFromString(message.content))
                     }
@@ -111,50 +146,78 @@ object Client {
                         // se houver, guardar esta current list numa var extra
                         // aplicar as mudanças vindas do propagate
                         // aplicar as mundanças da current list
-                        checkChanges(Json.decodeFromString(message.content), message.sender)
+                        checkChanges(
+                            Json.decodeFromString(message.content),
+                            message.sender
+                        )
                     }
 
                     ServerOperations.NOTIFY_CONFLICTS -> {
                         TrunkDelta.updateConflicts(Json.decodeFromString(message.content))
-//                        notifyConflicts(Json.decodeFromString(message.content))
                     }
                 }
             }
         } catch (ex: Exception) {
-            println("Disconnected from server at ${ClientProperties.address}:${ClientProperties.port}")
+            error(
+                "Disconnected",
+                "Disconnected from server at ${ClientProperties.address}:${ClientProperties.port}",
+                ex
+            )
+            disconnect()
         }
     }
 
+    private fun updateRootFiles(fileList: List<FileContent>) {
+        val rootDir = File(projectTrunk.getProjectRoot().root.toString())
+
+        // clear the root directory before updating files
+        rootDir.listFiles()?.forEach { it.deleteRecursively() }
+
+        fileList.forEach {
+            val filePath = "$rootDir${File.separator}${it.fileName}"
+            val file = File(filePath)
+            val decodedContent = Base64.getDecoder().decode(it.fileContent)
+            file.writeBytes(decodedContent)
+        }
+        // reinitialize the projectTrunk to reflect the updated files
+        projectTrunk = Project(projectTrunk.getProjectRoot().root.toString())
+
+        // trigger comparison of transformations between projectLocal and projectTrunk
+        TrunkDelta.updateTransformations()
+    }
+
+
     // safe mechanism to deal with the case of user making a change while receiving a PROPAGATE message
     private fun checkChanges(forcedTrans: JsonArray, sender: String) {
-        // get current changes
-        val currentTrans = mutableSetOf<Transformation>()
-        val factoryOfTransformations = FactoryOfTransformations(projectTrunk, projectLocal)
-        currentTrans.addAll(factoryOfTransformations.getListOfAllTransformations())
+        val currentTrans = FactoryOfTransformations(projectTrunk, projectLocal)
+            .getListOfAllTransformations()
+            .toMutableSet()
 
         // check if conflicts exist between current changes and trans being forced into
         val forcedTransSerialized = forcedTrans.map { json ->
-            (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
-                projectTrunk
-            ) // da erro se for Local pq em teoria o UUID e nao esta la. É aqui que esta a haver o erro de mudar um metodo adicionado
+            (Json.parseToJsonElement(json.toString()) as JsonObject)
+                .toTransformation(projectTrunk)
         }.toMutableSet()
         forcedTransSerialized.forEach { println("forcedTrans: ${it.toJson()}") }
 
         applyChanges(forcedTrans, sender)
         TrunkDelta.updateTransformations()
 
-        if(setsAreEqual(currentTrans, forcedTransSerialized)){
+        if (setsAreEqual(currentTrans, forcedTransSerialized)) {
             updateServer()
-
         } else {
-            val redundancyFreeSetOfTransformations = RedundancyFreeSetOfTransformations(forcedTransSerialized, currentTrans)
-            val conflicts = getConflicts(projectLocal, redundancyFreeSetOfTransformations)
+            val redundancyFreeSetOfTransformations =
+                RedundancyFreeSetOfTransformations(
+                    forcedTransSerialized,
+                    currentTrans
+                )
+            val conflicts =
+                getConflicts(projectLocal, redundancyFreeSetOfTransformations)
 
             // apply changes normally (to both local and root project)
 
             // apply the current changes to the local only
-            if(conflicts.isNotEmpty()) {
-                // TODO Verificar se ele depois vai ver as difs bem
+            if (conflicts.isNotEmpty()) {
                 Display.getDefault().syncExec {
                     applyTransformationsTo(projectLocal, currentTrans.toSet())
                 }
@@ -163,22 +226,20 @@ object Client {
         }
     }
 
-    private fun setsAreEqual(set1: MutableSet<Transformation>, set2: MutableSet<Transformation>): Boolean {
-        if (set1.size != set2.size) return false
-
-        val list1 = set1.map { it.toJson().toString() }.sorted()
-        val list2 = set2.map { it.toJson().toString() }.sorted()
-
+    private fun setsAreEqual(
+        a: Set<Transformation>,
+        b: Set<Transformation>
+    ): Boolean {
+        if (a.size != b.size) return false
+        val list1 = a.map { it.toJson().toString() }.sorted()
+        val list2 = b.map { it.toJson().toString() }.sorted()
         return list1 == list2
     }
 
-    fun write(message: String) {
-        if(isConnected) {
-            writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
-        }
-    }
-
-    private fun applyChanges(serializedTransformations: JsonArray, sender: String?) {
+    private fun applyChanges(
+        serializedTransformations: JsonArray,
+        sender: String?
+    ) {
         try {
             projectLocal.initializeAllIndexes()
 
@@ -188,7 +249,7 @@ object Client {
                 )
             }
 
-            if(sender != clientID.toString()) {
+            if (sender != clientID.toString()) {
                 val transLocal = serializedTransformations.map { json ->
                     (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
                         projectLocal
@@ -201,9 +262,14 @@ object Client {
             }
 
             applyTransformationsTo(projectTrunk, transRoot.toSet())
-            projectTrunk.saveProjectTo(Path(projectTrunk.getPrivatePath()))
+            projectTrunk.saveProjectTo(Path(projectTrunk.path))
         } catch (ex: Exception) {
-            println("Could not apply changes. ${ex.printStackTrace()}")        }
+            error(
+                "Apply Changes Error",
+                "Could not apply changes: ${ex.message}",
+                ex
+            )
+        }
     }
 
     private fun applyChangesLocal(serializedTransformations: JsonArray) {
@@ -214,79 +280,41 @@ object Client {
                     projectLocal
                 )
             }
-            println("LOCAL : " + transRoot)
+            println("LOCAL: " + transRoot)
             applyTransformationsTo(projectLocal, transRoot.toSet())
-            projectLocal.saveProjectTo(Path(projectLocal.getPrivatePath()))
+            projectLocal.saveProjectTo(Path(projectLocal.path))
         } catch (ex: Exception) {
-            println("Could not apply changes. ${ex.printStackTrace()}")        }
-    }
-
-    // send current transformation list to the server for consistency matters
-    private fun updateServer() {
-        val transformations: MutableSet<Transformation> = mutableSetOf()
-        val factoryOfTransformations = FactoryOfTransformations(projectTrunk, projectLocal)
-        transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
-
-        if(isConnected) {
-            val tempTrans = JsonArray(transformations.map { it.toJson() })
-            try {
-                val message = ClientMessage(ClientOperations.UPDATE, Json.encodeToString(tempTrans))
-                write(Json.encodeToString(message))
-
-            } catch (ex: Exception) {
-                println("Could not send message to Server. ${ex.printStackTrace()}")
-            }
-        }
-    }
-    private fun updateRootFiles(fileList: List<FileContent>) {
-        // Get dir from current client
-        val rootDir = File(projectTrunk.getProjectRoot().root.toString())
-
-        // Update/Create files
-        fileList.forEach {
-            val filePath = "$rootDir${File.separator}${it.fileName}"
-            val file = File(filePath)
-            val decodedContent = Base64.getDecoder().decode(it.fileContent)
-            file.writeBytes(decodedContent)
-        }
-        TrunkDelta.updateTransformations()
-        //projectTrunk = Project(trunkDir.absolutePath)
-    }
-
-    private fun requestFiles() {
-       if(isConnected) {
-           val message = ClientMessage(ClientOperations.FETCH_REQUEST, "")
-           write(Json.encodeToString(message))
-       }
-    }
-
-    private fun sendHandshakeMessage() {
-        if(isConnected) {
-            val message = ClientMessage(
-                ClientOperations.HANDSHAKE,
-                "$clientID,${ClientProperties.clientName}"
+            error(
+                "Apply Changes Error",
+                "Could not apply changes: ${ex.message}",
+                ex
             )
-            write(Json.encodeToString(message))
         }
     }
+
+
+    // sends current transformation list to the server
+    private fun updateServer() {
+        if (isConnected) {
+            val trans = JsonArray(
+                FactoryOfTransformations(projectTrunk, projectLocal)
+                    .getListOfAllTransformations()
+                    .map { it.toJson() }
+            )
+            ClientOperation.UPDATE.send(trans)
+        }
+    }
+
 
     fun push(transformations: List<Transformation>) {
-        if (!isConnected)
-            throw RuntimeException("Not connected")
-        else if (transformations.any { TrunkDelta.hasConflict(it) })
-            throw RuntimeException("There are conflicts in the transformation set")
+        if (transformations.any { TrunkDelta.hasConflict(it) })
+            error(
+                "Push Error",
+                "Cannot push changes because there are conflicts in the transformation set."
+            )
         else {
-            val serializedTransformations =  JsonArray(transformations.map { it.toJson() })
-            try {
-                val message = ClientMessage(
-                    ClientOperations.PUSH,
-                    Json.encodeToString(serializedTransformations)
-                )
-                write(Json.encodeToString(message))
-            } catch (ex: Exception) {
-                ex.printStackTrace()
-                throw RuntimeException("Could not send PUSH to Server")
-            }
+            val trans = JsonArray(transformations.map { it.toJson() })
+            ClientOperation.PUSH.send(trans)
         }
     }
 
