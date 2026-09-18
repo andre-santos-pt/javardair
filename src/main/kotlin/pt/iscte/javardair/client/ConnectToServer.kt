@@ -2,15 +2,18 @@ package pt.iscte.javardair.client
 
 import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.Node
+import com.github.javaparser.ast.body.BodyDeclaration
+import com.github.javaparser.ast.body.FieldDeclaration
+import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.comments.LineComment
 import kotlinx.serialization.json.jsonPrimitive
+import model.UUID
+import model.setUUIDTo
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.layout.RowLayout
 import org.eclipse.swt.widgets.*
-import pt.iscte.javardair.injectClassUUIDs
-import pt.iscte.javardair.injectMemberUUIDs
 import pt.iscte.javardair.server.ConflictInfo
 import pt.iscte.javardise.*
 import pt.iscte.javardise.basewidgets.ICodeDecoration
@@ -22,6 +25,8 @@ import pt.iscte.javardise.external.findChild
 import pt.iscte.javardise.external.getOrNull
 import pt.iscte.javardise.external.onClick
 import java.io.File
+import java.io.PrintWriter
+import kotlin.io.path.Path
 
 
 class ConnectToServer : Action {
@@ -34,33 +39,106 @@ class ConnectToServer : Action {
 
     override fun init(editor: CodeEditor) {
         ClientProperties.load(editor.folder.absolutePath)
-        val trans = TrackChangesWindow(editor)
-        TrunkDelta.addObserver {
-            trans.updateTable(it)
-        }
-        TrunkDelta.addConflictObserver {
-            trans.updateConflicts()
-        }
+        TrackChangesWindow(editor)
         addConflictMarks(editor)
-
-        // fires event at every editing command
-        val commandObserver = { cmd: Command, _: Boolean, _: CommandStack? ->
-            injectMemberUUIDs(cmd)
-            TrunkDelta.updateTransformations()
+        addObserverInjectUUIDsOnClassMembers(editor)
+        addObserverInjectUUIDsOnFiles(editor)
+        Client.setup(editor.folder, editor.allCompilationUnits()) {
+            Display.getDefault().asyncExec {
+                editor.openTab(it)
+            }
         }
+    }
+
+    private fun addObserverInjectUUIDsOnClassMembers(editor: CodeEditor) {
+        class IntectUUIDMembers(val cmd: Command) : Command {
+            val uuid = java.util.UUID.randomUUID().toString()
+            override val element: String
+                get() = uuid
+            override val kind: CommandKind
+                get() = CommandKind.MODIFY
+            override val target: Node
+                get() = cmd.element as Node
+
+            override fun run() {
+                if (cmd.kind == CommandKind.ADD && (cmd.element is MethodDeclaration || cmd.element is FieldDeclaration))
+                    (cmd.element as BodyDeclaration<*>).setUUIDTo(UUID(uuid))
+            }
+
+            override fun undo() { }
+        }
+
+        val commandObserver = { cmd: Command, _: Boolean, _: CommandStack? ->
+            if (editor.classOnFocus != null && cmd !is IntectUUIDMembers) {
+                // inject UUID on class members
+                // command forces serialization
+                editor.classOnFocus?.commandStack?.execute(IntectUUIDMembers(cmd))
+                TrunkDelta.updateTransformations()
+            }
+        }
+        // fires event at every editing command
         editor.addCommandObserver(commandObserver)
+    }
+
+    private fun addObserverInjectUUIDsOnFiles(editor: CodeEditor) {
+        fun injectClassUUIDs(unit: CompilationUnit) {
+
+            if (!unit.packageDeclaration.isPresent)
+                unit.setPackageDeclaration("todo")
+
+            if (!unit.comment.isPresent)
+                unit.setComment(
+                    LineComment(
+                        java.util.UUID.randomUUID().toString()
+                    )
+                )
+
+            unit.types.filter { !it.comment.isPresent }.forEach {
+                it.setComment(
+                    LineComment(
+                        java.util.UUID.randomUUID().toString()
+                    )
+                )
+            }
+        }
+//        class IntectUUIDFile(val unit: CompilationUnit) : Command {
+//            override val element: CompilationUnit
+//                get() = unit
+//            override val kind: CommandKind
+//                get() = CommandKind.MODIFY
+//            override val target: Node
+//                get() = unit as Node
+//
+//            override fun run() {
+//                injectClassUUIDs(unit)
+//            }
+//            override fun undo() { }
+//        }
+
+        fun writeFile(unit: CompilationUnit) {
+            val w = PrintWriter(unit.storage.get().path.toString())
+            w.write(unit.toString())
+            w.close()
+        }
 
         val fileObserver =
-            { _: File, event: FileEvent, unit: CompilationUnit? ->
-                if (event == FileEvent.CREATE && unit != null)
+            { f: File, event: FileEvent, unit: CompilationUnit? ->
+                if (event == FileEvent.CREATE && unit != null) {
+//                    val w = (editor.allUnitWidgets().find { it.node == unit })
+//                    println(w?.commandStack)
+//                    w?.commandStack?.execute(IntectUUIDFile(unit))
                     injectClassUUIDs(unit)
-                TrunkDelta.updateTransformations()
+                    Client.addLocalJavaFile(unit)
+                    //unit.setStorage(Path(f.absolutePath)) // TODO Jaid bug? storage is not set correctly?
+                    writeFile(unit) // force serialization of changes
+                    TrunkDelta.updateTransformations()
+                }
+
+                // TODO event == FileEvent.DELETE
+                // TODO event == FileEvent.RENAME
             }
         editor.addFileObserver(fileObserver)
 
-        // TODO add/remove file -> update project
-
-        Client.setup(editor.folder, editor.allCompilationUnits())
     }
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
@@ -68,7 +146,8 @@ class ConnectToServer : Action {
             Client.connect {
                 Display.getDefault().asyncExec {
                     MessageBox(
-                        Display.getDefault().activeShell,
+                        Shell(editor.display, SWT.NONE),
+//                        Display.getDefault().activeShell,
                         SWT.ICON_ERROR or SWT.OK
                     ).apply {
                         text = it.title
@@ -128,11 +207,12 @@ class ConnectToServer : Action {
                                     }
 
                                     Text(this, SWT.BORDER).apply {
-                                        text = when(c.conflictingTransformation["code"]?.jsonPrimitive?.content) {
-                                            "BodyChangedCallable" -> c.conflictingTransformation["body"]?.jsonPrimitive?.content
-                                            "SignatureChanged" -> c.conflictingTransformation["name"]?.jsonPrimitive?.content
-                                            else -> ""
-                                        }
+                                        text =
+                                            when (c.conflictingTransformation["code"]?.jsonPrimitive?.content) {
+                                                "BodyChangedCallable" -> c.conflictingTransformation["body"]?.jsonPrimitive?.content
+                                                "SignatureChanged" -> c.conflictingTransformation["name"]?.jsonPrimitive?.content
+                                                else -> ""
+                                            }
                                         editable = false
                                     }
 
@@ -175,5 +255,6 @@ class ConnectToServer : Action {
     }
 
     private fun ConflictInfo.isConflictSolvable() =
-        conflictingTransformation["code"].toString().matches(Regex("BodyChangedCallable|SignatureChanged"))
+        conflictingTransformation["code"].toString()
+            .matches(Regex("BodyChangedCallable|SignatureChanged"))
 }

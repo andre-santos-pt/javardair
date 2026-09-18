@@ -5,10 +5,10 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSol
 import com.github.javaparser.symbolsolver.resolution.typesolvers.MemoryTypeSolver
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
 import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
+import com.github.javaparser.utils.SourceRoot
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import model.FactoryOfTransformations
 import model.Project
@@ -17,19 +17,22 @@ import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
 import model.getConflicts
 import model.transformations.Transformation
 import org.eclipse.swt.widgets.Display
+import pt.iscte.javardair.decodeTransformations
 import pt.iscte.javardair.server.ConflictInfo
 import pt.iscte.javardair.server.FileContent
 import pt.iscte.javardair.server.ServerMessage
 import pt.iscte.javardair.server.ServerOperation
 import pt.iscte.javardair.toJson
-import pt.iscte.javardair.toTransformation
+import pt.iscte.javardise.external.getOrNull
 import java.io.File
 import java.io.OutputStream
+import java.io.PrintWriter
 import java.net.Socket
 import java.nio.charset.Charset
 import java.util.*
 import kotlin.concurrent.thread
 import kotlin.io.path.Path
+import kotlin.io.path.exists
 
 
 object Client {
@@ -46,28 +49,41 @@ object Client {
 
     private var errorHandler: ((ClientError) -> Unit)? = null
 
-    // setup the client offline
-    fun setup(editorPath: File, allCompilationUnits: List<CompilationUnit>) {
-        val memoryTypeSolver = MemoryTypeSolver()
+    private val memoryTypeSolver = MemoryTypeSolver()
 
-        val trunkDir = File(editorPath, ClientProperties.TRUNK_FOLDER)
+    private lateinit var newFileEvent: (CompilationUnit) -> Unit
+
+    // setup the client offline
+    fun setup(editorPath: File, compilationUnits: List<CompilationUnit>, newFileEvent: (CompilationUnit) -> Unit) {
+        val trunkDir = createTrunkDir(editorPath)
+        projectTrunk = Project(trunkDir.absolutePath)
+        loadProjectLocal(editorPath.absolutePath, compilationUnits)
+        TrunkDelta.updateTransformations()
+        this.newFileEvent = newFileEvent
+    }
+
+    private fun createTrunkDir(rootPath: File): File {
+        val trunkDir = File(rootPath, ClientProperties.TRUNK_FOLDER)
         if (!trunkDir.exists())
             trunkDir.mkdirs()
+        return trunkDir
+    }
 
-        projectTrunk = Project(trunkDir.absolutePath)
+    internal fun loadProjectLocal(path: String, compilationUnits: List<CompilationUnit>) {
         projectLocal = Project(
-            editorPath.absolutePath,
-            SymbolSolverCollectionStrategy().collect(
-                Path(editorPath.absolutePath)
-            ),
-            null,
-            allCompilationUnits.toMutableList(),
+            path,
+            SymbolSolverCollectionStrategy().collect(Path(path)),
+            SourceRoot(Path(path)),
+            compilationUnits.toMutableList(),
             CombinedTypeSolver(ReflectionTypeSolver(false), memoryTypeSolver),
             memoryTypeSolver,
             setupProject = true,
             initializeIndexes = true
         )
-        TrunkDelta.updateTransformations()
+    }
+
+    internal fun addLocalJavaFile(unit: CompilationUnit) {
+        projectLocal.addFile(unit)
     }
 
     private val deltaObserver = { transformations: List<Transformation> ->
@@ -138,6 +154,7 @@ object Client {
                 val text = reader.nextLine()
                 // The client will only receive messages from the server
                 val message = Json.decodeFromString<ServerMessage>(text)
+                println("[${message.op}] ${message.content}")
                 when (message.op) {
                     ServerOperation.FETCH_RESPONSE -> {
                         updateRootFiles(Json.decodeFromString(message.content))
@@ -149,10 +166,15 @@ object Client {
                         // se houver, guardar esta current list numa var extra
                         // aplicar as mudanças vindas do propagate
                         // aplicar as mundanças da current list
-                        integratePropagation(
+//                        integratePropagation(
+//                            Json.decodeFromString(message.content),
+//                            message.sender
+//                        )
+                        applyChanges(
                             Json.decodeFromString(message.content),
                             message.sender
                         )
+                        TrunkDelta.updateTransformations()
                     }
 
                     ServerOperation.NOTIFY_CONFLICTS -> {
@@ -208,11 +230,7 @@ object Client {
             .toMutableSet()
 
         // check if conflicts exist between current changes and trans being forced into
-        val forcedTransSerialized = forcedTrans.map { json ->
-            (Json.parseToJsonElement(json.toString()) as JsonObject)
-                .toTransformation(projectTrunk)
-        }.toMutableSet()
-        forcedTransSerialized.forEach { println("forcedTrans: ${it.toJson()}") }
+        val forcedTransSerialized = forcedTrans.decodeTransformations(projectTrunk).toMutableSet()
 
         applyChanges(forcedTrans, sender)
         TrunkDelta.updateTransformations()
@@ -241,32 +259,28 @@ object Client {
     }
 
 
-
     private fun applyChanges(
         serializedTransformations: JsonArray,
         sender: String?
     ) {
         try {
-            projectLocal.initializeAllIndexes()
-
-            val transRoot = serializedTransformations.map { json ->
-                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
-                    projectTrunk
-                )
-            }
-
             if (sender != clientID.toString()) {
-                val transLocal = serializedTransformations.map { json ->
-                    (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
-                        projectLocal
-                    ) // aqui dava erro tambem quando se edita um metodo que foi adicionado (no client q o adicionou)
-                }
-
+                projectLocal.initializeAllIndexes()
+                val transLocal = serializedTransformations.decodeTransformations(projectLocal)
                 Display.getDefault().syncExec {
                     applyTransformationsTo(projectLocal, transLocal.toSet())
                 }
+                projectLocal.getSetOfCompilationUnit()
+                    .filter { !Path(it.storage.getOrNull?.path.toString()).exists() }
+                    .forEach { println("NA: ${it.storage.getOrNull?.path}")
+                        val w = PrintWriter(it.storage.getOrNull?.path.toString())
+                        w.write(it.toString())
+                        w.close()
+                        newFileEvent(it)
+                    }
             }
 
+            val transRoot = serializedTransformations.decodeTransformations(projectTrunk)
             applyTransformationsTo(projectTrunk, transRoot.toSet())
             projectTrunk.saveProjectTo(Path(projectTrunk.path))
         } catch (ex: Exception) {
@@ -292,11 +306,11 @@ object Client {
     }
 
 
-    fun push(transformations: List<Transformation>) {
+    fun propagate(transformations: List<Transformation>) {
         if (transformations.any { TrunkDelta.hasConflict(it) })
             error(
-                "Push Error",
-                "Cannot push changes because there are conflicts in the transformation set."
+                "Conflicts",
+                "Cannot push changes because there are conflicts in the selected transformation set."
             )
         else {
             val trans = JsonArray(transformations.map { it.toJson() })
@@ -312,13 +326,13 @@ object Client {
     private fun applyChangesLocal(serializedTransformations: JsonArray) {
         try {
             projectLocal.initializeAllIndexes()
-            val transRoot = serializedTransformations.map { json ->
-                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
-                    projectLocal
-                )
-            }
-            println("LOCAL: " + transRoot)
-            applyTransformationsTo(projectLocal, transRoot.toSet())
+//            val transRoot = serializedTransformations.map { json ->
+//                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
+//                    projectLocal
+//                )
+//            }
+            val transLocal = serializedTransformations.decodeTransformations(projectLocal).toSet()
+            applyTransformationsTo(projectLocal, transLocal)
             projectLocal.saveProjectTo(Path(projectLocal.path))
         } catch (ex: Exception) {
             error(

@@ -11,19 +11,16 @@ import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.widgets.*
 import org.eclipse.swt.widgets.Event
+import pt.iscte.javardair.JsonPretty
 import pt.iscte.javardair.getPrivateField
 import pt.iscte.javardair.server.ConflictInfo
+import pt.iscte.javardair.toJson
 import pt.iscte.javardise.editor.CodeEditor
 import java.io.File
 import kotlin.reflect.KClass
 
 
 class TrackChangesWindow(val editor: CodeEditor) {
-    val changesView = Composite(editor.getPrivateField("shell") as Shell, SWT.BORDER)
-    val table = Table(
-        changesView,
-        SWT.CHECK or SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL
-    )
 
     val plus = this::class.java.getClassLoader()
         .getResourceAsStream("icons${File.separator}plus.png")?.let {
@@ -40,37 +37,21 @@ class TrackChangesWindow(val editor: CodeEditor) {
             Image(Display.getDefault(), it)
         }
 
-    init {
-        //stickToMainWindow()
-        open()
-    }
+    val changesView = Composite(editor.getPrivateField("shell") as Shell, SWT.BORDER)
+    val table = Table(
+        changesView,
+        SWT.CHECK or SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL
+    )
 
-//    private fun stickToMainWindow() {
-//        val mainShell = editor.display.shells.first()
-//        mainShell.text = ClientProperties.clientName
-//        mainShell.size = Point(600, 600)
-//        mainShell.addControlListener(object : ControlAdapter() {
-//            override fun controlMoved(e: ControlEvent) {
-//                updateFollowerPosition()
-//            }
-//
-//            override fun controlResized(e: ControlEvent) {
-//                updateFollowerPosition()
-//            }
-//
-//            private fun updateFollowerPosition() {
-//                val y = mainShell.location.y + mainShell.size.y - 120
-//                changesView.setLocation(mainShell.location.x + 10, y)
-//                changesView.setSize(
-//                    mainShell.size.x - 20,
-//                    120
-//                )
-//            }
-//        })
-//    }
+    val debugView = Composite(editor.getPrivateField("shell") as Shell, SWT.BORDER).apply {
+        layout = FillLayout()
+        Text(this, SWT.MULTI or SWT.V_SCROLL or SWT.H_SCROLL).apply {
+            text = "debug"
+            layoutData = GridData(SWT.FILL, SWT.FILL, true, true)
+        }
+    }.children.first() as Text
 
-
-    private fun open() {
+   init {
         editor.display.shells.first().text = "${ClientProperties.clientName}: ${editor.folder}"
         changesView.layout = FillLayout()
         changesView.layoutData = GridData(SWT.FILL, SWT.FILL, true, false)
@@ -78,8 +59,16 @@ class TrackChangesWindow(val editor: CodeEditor) {
         table.linesVisible = true
         table.addSelectionListener(object : SelectionAdapter() {
             override fun widgetSelected(e: SelectionEvent) {
-                if (table.selection.isNotEmpty())
-                    println(table.selection.get(0).data)
+                if (table.selection.isNotEmpty()) {
+                    val json = (table.selection[0].data as Transformation).toJson()
+                        .toString()
+                    debugView.text = JsonPretty.print(json)
+                    debugView.requestLayout()
+                }
+                else {
+                    debugView.text = "debug"
+                    debugView.requestLayout()
+                }
             }
         })
 
@@ -90,14 +79,17 @@ class TrackChangesWindow(val editor: CodeEditor) {
             column.width = 250
         }
 
-//        table.addSelectionListener(object : SelectionAdapter() {
-//            override fun widgetSelected(e: SelectionEvent) {
-//                val item = e.item as TableItem
-//                if(item.data is BodyDeclaration<*>)
-//                    editor.classOnFocus?.focus(item.data as BodyDeclaration<*>)
-//            }
-//        })
+        createPopupMenu()
 
+        TrunkDelta.addObserver {
+            updateTable(it)
+        }
+        TrunkDelta.addConflictObserver {
+            updateConflicts()
+        }
+    }
+
+    private fun createPopupMenu() {
         val popup = Menu(table)
         val push = MenuItem(popup, SWT.NONE)
         push.text = "Propagate"
@@ -106,11 +98,14 @@ class TrackChangesWindow(val editor: CodeEditor) {
                 .filter { it.checked }
                 .map { it.data as Transformation }
             try {
-                Client.push(selectedSet)
-            }
-            catch (ex: Exception) {
-               Display.getDefault().asyncExec {
-                    MessageBox(Display.getDefault().activeShell, SWT.ICON_ERROR or SWT.OK).apply {
+                Client.propagate(selectedSet)
+                TrunkDelta.updateTransformations()
+            } catch (ex: Exception) {
+                Display.getDefault().asyncExec {
+                    MessageBox(
+                        Display.getDefault().activeShell,
+                        SWT.ICON_ERROR or SWT.OK
+                    ).apply {
                         text = "Error"
                         message = ex.message
                     }.open()
@@ -121,7 +116,7 @@ class TrackChangesWindow(val editor: CodeEditor) {
         val rollback = MenuItem(popup, SWT.NONE)
         rollback.text = "Rollback"
         rollback.addListener(SWT.Selection) { e ->
-            TODO()
+
         }
 
         table.menu = popup
@@ -136,19 +131,22 @@ class TrackChangesWindow(val editor: CodeEditor) {
                     .filter { it.checked }
                     .map { it.data as Transformation }
 
-                push.enabled = Client.isConnected && selectedSet.isNotEmpty() && selectedSet.none { TrunkDelta.hasConflict(it) }
+                push.enabled =
+                    Client.isConnected && selectedSet.isNotEmpty() && selectedSet.none {
+                        TrunkDelta.hasConflict(it)
+                    }
                 rollback.enabled = true // TODO: check if rollback is possible
             }
         }
-        changesView.requestLayout()
     }
 
-    fun updateTable(list: List<Transformation>) {
+    private fun updateTable(list: List<Transformation>) {
         Display.getDefault().asyncExec {
+            val selected = table.items.filter { it.checked}.map { it.getText(0) }
             table.items.forEach { it.dispose() }
             for (t in list) {
                 val item = TableItem(table, SWT.NONE)
-                item.checked = true
+                item.checked = selected.contains(t.message())
                 item.setImage(0, t.icon())
                 item.setText(
                     arrayOf(
@@ -167,7 +165,7 @@ class TrackChangesWindow(val editor: CodeEditor) {
         }
     }
 
-    fun updateConflicts() {
+    private fun updateConflicts() {
         Display.getDefault().asyncExec {
             table.items.forEach {
                 val transformation = it.data as Transformation
@@ -201,11 +199,16 @@ class TrackChangesWindow(val editor: CodeEditor) {
             is SignatureChanged -> if (nameChanged())
                 "rename ${getNode().asString()} to '${getNewName()}'"
             else if (parametersChanged())
-                "parameters changed: ${getNode().parameters} parameters to ${getNewParameters()}"
+                "${getNode().signature} parameters changed to (${getNewParameters().joinToString { it.typeAsString }})"
             else
                 getText()
 
-            is AddCallable, is BodyChangedCallable, is RemoveCallable -> {
+            is AddCallable -> {
+                val callable = this.getPrivateField("callable") as CallableDeclaration<*>
+                this.getParentNode().nameAsString + "." + callable.asString()
+            }
+
+            is BodyChangedCallable, is RemoveCallable -> {
                 val callable =
                     this.getPrivateField("callable") as CallableDeclaration<*>
                 callable.asString()

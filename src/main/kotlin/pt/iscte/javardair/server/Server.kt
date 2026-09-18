@@ -6,6 +6,8 @@ import pt.iscte.javardair.client.ClientOperation
 import model.*
 import model.conflictDetection.Conflict
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
+import pt.iscte.javardair.JsonPretty
+import pt.iscte.javardair.decodeTransformations
 import pt.iscte.javardair.toJson
 import pt.iscte.javardair.toTransformation
 import java.io.*
@@ -47,6 +49,7 @@ class Server(val port: Int, val trunkPath: String) {
 
     init {
         launch()
+
     }
 
     fun launch() {
@@ -90,11 +93,13 @@ class Server(val port: Int, val trunkPath: String) {
             writer.write((message + '\n').toByteArray(Charset.defaultCharset()))
         }
 
+
+
         private fun serve() {
             while (true) {
                 val text = reader.nextLine()
                 val message = Json.decodeFromString<ClientMessage>(text)
-                println("${message.op} [${if(::clientName.isInitialized) clientName else "?"}]: ${message.content}")
+                println("${message.op} [${if(::clientName.isInitialized) clientName else "?"}]: ${JsonPretty.print(message.content)}\n")
                 when (message.op) {
                     ClientOperation.HANDSHAKE -> {
                         val s = Json.decodeFromString<String>(message.content)
@@ -285,16 +290,9 @@ class Server(val port: Int, val trunkPath: String) {
         transA: JsonArray,
         transB: JsonArray
     ): Set<Conflict> {
-        val transASerialized = transA.map { json ->
-            (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
-                project
-            )
-        }.toMutableSet()
-        val transBSerialized = transB.map { json ->
-            (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
-                project
-            )
-        }.toMutableSet()
+        val transASerialized = transA.decodeTransformations(project).toMutableSet()
+        val transBSerialized = transB.decodeTransformations(project).toMutableSet()
+
         val redundancyFreeSetOfTransformations =
             RedundancyFreeSetOfTransformations(
                 transASerialized,
@@ -305,12 +303,8 @@ class Server(val port: Int, val trunkPath: String) {
 
     private fun applyChanges(transformations: JsonArray) {
         try {
-            val trans = transformations.map { json ->
-                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
-                    project
-                )
-            }
-            applyTransformationsTo(project, trans.toSet())
+            val trans = transformations.decodeTransformations(project).toSet()
+            applyTransformationsTo(project, trans)
             project.saveProjectTo(Path(project.path))
 
         } catch (ex: Exception) {

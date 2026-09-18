@@ -25,9 +25,9 @@ dependencies {
     testImplementation(kotlin("test"))
     implementation(kotlin("reflect"))
     if(win)
-        implementation(files("libs/javardise-win.jar"))
+        implementation(files("libs/javardise-windows-1.2.1.jar"))
     else
-        implementation(files("libs/javardise-macos-1.2.0.jar"))
+        implementation(files("libs/javardise-macos-1.2.1.jar"))
    // implementation(files("libs/compilation-1.2.0.jar"))
     implementation(files("libs/jaid-1.1.jar"))
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0")

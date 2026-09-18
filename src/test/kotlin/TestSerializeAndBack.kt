@@ -77,7 +77,7 @@ class TestSerializeAndBack {
         val serializedTransformations = listOfTransformations.map { it.toJson().toString() }
         serializedTransformations.forEach { println(it)}
 
-        val deserializedTransformations = serializedTransformations.map { json ->
+        val deserializedTransformations = serializedTransformations.mapNotNull { json ->
             (Json.parseToJsonElement(json) as JsonObject).toTransformation(projBase)
         }.toSet()
 
