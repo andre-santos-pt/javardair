@@ -4,6 +4,9 @@ import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.body.*
 import model.transformations.*
 import org.eclipse.swt.SWT
+import org.eclipse.swt.events.MouseAdapter
+import org.eclipse.swt.events.MouseEvent
+import org.eclipse.swt.events.MouseListener
 import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.graphics.Image
@@ -16,63 +19,43 @@ import pt.iscte.javardair.getPrivateField
 import pt.iscte.javardair.server.ConflictInfo
 import pt.iscte.javardair.toJson
 import pt.iscte.javardise.editor.CodeEditor
+import pt.iscte.javardise.external.getOrNull
+import pt.iscte.javardise.findChild
 import java.io.File
 import kotlin.reflect.KClass
 
 
+
+
 class TrackChangesWindow(val editor: CodeEditor) {
 
-    val plus = this::class.java.getClassLoader()
-        .getResourceAsStream("icons${File.separator}plus.png")?.let {
+    private val icons = listOf("plus","minus","rename","edit").associateWith { loadIcon(it) }
+
+    private fun loadIcon(name: String) = TrackChangesWindow::class.java.getClassLoader()
+        .getResourceAsStream("icons${File.separator}$name.png")?.let {
             Image(Display.getDefault(), it)
         }
 
-    val minus = this::class.java.getClassLoader()
-        .getResourceAsStream("icons${File.separator}minus.png")?.let {
-            Image(Display.getDefault(), it)
-        }
-
-    val edit = this::class.java.getClassLoader()
-        .getResourceAsStream("icons${File.separator}edit.png")?.let {
-            Image(Display.getDefault(), it)
-        }
-
-    val changesView = Composite(editor.getPrivateField("shell") as Shell, SWT.BORDER)
+    val changesView =
+        Composite(editor.getPrivateField("shell") as Shell, SWT.BORDER)
     val table = Table(
         changesView,
-        SWT.CHECK or SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL
+        SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL or SWT.MULTI
     )
 
-    val debugView = Composite(editor.getPrivateField("shell") as Shell, SWT.BORDER).apply {
-        layout = FillLayout()
-        Text(this, SWT.MULTI or SWT.V_SCROLL or SWT.H_SCROLL).apply {
-            text = "debug"
-            layoutData = GridData(SWT.FILL, SWT.FILL, true, true)
-        }
-    }.children.first() as Text
 
-   init {
-        editor.display.shells.first().text = "${ClientProperties.clientName}: ${editor.folder}"
+    init {
+        editor.display.shells.first().text =
+            "${ClientProperties.clientName}: ${editor.folder}"
         changesView.layout = FillLayout()
         changesView.layoutData = GridData(SWT.FILL, SWT.FILL, true, false)
         table.headerVisible = true
         table.linesVisible = true
-        table.addSelectionListener(object : SelectionAdapter() {
-            override fun widgetSelected(e: SelectionEvent) {
-                if (table.selection.isNotEmpty()) {
-                    val json = (table.selection[0].data as Transformation).toJson()
-                        .toString()
-                    debugView.text = JsonPretty.print(json)
-                    debugView.requestLayout()
-                }
-                else {
-                    debugView.text = "debug"
-                    debugView.requestLayout()
-                }
-            }
-        })
 
-        val columnTitles = arrayOf("Transformation", "Incompatibility", "Reason")
+        addDebugView()
+
+        val columnTitles =
+            arrayOf("Transformation", "Incompatibility", "Reason")
         for (title in columnTitles) {
             val column = TableColumn(table, SWT.NONE)
             column.text = title
@@ -89,13 +72,44 @@ class TrackChangesWindow(val editor: CodeEditor) {
         }
     }
 
+    private fun addDebugView() {
+        if (ClientProperties.debug) {
+            val debugView = Composite(
+                editor.getPrivateField("shell") as Shell,
+                SWT.BORDER
+            ).apply {
+                layout = FillLayout()
+                Text(this, SWT.MULTI or SWT.V_SCROLL or SWT.H_SCROLL).apply {
+                    text = "debug"
+                    layoutData = GridData(SWT.FILL, SWT.FILL, true, true).apply {
+                        minimumHeight = 300;
+                    }
+                }
+            }.children.first() as Text
+            table.addSelectionListener(object : SelectionAdapter() {
+                override fun widgetSelected(e: SelectionEvent) {
+                    if (table.selection.isNotEmpty()) {
+                        val json =
+                            (table.selection[0].data as Transformation).toJson()
+                                .toString()
+                        debugView.text = JsonPretty.print(json)
+                        debugView.requestLayout()
+                    } else {
+                        debugView.text = "debug"
+                        debugView.requestLayout()
+                    }
+                }
+            })
+        }
+    }
+
     private fun createPopupMenu() {
         val popup = Menu(table)
-        val push = MenuItem(popup, SWT.NONE)
-        push.text = "Propagate"
-        push.addListener(SWT.Selection) { e ->
-            val selectedSet = table.items
-                .filter { it.checked }
+        val propagate = MenuItem(popup, SWT.NONE)
+        propagate.text = "Propagate"
+        propagate.addListener(SWT.Selection) { e ->
+            val selectedSet = table.selection
+//                .filter { it.checked }
                 .map { it.data as Transformation }
             try {
                 Client.propagate(selectedSet)
@@ -113,8 +127,17 @@ class TrackChangesWindow(val editor: CodeEditor) {
             }
         }
 
+        MenuItem(popup, SWT.NONE).apply {
+            text = "Accept theirs"
+            enabled = false
+            addListener(SWT.Selection) { e ->
+
+            }
+        }
+
         val rollback = MenuItem(popup, SWT.NONE)
         rollback.text = "Rollback"
+        rollback.enabled = false
         rollback.addListener(SWT.Selection) { e ->
 
         }
@@ -124,25 +147,39 @@ class TrackChangesWindow(val editor: CodeEditor) {
         table.addListener(SWT.MenuDetect) { e: Event? ->
             val selection = table.selection
             if (selection.isEmpty()) {
-                push.enabled = false
+                propagate.enabled = false
                 rollback.enabled = false
             } else {
-                val selectedSet = table.items
-                    .filter { it.checked }
+                val selectedSet = table.selection
+                    //.filter { it.checked }
                     .map { it.data as Transformation }
 
-                push.enabled =
+                propagate.enabled =
                     Client.isConnected && selectedSet.isNotEmpty() && selectedSet.none {
                         TrunkDelta.hasConflict(it)
                     }
-                rollback.enabled = true // TODO: check if rollback is possible
+                //rollback.enabled = true // TODO: check if rollback is possible
             }
         }
+
+        table.addMouseListener(object: MouseAdapter() {
+            override fun mouseDoubleClick(e: MouseEvent) {
+               if(table.selection.size == 1) {
+                   val t = table.selection.first().data as Transformation
+                   if(t is AddFile) {
+                       editor.openTab(t.getNode())
+                   }
+                   else
+                        editor.classOnFocus?.findChild(t.getNode())?.setFocus()
+               }
+            }
+        })
     }
 
     private fun updateTable(list: List<Transformation>) {
         Display.getDefault().asyncExec {
-            val selected = table.items.filter { it.checked}.map { it.getText(0) }
+            val selected =
+                table.items.filter { it.checked }.map { it.getText(0) }
             table.items.forEach { it.dispose() }
             for (t in list) {
                 val item = TableItem(table, SWT.NONE)
@@ -185,34 +222,57 @@ class TrackChangesWindow(val editor: CodeEditor) {
         }
     }
 
-    private fun Transformation.icon(): Image? {
-        return when (getText().split(" ")[0]) {
-            "ADD" -> plus
-            "REMOVE" -> minus
-            "RENAME", "CHANGE" -> edit
-            else -> null
-        }
-    }
+    private fun Transformation.icon(): Image? =
+        if(this::class.simpleName?.startsWith("Add") == true)
+            icons["plus"]
+        else if(this::class.simpleName?.startsWith("Remove") == true)
+            icons["minus"]
+        else if(this::class.simpleName?.startsWith("Rename") == true || this is SignatureChanged)
+            icons["rename"]
+        else
+            icons["edit"]
+
 
     private fun Transformation.message(): String {
+        fun SignatureChanged.sig() = getParentNode().nameAsString + "." + getNode().asString()
         return when (this) {
             is SignatureChanged -> if (nameChanged())
-                "rename ${getNode().asString()} to '${getNewName()}'"
+                "${sig()} renamed to ${getParentNode().nameAsString + "." + getNewName() + "()"}"
             else if (parametersChanged())
-                "${getNode().signature} parameters changed to (${getNewParameters().joinToString { it.typeAsString }})"
+                "${sig()} parameters changed to (${getNewParameters().joinToString { it.typeAsString }})"
             else
                 getText()
 
-            is AddCallable -> {
-                val callable = this.getPrivateField("callable") as CallableDeclaration<*>
-                this.getParentNode().nameAsString + "." + callable.asString()
-            }
 
-            is BodyChangedCallable, is RemoveCallable -> {
+            // TODO Field
+
+            is AddCallable -> {
                 val callable =
                     this.getPrivateField("callable") as CallableDeclaration<*>
-                callable.asString()
+                this.getParentNode().nameAsString + "." + callable.asString() + " added"
             }
+
+            is RemoveCallable -> {
+                val callable =
+                    this.getPrivateField("callable") as CallableDeclaration<*>
+                this.getParentNode().nameAsString + "." + callable.asString() + " removed"
+            }
+
+            is BodyChangedCallable -> {
+                val type =
+                    this.getPrivateField("type") as TypeDeclaration<*>
+                val callable =
+                    this.getPrivateField("callable") as CallableDeclaration<*>
+                type.nameAsString + "." + callable.asString() + " edited"
+            }
+
+            is AddFile -> this.getNode().storage.getOrNull?.fileName?.let {
+                "$it added"
+            } ?: getText()
+
+            is RemoveFile -> this.getNode().storage.getOrNull?.fileName?.let {
+                "$it removed"
+            } ?: getText()
 
             else -> getText()
         }
@@ -226,7 +286,7 @@ class TrackChangesWindow(val editor: CodeEditor) {
             is MethodDeclaration ->
                 "${nameAsString}(${parameters.joinToString { it.typeAsString }})"
 
-            else -> TODO()
+            else -> toString()
         }
     }
 

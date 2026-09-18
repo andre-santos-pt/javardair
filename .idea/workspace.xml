@@ -4,21 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="package client/server refactoring">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/javardair_clientA2.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/javardair_clientA2.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/runConfigurations/javardair_clientB.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/runConfigurations/javardair_clientB.xml" afterDir="false" />
+    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="fixed member ordering">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Jaid.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Jaid.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Util.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Util.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/Client.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/Client.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ConnectToServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ConnectToServer.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ObservableList.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ClientProperties.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ClientProperties.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrackChangesView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrackChangesView.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrunkDelta.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrunkDelta.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/Server.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/Server.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/TestSerializeAndBack.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/TestSerializeAndBack.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -220,7 +211,7 @@
     &quot;com.google.cloudcode.ide_session_index&quot;: &quot;20260915_0002&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/andresantos/git/javardair/libs&quot;,
+    &quot;last_opened_file_path&quot;: &quot;/Users/andresantos/git/javardair&quot;,
     &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.jshint&quot;: &quot;true&quot;,
     &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
@@ -237,15 +228,15 @@
 }</component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/libs" />
       <recent name="$PROJECT_DIR$/TEST-workspaceB" />
       <recent name="$PROJECT_DIR$/server" />
       <recent name="$PROJECT_DIR$/workspaceB" />
-      <recent name="$PROJECT_DIR$/workspaceB/.trunk" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="$PROJECT_DIR$/libs" />
       <recent name="$PROJECT_DIR$/src/main/resources/icons" />
+      <recent name="$PROJECT_DIR$/libs" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/workspace1" />
       <recent name="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair" />
@@ -263,7 +254,7 @@
       <recent name="pt.iscte.javardair" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.javardair [fatJar]">
+  <component name="RunManager" selected="Gradle.javardair [run]">
     <configuration name="javardair [build]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -512,7 +503,8 @@
       <workItem from="1789659565421" duration="583000" />
       <workItem from="1789660165270" duration="4817000" />
       <workItem from="1789720313537" duration="680000" />
-      <workItem from="1789721011307" duration="1111000" />
+      <workItem from="1789721011307" duration="4221000" />
+      <workItem from="1789725784892" duration="5188000" />
     </task>
     <task id="LOCAL-00001" summary="Cleaned up a bit Conflict View window">
       <option name="closed" value="true" />
@@ -666,7 +658,15 @@
       <option name="project" value="LOCAL" />
       <updated>1789474664330</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="fixed member ordering">
+      <option name="closed" value="true" />
+      <created>1789722702604</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1789722702604</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -694,7 +694,8 @@
     <MESSAGE value="gradle 8.5" />
     <MESSAGE value="major client refactoring" />
     <MESSAGE value="package client/server refactoring" />
-    <option name="LAST_COMMIT_MESSAGE" value="package client/server refactoring" />
+    <MESSAGE value="fixed member ordering" />
+    <option name="LAST_COMMIT_MESSAGE" value="fixed member ordering" />
   </component>
   <component name="XSLT-Support.FileAssociations.UIState">
     <expand />

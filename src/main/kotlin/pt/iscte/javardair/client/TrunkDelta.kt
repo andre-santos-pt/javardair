@@ -1,6 +1,7 @@
 package pt.iscte.javardair.client
 
 import model.FactoryOfTransformations
+import model.transformations.MoveCallableIntraType
 import model.transformations.Transformation
 import model.uuid
 import pt.iscte.javardair.server.ConflictInfo
@@ -29,7 +30,9 @@ object TrunkDelta {
             synchronized(transformations) {
                 transformations.clear()
                 val factoryOfTransformations = FactoryOfTransformations(Client.projectTrunk, Client.projectLocal)
-                transformations.addAll(factoryOfTransformations.getListOfAllTransformations())
+                transformations.addAll(factoryOfTransformations.getListOfAllTransformations().filterNot {
+                    it is MoveCallableIntraType
+                })
             }
         }
     }
@@ -88,7 +91,7 @@ class ObservableList<T>(val list: MutableList<T> = mutableListOf()): MutableList
 
     private fun notifyObservers() {
         observers.forEach {
-            it(list)
+            it(list.toList())
         }
     }
 
