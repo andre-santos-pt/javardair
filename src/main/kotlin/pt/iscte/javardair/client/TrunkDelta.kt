@@ -1,6 +1,7 @@
 package pt.iscte.javardair.client
 
 import model.FactoryOfTransformations
+import model.Project
 import model.transformations.MoveCallableIntraType
 import model.transformations.Transformation
 import model.uuid
@@ -8,7 +9,10 @@ import pt.iscte.javardair.server.ConflictInfo
 import kotlin.concurrent.thread
 
 
-object TrunkDelta {
+class TrunkDelta(
+    var projectTrunk: Project,
+    val projectLocal: Project
+) {
     private val transformations = ObservableList<Transformation>()
 
     private val conflictsMap = ObservableMap<String, List<ConflictInfo>>()
@@ -29,7 +33,7 @@ object TrunkDelta {
         thread {
             synchronized(transformations) {
                 transformations.clear()
-                val factoryOfTransformations = FactoryOfTransformations(Client.projectTrunk, Client.projectLocal)
+                val factoryOfTransformations = FactoryOfTransformations(projectTrunk, projectLocal)
                 transformations.addAll(factoryOfTransformations.getListOfAllTransformations().filterNot {
                     it is MoveCallableIntraType
                 })
@@ -90,8 +94,9 @@ class ObservableList<T>(val list: MutableList<T> = mutableListOf()): MutableList
     }
 
     private fun notifyObservers() {
+        val copy = list.toMutableList()
         observers.forEach {
-            it(list.toList())
+            it(copy)
         }
     }
 

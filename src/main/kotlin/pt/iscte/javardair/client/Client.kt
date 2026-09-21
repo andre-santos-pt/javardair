@@ -35,10 +35,11 @@ import kotlin.io.path.Path
 import kotlin.io.path.exists
 
 
-object Client {
-    internal lateinit var projectLocal: Project
-    internal lateinit var projectTrunk: Project
-
+class Client(
+    var projectTrunk: Project,
+    val projectLocal: Project,
+    val trunkDelta: TrunkDelta
+) {
     private var socket: Socket? = null
     private lateinit var reader: Scanner
     private lateinit var writer: OutputStream
@@ -47,40 +48,13 @@ object Client {
 
     private val clientID: UUID = UUID.randomUUID()
 
-    private var errorHandler: ((ClientError) -> Unit)? = null
+    var errorHandler: (ClientError) -> Unit = {}
 
-    private val memoryTypeSolver = MemoryTypeSolver()
+    var propagationEvent: (Project) -> Unit = {}
 
-    private lateinit var newFileEvent: (CompilationUnit) -> Unit
+    var newFileEvent: (CompilationUnit) -> Unit = {}
 
-    // setup the client offline
-    fun setup(editorPath: File, compilationUnits: List<CompilationUnit>, newFileEvent: (CompilationUnit) -> Unit) {
-        val trunkDir = createTrunkDir(editorPath)
-        projectTrunk = Project(trunkDir.absolutePath)
-        loadProjectLocal(editorPath.absolutePath, compilationUnits)
-        TrunkDelta.updateTransformations()
-        this.newFileEvent = newFileEvent
-    }
-
-    private fun createTrunkDir(rootPath: File): File {
-        val trunkDir = File(rootPath, ClientProperties.TRUNK_FOLDER)
-        if (!trunkDir.exists())
-            trunkDir.mkdirs()
-        return trunkDir
-    }
-
-    internal fun loadProjectLocal(path: String, compilationUnits: List<CompilationUnit>) {
-        projectLocal = Project(
-            path,
-            SymbolSolverCollectionStrategy().collect(Path(path)),
-            SourceRoot(Path(path)),
-            compilationUnits.toMutableList(),
-            CombinedTypeSolver(ReflectionTypeSolver(false), memoryTypeSolver),
-            memoryTypeSolver,
-            setupProject = true,
-            initializeIndexes = true
-        )
-    }
+    var connectionEvent: (Boolean) -> Unit = {}
 
     internal fun addLocalJavaFile(unit: CompilationUnit) {
         projectLocal.addFile(unit)
@@ -88,15 +62,14 @@ object Client {
 
     private val deltaObserver = { transformations: List<Transformation> ->
         if (isConnected) {
-            val trans = JsonArray(transformations.map { it.toJson() })
+            val trans = JsonArray(transformations.map { it.toJson(projectLocal) })
             ClientOperation.UPDATE.send(trans)
         }
     }
 
     data class ClientError(val title: String, val message: String, val exception: Exception? = null)
 
-    fun connect(errorHandler: (ClientError) -> Unit) {
-        this.errorHandler = errorHandler
+    fun connect() {
         try {
             socket = Socket(ClientProperties.address, ClientProperties.port)
             socket?.let { socket ->
@@ -109,6 +82,7 @@ object Client {
                 }
             }
             isConnected = true
+            connectionEvent(true)
         } catch (ex: Exception) {
             error(
                 "Connection Error",
@@ -121,11 +95,12 @@ object Client {
     fun disconnect() {
         socket?.close()
         isConnected = false
-        TrunkDelta.removeObserver(deltaObserver)
+        connectionEvent(false)
+        trunkDelta.removeObserver(deltaObserver)
     }
 
     private fun error(title: String, message: String, exception: Exception? = null) {
-        errorHandler?.invoke(ClientError(title, message, exception))
+        errorHandler.invoke(ClientError(title, message, exception))
     }
 
     fun ClientOperation.send(json: JsonElement) {
@@ -147,7 +122,7 @@ object Client {
     }
 
     private fun dealWithServer() {
-        TrunkDelta.addObserver(deltaObserver)
+        trunkDelta.addObserver(deltaObserver)
 
         try {
             while (isConnected) {
@@ -174,11 +149,12 @@ object Client {
                             Json.decodeFromString(message.content),
                             message.sender
                         )
-                        TrunkDelta.updateTransformations()
+                        propagationEvent(projectTrunk)
+                        trunkDelta.updateTransformations()
                     }
 
                     ServerOperation.NOTIFY_CONFLICTS -> {
-                        TrunkDelta.updateConflicts(Json.decodeFromString(message.content))
+                        trunkDelta.updateConflicts(Json.decodeFromString(message.content))
                     }
                 }
             }
@@ -188,6 +164,7 @@ object Client {
                 "Disconnected from server at ${ClientProperties.address}:${ClientProperties.port}",
                 ex
             )
+            ex.printStackTrace()
             disconnect()
         }
     }
@@ -208,7 +185,7 @@ object Client {
         projectTrunk = Project(projectTrunk.getProjectRoot().root.toString())
 
         // trigger comparison of transformations between projectLocal and projectTrunk
-        TrunkDelta.updateTransformations()
+        trunkDelta.updateTransformations()
     }
 
 
@@ -220,8 +197,8 @@ object Client {
             b: Set<Transformation>
         ): Boolean {
             if (a.size != b.size) return false
-            val list1 = a.map { it.toJson().toString() }.sorted()
-            val list2 = b.map { it.toJson().toString() }.sorted()
+            val list1 = a.map { it.toJson(projectLocal).toString() }.sorted()
+            val list2 = b.map { it.toJson(projectLocal).toString() }.sorted()
             return list1 == list2
         }
 
@@ -233,7 +210,7 @@ object Client {
         val forcedTransSerialized = forcedTrans.decodeTransformations(projectTrunk).toMutableSet()
 
         applyChanges(forcedTrans, sender)
-        TrunkDelta.updateTransformations()
+        trunkDelta.updateTransformations()
 
         if (setsAreEqual(currentTrans, forcedTransSerialized)) {
             updateServer()
@@ -269,10 +246,11 @@ object Client {
                 val transLocal = serializedTransformations.decodeTransformations(projectLocal)
                 Display.getDefault().syncExec {
                     applyTransformationsTo(projectLocal, transLocal.toSet())
+
                 }
                 projectLocal.getSetOfCompilationUnit()
                     .filter { !Path(it.storage.getOrNull?.path.toString()).exists() }
-                    .forEach { println("NA: ${it.storage.getOrNull?.path}")
+                    .forEach {
                         val w = PrintWriter(it.storage.getOrNull?.path.toString())
                         w.write(it.toString())
                         w.close()
@@ -299,7 +277,7 @@ object Client {
             val trans = JsonArray(
                 FactoryOfTransformations(projectTrunk, projectLocal)
                     .getListOfAllTransformations()
-                    .map { it.toJson() }
+                    .map { it.toJson(projectLocal) }
             )
             ClientOperation.UPDATE.send(trans)
         }
@@ -307,30 +285,25 @@ object Client {
 
 
     fun propagate(transformations: List<Transformation>) {
-        if (transformations.any { TrunkDelta.hasConflict(it) })
+        if (transformations.any { trunkDelta.hasConflict(it) })
             error(
                 "Conflicts",
                 "Cannot push changes because there are conflicts in the selected transformation set."
             )
         else {
-            val trans = JsonArray(transformations.map { it.toJson() })
+            val trans = JsonArray(transformations.map { it.toJson(projectLocal) })
             ClientOperation.PROPAGATE.send(trans)
         }
     }
 
     fun acceptChanges(conflict: ConflictInfo) {
         applyChangesLocal(JsonArray(listOf(conflict.conflictingTransformation)))
-        TrunkDelta.updateTransformations()
+        trunkDelta.updateTransformations()
     }
 
     private fun applyChangesLocal(serializedTransformations: JsonArray) {
         try {
             projectLocal.initializeAllIndexes()
-//            val transRoot = serializedTransformations.map { json ->
-//                (Json.parseToJsonElement(json.toString()) as JsonObject).toTransformation(
-//                    projectLocal
-//                )
-//            }
             val transLocal = serializedTransformations.decodeTransformations(projectLocal).toSet()
             applyTransformationsTo(projectLocal, transLocal)
             projectLocal.saveProjectTo(Path(projectLocal.path))

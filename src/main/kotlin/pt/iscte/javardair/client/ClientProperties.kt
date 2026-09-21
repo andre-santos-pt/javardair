@@ -14,7 +14,7 @@ object ClientProperties {
 
     var address: String = "localhost"
     var port: Int = 8080
-    var clientName: String = "client-${this.hashCode() % 100}"
+    var clientName: String = "client-${Thread.currentThread().hashCode() % 100}"
     var debug: Boolean = false
 
     fun load(workingDir: String) {
@@ -29,7 +29,7 @@ object ClientProperties {
         address = props.getProperty(SERVER_PROP) ?: "localhost"
         port = props.getProperty(PORT_PROP)?.toInt() ?: 8080
         clientName = props.getProperty(CLIENTID_PROP)
-            ?: "client-${this.hashCode() % 100}"
+            ?: "client-${Thread.currentThread().hashCode()  % 100}"
         debug = props.getProperty(DEBUG_PROP) == "true"
     }
 }

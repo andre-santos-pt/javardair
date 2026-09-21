@@ -6,7 +6,13 @@ import com.github.javaparser.ast.body.BodyDeclaration
 import com.github.javaparser.ast.body.FieldDeclaration
 import com.github.javaparser.ast.body.MethodDeclaration
 import com.github.javaparser.ast.comments.LineComment
+import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.MemoryTypeSolver
+import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
+import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
+import com.github.javaparser.utils.SourceRoot
 import kotlinx.serialization.json.jsonPrimitive
+import model.Project
 import model.UUID
 import model.setUUIDTo
 import org.eclipse.swt.SWT
@@ -37,17 +43,77 @@ class ConnectToServer : Action {
     override val toggle: Boolean
         get() = true
 
+    private lateinit var client: Client
+    private lateinit var trunkDelta: TrunkDelta
+
     override fun init(editor: CodeEditor) {
         ClientProperties.load(editor.folder.absolutePath)
-        TrackChangesWindow(editor)
+
+        val projectTrunk = Project(createTrunkDir(editor.folder).absolutePath)
+        val projectLocal = loadProjectLocal(editor.folder.absolutePath, editor.allCompilationUnits())
+
+        trunkDelta = TrunkDelta(projectTrunk, projectLocal)
+        client = Client(projectTrunk, projectLocal, trunkDelta)
+
+        TrackChangesView(editor, client, trunkDelta)
         addConflictMarks(editor)
         addObserverInjectUUIDsOnClassMembers(editor)
         addObserverInjectUUIDsOnFiles(editor)
-        Client.setup(editor.folder, editor.allCompilationUnits()) {
+
+        client.propagationEvent = { proj ->
+            Display.getDefault().asyncExec {
+                proj.getSetOfCompilationUnit().forEach {
+                    editor.saveAndSyncRanges(
+                        File(it.storage.get().path.toString()),
+                        it
+                    )
+                }
+            }
+            trunkDelta.projectTrunk = proj
+        }
+        client.newFileEvent = {
             Display.getDefault().asyncExec {
                 editor.openTab(it)
             }
         }
+        client.errorHandler =  {
+            Display.getDefault().asyncExec {
+                MessageBox(
+                    Shell(editor.display, SWT.NONE),
+                    SWT.ICON_ERROR or SWT.OK
+                ).apply {
+                    text = it.title
+                    this.message = it.message
+                }.open()
+            }
+            it.exception?.printStackTrace()
+        }
+        client.connectionEvent = {
+            // TODO button
+        }
+
+        trunkDelta.updateTransformations()
+    }
+
+    private fun createTrunkDir(rootPath: File): File {
+        val trunkDir = File(rootPath, ClientProperties.TRUNK_FOLDER)
+        if (!trunkDir.exists())
+            trunkDir.mkdirs()
+        return trunkDir
+    }
+
+    internal fun loadProjectLocal(path: String, compilationUnits: List<CompilationUnit>) : Project {
+        val memoryTypeSolver = MemoryTypeSolver()
+        return Project(
+            path,
+            SymbolSolverCollectionStrategy().collect(Path(path)),
+            SourceRoot(Path(path)),
+            compilationUnits.toMutableList(),
+            CombinedTypeSolver(ReflectionTypeSolver(false), memoryTypeSolver),
+            memoryTypeSolver,
+            setupProject = true,
+            initializeIndexes = true
+        )
     }
 
     private fun addObserverInjectUUIDsOnClassMembers(editor: CodeEditor) {
@@ -65,7 +131,7 @@ class ConnectToServer : Action {
                     (cmd.element as BodyDeclaration<*>).setUUIDTo(UUID(uuid))
             }
 
-            override fun undo() { }
+            override fun undo() {}
         }
 
         val commandObserver = { cmd: Command, _: Boolean, _: CommandStack? ->
@@ -73,7 +139,7 @@ class ConnectToServer : Action {
                 // inject UUID on class members
                 // command forces serialization
                 editor.classOnFocus?.commandStack?.execute(IntectUUIDMembers(cmd))
-                TrunkDelta.updateTransformations()
+                trunkDelta.updateTransformations()
             }
         }
         // fires event at every editing command
@@ -128,10 +194,10 @@ class ConnectToServer : Action {
 //                    println(w?.commandStack)
 //                    w?.commandStack?.execute(IntectUUIDFile(unit))
                     injectClassUUIDs(unit)
-                    Client.addLocalJavaFile(unit)
+                    client.addLocalJavaFile(unit)
                     //unit.setStorage(Path(f.absolutePath)) // TODO Jaid bug? storage is not set correctly?
                     writeFile(unit) // force serialization of changes
-                    TrunkDelta.updateTransformations()
+                    trunkDelta.updateTransformations()
                 }
 
                 // TODO event == FileEvent.DELETE
@@ -142,21 +208,10 @@ class ConnectToServer : Action {
     }
 
     override fun run(editor: CodeEditor, toggle: Boolean) {
-        if (!Client.isConnected && toggle)
-            Client.connect {
-                Display.getDefault().asyncExec {
-                    MessageBox(
-                        Shell(editor.display, SWT.NONE),
-//                        Display.getDefault().activeShell,
-                        SWT.ICON_ERROR or SWT.OK
-                    ).apply {
-                        text = it.title
-                        this.message = it.message
-                    }.open()
-                }
-            }
+        if (!client.isConnected && toggle)
+            client.connect()
         else
-            Client.disconnect()
+            client.disconnect()
     }
 
     private fun addConflictMarks(editor: CodeEditor) {
@@ -172,7 +227,7 @@ class ConnectToServer : Action {
 
         val marks = mutableListOf<ICodeDecoration<*>>()
         var popupShell: Shell? = null
-        TrunkDelta.addConflictObserver {
+        trunkDelta.addConflictObserver {
             Display.getDefault().asyncExec {
                 marks.forEach { it.delete() }
                 marks.clear()
@@ -223,7 +278,7 @@ class ConnectToServer : Action {
                                             addSelectionListener(object :
                                                 SelectionAdapter() {
                                                 override fun widgetSelected(e: SelectionEvent) {
-                                                    Client.acceptChanges(c)
+                                                    client.acceptChanges(c)
                                                     popupShell?.dispose()
                                                 }
                                             })

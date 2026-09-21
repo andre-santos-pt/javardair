@@ -1,7 +1,6 @@
 package pt.iscte.javardair
 
 import com.github.javaparser.StaticJavaParser
-import com.github.javaparser.ast.CompilationUnit
 import com.github.javaparser.ast.NodeList
 import com.github.javaparser.ast.body.FieldDeclaration
 import com.github.javaparser.ast.body.Parameter
@@ -12,11 +11,10 @@ import model.Project
 import model.UUID
 import model.transformations.*
 import model.uuid
-import pt.iscte.javardair.client.Client
 import java.nio.file.Path
 
 // map a transformation to a json object
-fun Transformation.toJson(): JsonObject {
+fun Transformation.toJson(project: Project): JsonObject {
     val fields =
         mutableMapOf<String, JsonElement>("code" to JsonPrimitive(this::class.java.simpleName))
     when (this) {
@@ -24,9 +22,7 @@ fun Transformation.toJson(): JsonObject {
         // TODO RemoveFile
 
         is AddFile -> {
-            //println("\t${Client.projectLocal.path}")
-            //println("\t${getNewNode().storage.get().path}")
-            val relPath = Path.of(Client.projectLocal.path).relativize(getNewNode().storage.get().path).toString()
+            val relPath = Path.of(project.path).relativize(getNewNode().storage.get().path).toString()
             fields["path"] = JsonPrimitive(relPath)
             fields["content"] = JsonPrimitive(getNewNode().toString())
         }
@@ -134,7 +130,7 @@ fun JsonObject.toTransformation(project: Project): Transformation? {
             SignatureChanged(
                 project,
                 project.getMethodByUUID(UUID(field("uuid")))!!,
-                NodeList<Parameter>(this["parameters"]?.jsonArray?.map {
+                NodeList(this["parameters"]?.jsonArray?.map {
                     it as JsonObject
                     Parameter(
                         StaticJavaParser.parseType(it.field("type")),

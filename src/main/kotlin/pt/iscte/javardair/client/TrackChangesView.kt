@@ -6,7 +6,6 @@ import model.transformations.*
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.MouseAdapter
 import org.eclipse.swt.events.MouseEvent
-import org.eclipse.swt.events.MouseListener
 import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.graphics.Image
@@ -27,17 +26,16 @@ import kotlin.reflect.KClass
 
 
 
-class TrackChangesWindow(val editor: CodeEditor) {
+class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelta: TrunkDelta) {
 
     private val icons = listOf("plus","minus","rename","edit").associateWith { loadIcon(it) }
 
-    private fun loadIcon(name: String) = TrackChangesWindow::class.java.getClassLoader()
+    private fun loadIcon(name: String) = TrackChangesView::class.java.getClassLoader()
         .getResourceAsStream("icons${File.separator}$name.png")?.let {
             Image(Display.getDefault(), it)
         }
 
-    val changesView =
-        Composite(editor.getPrivateField("shell") as Shell, SWT.BORDER)
+    val changesView = editor.createExtraComposite()
     val table = Table(
         changesView,
         SWT.BORDER or SWT.V_SCROLL or SWT.H_SCROLL or SWT.MULTI
@@ -64,10 +62,10 @@ class TrackChangesWindow(val editor: CodeEditor) {
 
         createPopupMenu()
 
-        TrunkDelta.addObserver {
+        trunkDelta.addObserver {
             updateTable(it)
         }
-        TrunkDelta.addConflictObserver {
+        trunkDelta.addConflictObserver {
             updateConflicts()
         }
     }
@@ -90,7 +88,8 @@ class TrackChangesWindow(val editor: CodeEditor) {
                 override fun widgetSelected(e: SelectionEvent) {
                     if (table.selection.isNotEmpty()) {
                         val json =
-                            (table.selection[0].data as Transformation).toJson()
+                            (table.selection[0].data as Transformation).toJson(
+                                client.projectLocal)
                                 .toString()
                         debugView.text = JsonPretty.print(json)
                         debugView.requestLayout()
@@ -112,8 +111,8 @@ class TrackChangesWindow(val editor: CodeEditor) {
 //                .filter { it.checked }
                 .map { it.data as Transformation }
             try {
-                Client.propagate(selectedSet)
-                TrunkDelta.updateTransformations()
+                client.propagate(selectedSet)
+                trunkDelta.updateTransformations()
             } catch (ex: Exception) {
                 Display.getDefault().asyncExec {
                     MessageBox(
@@ -155,8 +154,8 @@ class TrackChangesWindow(val editor: CodeEditor) {
                     .map { it.data as Transformation }
 
                 propagate.enabled =
-                    Client.isConnected && selectedSet.isNotEmpty() && selectedSet.none {
-                        TrunkDelta.hasConflict(it)
+                    client.isConnected && selectedSet.isNotEmpty() && selectedSet.none {
+                        trunkDelta.hasConflict(it)
                     }
                 //rollback.enabled = true // TODO: check if rollback is possible
             }
@@ -188,11 +187,11 @@ class TrackChangesWindow(val editor: CodeEditor) {
                 item.setText(
                     arrayOf(
                         t.message(),
-                        TrunkDelta.getConflictCollaborator(t),
-                        TrunkDelta.getConflicts(t).asText()
+                        trunkDelta.getConflictCollaborator(t),
+                        trunkDelta.getConflicts(t).asText()
                     )
                 )
-                if (TrunkDelta.hasConflict(t))
+                if (trunkDelta.hasConflict(t))
                     item.foreground =
                         Display.getDefault().getSystemColor(SWT.COLOR_RED)
 
@@ -206,7 +205,7 @@ class TrackChangesWindow(val editor: CodeEditor) {
         Display.getDefault().asyncExec {
             table.items.forEach {
                 val transformation = it.data as Transformation
-                val conflicts = TrunkDelta.getConflicts(transformation)
+                val conflicts = trunkDelta.getConflicts(transformation)
                 if (conflicts.isNotEmpty()) {
                     it.foreground =
                         Display.getDefault().getSystemColor(SWT.COLOR_RED)
@@ -243,19 +242,19 @@ class TrackChangesWindow(val editor: CodeEditor) {
             else
                 getText()
 
+            is AddField -> {
+                getParentNode().nameAsString + "." + getNode().variables.first().nameAsString + " field added"
+            }
 
-            // TODO Field
-
+            is RemoveField -> {
+                getParentNode().nameAsString + "." + getNode().variables.first().nameAsString + " field removed"
+            }
             is AddCallable -> {
-                val callable =
-                    this.getPrivateField("callable") as CallableDeclaration<*>
-                this.getParentNode().nameAsString + "." + callable.asString() + " added"
+                getParentNode().nameAsString + "." + getNode().nameAsString + "(...) method added"
             }
 
             is RemoveCallable -> {
-                val callable =
-                    this.getPrivateField("callable") as CallableDeclaration<*>
-                this.getParentNode().nameAsString + "." + callable.asString() + " removed"
+                getParentNode().nameAsString + "." + getNode().nameAsString + "(...) method removed"
             }
 
             is BodyChangedCallable -> {

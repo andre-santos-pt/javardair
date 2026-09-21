@@ -49,7 +49,6 @@ class Server(val port: Int, val trunkPath: String) {
 
     init {
         launch()
-
     }
 
     fun launch() {
@@ -76,6 +75,7 @@ class Server(val port: Int, val trunkPath: String) {
                 serve()
             } catch (ex: Exception) {
                 println("${clientSocket.port} closed the connection due to ${ex.message}")
+                ex.printStackTrace()
             } finally {
                 try {
                     clientSocket.close()
@@ -221,7 +221,7 @@ class Server(val port: Int, val trunkPath: String) {
                         clientHandler.clientName,
                         conflict.message,
                         conflict.first.getNode().uuid.toString(),
-                        conflict.second.toJson()
+                        conflict.second.toJson(project)
                     )
                 }.toSet()
                 val conflictInfoSetOpposite = conflicts.map { conflict ->
@@ -229,7 +229,7 @@ class Server(val port: Int, val trunkPath: String) {
                         client.clientName,
                         conflict.message,
                         conflict.second.getNode().uuid.toString(),
-                        conflict.first.toJson()
+                        conflict.first.toJson(project)
                     )
                 }.toSet()
                 tempMap["${this.clientID},${this.clientName}"] =
