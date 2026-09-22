@@ -2,6 +2,8 @@ package pt.iscte.javardair.client
 
 import com.github.javaparser.ast.Node
 import com.github.javaparser.ast.body.*
+import com.github.javaparser.ast.comments.LineComment
+import kotlinx.serialization.json.jsonPrimitive
 import model.transformations.*
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.MouseAdapter
@@ -11,14 +13,21 @@ import org.eclipse.swt.events.SelectionEvent
 import org.eclipse.swt.graphics.Image
 import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
+import org.eclipse.swt.layout.RowLayout
 import org.eclipse.swt.widgets.*
 import org.eclipse.swt.widgets.Event
 import pt.iscte.javardair.JsonPretty
 import pt.iscte.javardair.getPrivateField
 import pt.iscte.javardair.server.ConflictInfo
 import pt.iscte.javardair.toJson
+import pt.iscte.javardair.toTransformation
+import pt.iscte.javardise.basewidgets.ICodeDecoration
+import pt.iscte.javardise.basewidgets.addMark
+import pt.iscte.javardise.basewidgets.addMark3
 import pt.iscte.javardise.editor.CodeEditor
+import pt.iscte.javardise.external.findChild
 import pt.iscte.javardise.external.getOrNull
+import pt.iscte.javardise.external.onClick
 import pt.iscte.javardise.findChild
 import java.io.File
 import kotlin.reflect.KClass
@@ -69,11 +78,12 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
 
         trunkDelta.addObserver {
             updateTable(it)
-            println("update table: $it")
         }
         trunkDelta.addConflictObserver {
             updateConflicts()
         }
+
+        addConflictObserver()
     }
 
     private fun addDebugView() {
@@ -157,7 +167,6 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
                 rollback.enabled = false
             } else {
                 val selectedSet = table.selection
-                    //.filter { it.checked }
                     .map { it.data as Transformation }
 
                 propagate.enabled =
@@ -174,13 +183,25 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
                if(table.selection.size == 1) {
                    val t = table.selection.first().data as Transformation
                    if(t is AddFile) {
-                       editor.openTab(t.getNode())
+                       //editor.openTab(t.getNode()) // TODO Javardise bug
                    }
                    else
                         editor.classOnFocus?.findChild(t.getNode())?.setFocus()
                }
             }
         })
+//        table.addSelectionListener(object : SelectionAdapter() {
+//            var mark: ICodeDecoration<*>? = null
+//            override fun widgetSelected(e: SelectionEvent) {
+//                mark?.hide()
+//                if(table.selection.size == 1) {
+//                    val t = table.selection.first().data as Transformation
+//                    mark = editor.classOnFocus?.findChild(t.getNode())
+//                        ?.addMark3(Display.getDefault().getSystemColor(SWT.COLOR_GRAY))
+//                    mark?.show()
+//                }
+//            }
+//        })
     }
 
     private fun updateTable(list: List<Transformation>) {
@@ -196,7 +217,7 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
                     arrayOf(
                         t.message(),
                         trunkDelta.getConflictCollaborator(t),
-                        trunkDelta.getConflicts(t).asText()
+                        trunkDelta.getConflicts(t).joinToString { it.conflictMessage }
                     )
                 )
                 if (trunkDelta.hasConflict(t))
@@ -218,7 +239,7 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
                     it.foreground =
                         Display.getDefault().getSystemColor(SWT.COLOR_RED)
                     it.setText(1, conflicts.joinToString { it.collaborator })
-                    it.setText(2, conflicts.asText())
+                    it.setText(2, conflicts.joinToString { it.conflictMessage })
                 } else {
                     it.foreground =
                         Display.getDefault().getSystemColor(SWT.COLOR_BLACK)
@@ -297,27 +318,119 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
         }
     }
 
-    private fun Node.asString(): String {
-        return this::class.asString()
-    }
 
-    private fun KClass<*>.asString(): String =
-        when (this) {
-            ClassOrInterfaceDeclaration::class -> if ((this as ClassOrInterfaceDeclaration).isInterface)
-                "interface"
-            else
-                "class"
+//    private fun ConflictInfo.message(): String {
+//        val localTrans = this.transformation.toTransformation(client.projectLocal)
+//        val conflictTrans =  this.conflictingTransformation.toTransformation(client.projectLocal)
+//        return if(localTrans is SignatureChanged && conflictTrans is SignatureChanged) {
+//            if(localTrans.getNewName() != conflictTrans.getNewName())
+//                "Different renames"
+//            else
+//                "Different signatures"
+//        }
+//        else if(localTrans is BodyChangedCallable && conflictTrans is BodyChangedCallable)
+//            "Different method body"
+//        else
+//            this.conflictMessage
+//    }
 
-            FieldDeclaration::class -> "field"
-            ConstructorDeclaration::class -> "constructor"
-            MethodDeclaration::class -> "method"
-            else -> this::class.simpleName ?: this.toString()
+    private fun addConflictObserver() {
+
+        fun Node.getUuidFromComment(): String? {
+            return comment.getOrNull?.let {
+                when (it) {
+                    is LineComment -> it.content.trim()
+                    else -> null
+                }
+            }
         }
+
+        val marks = mutableListOf<ICodeDecoration<*>>()
+        var popupShell: Shell? = null
+        trunkDelta.addConflictObserver {
+            Display.getDefault().asyncExec {
+                marks.forEach { it.delete() }
+                marks.clear()
+                it.values.forEach { list ->
+                    list.forEach { c ->
+                        val uuid = c.conflictUUID
+                        val control =
+                            editor.classOnFocus?.findChild { (it.data as? Node)?.getUuidFromComment() == uuid }
+                        if (control != null) {
+                            val m = control.addMark(
+                                Display.getDefault()
+                                    .getSystemColor(SWT.COLOR_RED),
+                                c.conflictMessage
+                            )
+                            marks.add(m)
+                            m.show()
+                            m.control.onClick {
+                                popupShell?.dispose()
+                                popupShell = Shell(
+                                    editor.display,
+                                    SWT.SYSTEM_MODAL or SWT.TOOL or SWT.NO_FOCUS or SWT.NO_TRIM
+                                )
+                                popupShell?.layout = RowLayout(SWT.VERTICAL)
+
+                                Group(popupShell, SWT.NONE).apply {
+                                    text =
+                                        "Conflicting with ${c.collaborator}"
+                                    layout = RowLayout(SWT.VERTICAL)
+
+                                    Label(this, SWT.NONE).apply {
+                                        text = c.conflictMessage
+                                    }
+
+                                    Text(this, SWT.BORDER).apply {
+                                        text =
+                                            when (c.conflictingTransformation["code"]?.jsonPrimitive?.content) {
+                                                "BodyChangedCallable" -> c.conflictingTransformation["body"]?.jsonPrimitive?.content
+                                                "SignatureChanged" -> c.conflictingTransformation["name"]?.jsonPrimitive?.content
+                                                else -> ""
+                                            }
+                                        editable = false
+                                    }
+
+                                    Composite(this, SWT.NONE).apply {
+                                        layout = RowLayout(SWT.HORIZONTAL)
+                                        Button(this, SWT.PUSH).apply {
+                                            text = "Accept theirs"
+                                            addSelectionListener(object :
+                                                SelectionAdapter() {
+                                                override fun widgetSelected(e: SelectionEvent) {
+                                                    client.acceptChanges(c)
+                                                    popupShell?.dispose()
+                                                }
+                                            })
+                                        }
+                                        Button(this, SWT.PUSH).apply {
+                                            text = "Close"
+                                            addSelectionListener(object :
+                                                SelectionAdapter() {
+                                                override fun widgetSelected(e: SelectionEvent) {
+                                                    popupShell?.dispose()
+                                                }
+                                            })
+                                        }
+                                    }
+                                }
+                                popupShell?.location =
+                                    control.toDisplay(0, control.size.y)
+                                popupShell?.pack()
+                                popupShell?.open()
+                                m.control.addDisposeListener {
+                                    popupShell?.dispose()
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
-private fun Iterable<ConflictInfo>.asText(): String {
-    return joinToString("\n") { it.conflictMessage }
-}
+
 
 
 

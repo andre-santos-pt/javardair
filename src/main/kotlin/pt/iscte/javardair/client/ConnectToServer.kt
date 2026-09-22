@@ -24,6 +24,7 @@ import pt.iscte.javardair.server.ConflictInfo
 import pt.iscte.javardise.*
 import pt.iscte.javardise.basewidgets.ICodeDecoration
 import pt.iscte.javardise.basewidgets.addMark
+import pt.iscte.javardise.basewidgets.addMark3
 import pt.iscte.javardise.editor.Action
 import pt.iscte.javardise.editor.CodeEditor
 import pt.iscte.javardise.editor.FileEvent
@@ -56,7 +57,6 @@ class ConnectToServer : Action {
         client = Client(projectTrunk, projectLocal, trunkDelta)
 
         TrackChangesView(editor, client, trunkDelta)
-        addConflictMarks(editor)
         addObserverInjectUUIDsOnClassMembers(editor)
         addObserverInjectUUIDsOnFiles(editor)
 
@@ -218,102 +218,4 @@ class ConnectToServer : Action {
             client.disconnect()
     }
 
-    private fun addConflictMarks(editor: CodeEditor) {
-
-        fun Node.getUuidFromComment(): String? {
-            return comment.getOrNull?.let {
-                when (it) {
-                    is LineComment -> it.content.trim()
-                    else -> null
-                }
-            }
-        }
-
-        val marks = mutableListOf<ICodeDecoration<*>>()
-        var popupShell: Shell? = null
-        trunkDelta.addConflictObserver {
-            Display.getDefault().asyncExec {
-                marks.forEach { it.delete() }
-                marks.clear()
-                it.values.forEach { list ->
-                    list.forEach { c ->
-                        val uuid = c.conflictUUID
-                        val control =
-                            editor.classOnFocus?.findChild { (it.data as? Node)?.getUuidFromComment() == uuid }
-                        if (control != null) {
-                            val m = control.addMark(
-                                Display.getDefault()
-                                    .getSystemColor(SWT.COLOR_RED),
-                                c.conflictMessage
-                            )
-                            marks.add(m)
-                            m.show()
-                            m.control.onClick {
-                                popupShell?.dispose()
-                                popupShell = Shell(
-                                    editor.display,
-                                    SWT.ON_TOP or SWT.TOOL or SWT.NO_FOCUS or SWT.NO_TRIM
-                                )
-                                popupShell?.layout = RowLayout(SWT.VERTICAL)
-
-                                Group(popupShell, SWT.NONE).apply {
-                                    text =
-                                        "Incompatibility with ${c.collaborator}"
-                                    layout = RowLayout(SWT.VERTICAL)
-
-                                    Label(this, SWT.NONE).apply {
-                                        text = c.conflictMessage
-                                    }
-
-                                    Text(this, SWT.BORDER).apply {
-                                        text =
-                                            when (c.conflictingTransformation["code"]?.jsonPrimitive?.content) {
-                                                "BodyChangedCallable" -> c.conflictingTransformation["body"]?.jsonPrimitive?.content
-                                                "SignatureChanged" -> c.conflictingTransformation["name"]?.jsonPrimitive?.content
-                                                else -> ""
-                                            }
-                                        editable = false
-                                    }
-
-                                    Composite(this, SWT.NONE).apply {
-                                        layout = RowLayout(SWT.HORIZONTAL)
-                                        Button(this, SWT.PUSH).apply {
-                                            text = "Accept theirs"
-                                            addSelectionListener(object :
-                                                SelectionAdapter() {
-                                                override fun widgetSelected(e: SelectionEvent) {
-                                                    client.acceptChanges(c)
-                                                    popupShell?.dispose()
-                                                }
-                                            })
-                                        }
-                                        Button(this, SWT.PUSH).apply {
-                                            text = "Close"
-                                            addSelectionListener(object :
-                                                SelectionAdapter() {
-                                                override fun widgetSelected(e: SelectionEvent) {
-                                                    popupShell?.dispose()
-                                                }
-                                            })
-                                        }
-                                    }
-                                }
-                                popupShell?.location =
-                                    control.toDisplay(0, control.size.y)
-                                popupShell?.pack()
-                                popupShell?.open()
-                                m.control.addDisposeListener {
-                                    popupShell?.dispose()
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private fun ConflictInfo.isConflictSolvable() =
-        conflictingTransformation["code"].toString()
-            .matches(Regex("BodyChangedCallable|SignatureChanged"))
 }

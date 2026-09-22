@@ -7,8 +7,7 @@ import kotlinx.serialization.json.JsonObject
 data class ConflictInfo(
     val collaborator: String,
     val conflictMessage: String,
-    //val transformationPair: Pair<JsonObject, JsonObject>
     val conflictUUID: String,
-    val conflictingTransformation: JsonObject // oposite
-    //val conflictTransformationMessage: String
+    val conflictingTransformation: JsonObject, // oposite
+    val transformation: JsonObject
 )

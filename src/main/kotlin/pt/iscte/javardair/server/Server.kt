@@ -6,6 +6,8 @@ import pt.iscte.javardair.client.ClientOperation
 import model.*
 import model.conflictDetection.Conflict
 import model.detachRedundantTransformations.RedundancyFreeSetOfTransformations
+import model.transformations.BodyChangedCallable
+import model.transformations.SignatureChanged
 import pt.iscte.javardair.JsonPretty
 import pt.iscte.javardair.decodeTransformations
 import pt.iscte.javardair.toJson
@@ -219,17 +221,19 @@ class Server(val port: Int, val trunkPath: String) {
                 val conflictInfoSet = conflicts.map { conflict ->
                     ConflictInfo(
                         clientHandler.clientName,
-                        conflict.message,
+                        conflict.userMessage(),
                         conflict.first.getNode().uuid.toString(),
-                        conflict.second.toJson(project)
+                        conflict.second.toJson(project),
+                        conflict.first.toJson(project)
                     )
                 }.toSet()
                 val conflictInfoSetOpposite = conflicts.map { conflict ->
                     ConflictInfo(
                         client.clientName,
-                        conflict.message,
+                        conflict.userMessage(),
                         conflict.second.getNode().uuid.toString(),
-                        conflict.first.toJson(project)
+                        conflict.first.toJson(project),
+                        conflict.second.toJson(project)
                     )
                 }.toSet()
                 tempMap["${this.clientID},${this.clientName}"] =
@@ -249,6 +253,19 @@ class Server(val port: Int, val trunkPath: String) {
                 this.clientID
             )
             write(Json.encodeToString(response))
+        }
+
+        private fun Conflict.userMessage(): String {
+            return if(first is SignatureChanged && second is SignatureChanged) {
+                if((first as SignatureChanged).getNewName() != (second as SignatureChanged).getNewName())
+                    "Different rename: ${(second as SignatureChanged).getNewName()}"
+                else
+                    "Different signatures"
+            }
+            else if(first is BodyChangedCallable && second is BodyChangedCallable)
+                "Different method body"
+            else
+                this.message
         }
 
         private fun propagateChanges(trans: String) {
