@@ -3,29 +3,25 @@
   <component name="AutoImportSettings">
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
+  <component name="BackgroundAgentGlobalSettings">
+    <option name="selectedModelId" value="auto" />
+  </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="table and debug view">
-      <change beforePath="$PROJECT_DIR$/../Jaid/src/main/kotlin/model/Project.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../Jaid/src/main/kotlin/model/Project.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Jaid/src/main/kotlin/model/conflictDetection/FileFile.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../Jaid/src/main/kotlin/model/conflictDetection/FileFile.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../Jaid/src/main/kotlin/model/transformations/CallableDeclarationTransformations.kt" beforeDir="false" afterPath="$PROJECT_DIR$/../Jaid/src/main/kotlin/model/transformations/CallableDeclarationTransformations.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
+    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="singletons refactoring">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle.kts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Jaid.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/Jaid.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/Client.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/Client.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ClientProperties.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ClientProperties.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ConnectToServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ConnectToServer.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrackChangesView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrackChangesView.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrunkDelta.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrunkDelta.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/Server.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/Server.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/kotlin/TestSerializeAndBack.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/kotlin/TestSerializeAndBack.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="CopilotPersistence">
+    <persistenceIdMap>
+      <entry key="_/Users/andresantos/git/Jaid" value="3JfyIDqg2PaXn3UGaR4ObVG285P" />
+    </persistenceIdMap>
   </component>
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
@@ -180,6 +176,21 @@
   &quot;associatedIndex&quot;: 6
 }</component>
   <component name="ProjectId" id="2mFDEH8Ir431l9fLdQEWHAVPDvC" />
+  <component name="ProjectSessionTemplates">
+    <option name="panelTemplate">
+      <template>
+        <option name="modeId" value="Agent" />
+        <option name="model">
+          <model>
+            <option name="modelType" value="builtin_id" />
+            <option name="modelValue" value="auto" />
+          </model>
+        </option>
+        <option name="targetType" value="BACKGROUND" />
+        <option name="worktreeMode" value="WORKSPACE" />
+      </template>
+    </option>
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -187,6 +198,7 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "Gradle.Build javardair.executor": "Run",
+    "Gradle.TestTransformations.executor": "Run",
     "Gradle.Upgrade Gradle wrapper.executor": "Run",
     "Gradle.javardair [:CheckBoxListWithIcons.main()].executor": "Run",
     "Gradle.javardair [:pt.iscte.javardair.ServerKt.main()].executor": "Run",
@@ -203,6 +215,7 @@
     "Gradle.javardair_client3.executor": "Run",
     "Gradle.javardair_clientA.executor": "Run",
     "Gradle.javardair_clientB.executor": "Run",
+    "Gradle.javardair_clientR.executor": "Run",
     "JUnit.Whole project (1).executor": "Run",
     "JUnit.Whole project.executor": "Run",
     "KEY_CHAT_IN_TOOLWINDOW": "false",
@@ -220,6 +233,7 @@
     "WebServerToolWindowFactoryState": "false",
     "codeWithMe.voiceChat.enabledByDefault": "false",
     "com.google.cloudcode.ide_session_index": "20260915_0002",
+    "copilot.chat.legacySessionMetadata.migrated": "true",
     "git-widget-placeholder": "master",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/Users/andresantos/git/javardair/TEST-workspaceA",
@@ -265,7 +279,7 @@
       <recent name="pt.iscte.javardair" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.TestTransformations">
+  <component name="RunManager" selected="Compound.runDemo">
     <configuration name="TestTransformations" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -393,6 +407,32 @@
       <GradleCoverageDisabled>false</GradleCoverageDisabled>
       <method v="2" />
     </configuration>
+    <configuration name="javardair_clientR" type="GradleRunConfiguration" factoryName="Gradle">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="run" />
+            <option value="--args=&quot;$PROJECT_DIR$/TEST-workspaceR&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <ExternalSystemDebugDisabled>false</ExternalSystemDebugDisabled>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>false</RunAsTest>
+      <GradleProfilingDisabled>false</GradleProfilingDisabled>
+      <GradleCoverageDisabled>false</GradleCoverageDisabled>
+      <method v="2" />
+    </configuration>
     <configuration name="ServerKt" type="JetRunConfigurationType" nameIsGenerated="true">
       <option name="ALTERNATIVE_JRE_PATH" value="23" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
@@ -422,6 +462,7 @@
     <list>
       <item itemvalue="Compound.runDemo" />
       <item itemvalue="Gradle.javardair_clientB" />
+      <item itemvalue="Gradle.javardair_clientR" />
       <item itemvalue="Gradle.javardair_clientA" />
       <item itemvalue="Gradle.javardair [run]" />
       <item itemvalue="Gradle.TestTransformations" />
@@ -433,9 +474,9 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Shell Script.cleanTest.sh" />
         <item itemvalue="Gradle.TestTransformations" />
         <item itemvalue="Gradle.javardair [fatJar]" />
-        <item itemvalue="Shell Script.cleanTest.sh" />
         <item itemvalue="Gradle.javardair [clean]" />
         <item itemvalue="Gradle.javardair [build]" />
       </list>
@@ -523,7 +564,9 @@
       <workItem from="1789744806509" duration="2289000" />
       <workItem from="1789979773936" duration="11243000" />
       <workItem from="1789994157216" duration="5078000" />
-      <workItem from="1789999515592" duration="4044000" />
+      <workItem from="1789999515592" duration="5162000" />
+      <workItem from="1790006215056" duration="3940000" />
+      <workItem from="1790063845047" duration="4942000" />
     </task>
     <task id="LOCAL-00001" summary="Cleaned up a bit Conflict View window">
       <option name="closed" value="true" />
@@ -693,7 +736,23 @@
       <option name="project" value="LOCAL" />
       <updated>1789735188245</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="- AddCallable on existing method&#10;- Files with same name but different conflict">
+      <option name="closed" value="true" />
+      <created>1790003988290</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1790003988290</updated>
+    </task>
+    <task id="LOCAL-00023" summary="singletons refactoring">
+      <option name="closed" value="true" />
+      <created>1790004207617</created>
+      <option name="number" value="00023" />
+      <option name="presentableId" value="LOCAL-00023" />
+      <option name="project" value="LOCAL" />
+      <updated>1790004207617</updated>
+    </task>
+    <option name="localTasksCounter" value="24" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -723,7 +782,9 @@
     <MESSAGE value="package client/server refactoring" />
     <MESSAGE value="fixed member ordering" />
     <MESSAGE value="table and debug view" />
-    <option name="LAST_COMMIT_MESSAGE" value="table and debug view" />
+    <MESSAGE value="- AddCallable on existing method&#10;- Files with same name but different conflict" />
+    <MESSAGE value="singletons refactoring" />
+    <option name="LAST_COMMIT_MESSAGE" value="singletons refactoring" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
@@ -758,16 +819,6 @@
             <option name="lambda-ordinal" value="-1" />
           </properties>
           <option name="timeStamp" value="12" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/../Jaid/src/main/kotlin/model/transformations/FileTransformations.kt</url>
-          <line>14</line>
-          <option name="timeStamp" value="18" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/../Jaid/src/main/kotlin/model/FactoryOfTransformations.kt</url>
-          <line>23</line>
-          <option name="timeStamp" value="19" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

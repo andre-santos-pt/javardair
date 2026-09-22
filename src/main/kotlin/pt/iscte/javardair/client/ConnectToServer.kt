@@ -60,16 +60,16 @@ class ConnectToServer : Action {
         addObserverInjectUUIDsOnClassMembers(editor)
         addObserverInjectUUIDsOnFiles(editor)
 
-        client.propagationEvent = { proj ->
+        client.propagationEvent = { projTrunk ->
             Display.getDefault().asyncExec {
-                proj.getSetOfCompilationUnit().forEach {
+                projectLocal.getSetOfCompilationUnit().toList().forEach {
                     editor.saveAndSyncRanges(
                         File(it.storage.get().path.toString()),
                         it
                     )
                 }
             }
-            trunkDelta.projectTrunk = proj
+            trunkDelta.projectTrunk = projTrunk
         }
         client.newFileEvent = {
             Display.getDefault().asyncExec {
@@ -93,6 +93,10 @@ class ConnectToServer : Action {
         }
 
         trunkDelta.updateTransformations()
+//        editor.addCommandObserver { c, _, _ ->
+//            println("new command: $c")
+//            trunkDelta.updateTransformations()
+//        }
     }
 
     private fun createTrunkDir(rootPath: File): File {

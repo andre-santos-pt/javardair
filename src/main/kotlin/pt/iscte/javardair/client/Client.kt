@@ -1,11 +1,6 @@
 package pt.iscte.javardair.client
 
 import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver
-import com.github.javaparser.symbolsolver.resolution.typesolvers.MemoryTypeSolver
-import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver
-import com.github.javaparser.symbolsolver.utils.SymbolSolverCollectionStrategy
-import com.github.javaparser.utils.SourceRoot
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
@@ -50,7 +45,7 @@ class Client(
 
     var errorHandler: (ClientError) -> Unit = {}
 
-    var propagationEvent: (Project) -> Unit = {}
+    var propagationEvent: (Project) -> Unit = { _ -> }
 
     var newFileEvent: (CompilationUnit) -> Unit = {}
 
@@ -62,12 +57,17 @@ class Client(
 
     private val deltaObserver = { transformations: List<Transformation> ->
         if (isConnected) {
-            val trans = JsonArray(transformations.map { it.toJson(projectLocal) })
+            val trans =
+                JsonArray(transformations.map { it.toJson(projectLocal) })
             ClientOperation.UPDATE.send(trans)
         }
     }
 
-    data class ClientError(val title: String, val message: String, val exception: Exception? = null)
+    data class ClientError(
+        val title: String,
+        val message: String,
+        val exception: Exception? = null
+    )
 
     fun connect() {
         try {
@@ -99,7 +99,11 @@ class Client(
         trunkDelta.removeObserver(deltaObserver)
     }
 
-    private fun error(title: String, message: String, exception: Exception? = null) {
+    private fun error(
+        title: String,
+        message: String,
+        exception: Exception? = null
+    ) {
         errorHandler.invoke(ClientError(title, message, exception))
     }
 
@@ -192,6 +196,18 @@ class Client(
     // safe mechanism to deal with the case of user making a change while receiving a PROPAGATE message
     private fun integratePropagation(forcedTrans: JsonArray, sender: String) {
 
+        // sends current transformation list to the server
+        fun updateServer() {
+            if (isConnected) {
+                val trans = JsonArray(
+                    FactoryOfTransformations(projectTrunk, projectLocal)
+                        .getListOfAllTransformations()
+                        .map { it.toJson(projectLocal) }
+                )
+                ClientOperation.UPDATE.send(trans)
+            }
+        }
+
         fun setsAreEqual(
             a: Set<Transformation>,
             b: Set<Transformation>
@@ -207,7 +223,8 @@ class Client(
             .toMutableSet()
 
         // check if conflicts exist between current changes and trans being forced into
-        val forcedTransSerialized = forcedTrans.decodeTransformations(projectTrunk).toMutableSet()
+        val forcedTransSerialized =
+            forcedTrans.decodeTransformations(projectTrunk).toMutableSet()
 
         applyChanges(forcedTrans, sender)
         trunkDelta.updateTransformations()
@@ -243,7 +260,8 @@ class Client(
         try {
             if (sender != clientID.toString()) {
                 projectLocal.initializeAllIndexes()
-                val transLocal = serializedTransformations.decodeTransformations(projectLocal)
+                val transLocal =
+                    serializedTransformations.decodeTransformations(projectLocal)
                 Display.getDefault().syncExec {
                     applyTransformationsTo(projectLocal, transLocal.toSet())
 
@@ -251,16 +269,20 @@ class Client(
                 projectLocal.getSetOfCompilationUnit()
                     .filter { !Path(it.storage.getOrNull?.path.toString()).exists() }
                     .forEach {
-                        val w = PrintWriter(it.storage.getOrNull?.path.toString())
+                        val w =
+                            PrintWriter(it.storage.getOrNull?.path.toString())
                         w.write(it.toString())
                         w.close()
                         newFileEvent(it)
                     }
             }
 
-            val transRoot = serializedTransformations.decodeTransformations(projectTrunk)
+            val transRoot =
+                serializedTransformations.decodeTransformations(projectTrunk)
             applyTransformationsTo(projectTrunk, transRoot.toSet())
             projectTrunk.saveProjectTo(Path(projectTrunk.path))
+
+            trunkDelta.updateTransformations()
         } catch (ex: Exception) {
             error(
                 "Apply Changes Error",
@@ -271,17 +293,7 @@ class Client(
     }
 
 
-    // sends current transformation list to the server
-    private fun updateServer() {
-        if (isConnected) {
-            val trans = JsonArray(
-                FactoryOfTransformations(projectTrunk, projectLocal)
-                    .getListOfAllTransformations()
-                    .map { it.toJson(projectLocal) }
-            )
-            ClientOperation.UPDATE.send(trans)
-        }
-    }
+
 
 
     fun propagate(transformations: List<Transformation>) {
@@ -291,22 +303,23 @@ class Client(
                 "Cannot push changes because there are conflicts in the selected transformation set."
             )
         else {
-            val trans = JsonArray(transformations.map { it.toJson(projectLocal) })
+            val trans =
+                JsonArray(transformations.map { it.toJson(projectLocal) })
             ClientOperation.PROPAGATE.send(trans)
         }
     }
 
     fun acceptChanges(conflict: ConflictInfo) {
-        applyChangesLocal(JsonArray(listOf(conflict.conflictingTransformation)))
-        trunkDelta.updateTransformations()
-    }
-
-    private fun applyChangesLocal(serializedTransformations: JsonArray) {
         try {
             projectLocal.initializeAllIndexes()
-            val transLocal = serializedTransformations.decodeTransformations(projectLocal).toSet()
-            applyTransformationsTo(projectLocal, transLocal)
-            projectLocal.saveProjectTo(Path(projectLocal.path))
+            val transLocal =
+                JsonArray(listOf(conflict.conflictingTransformation)).decodeTransformations(
+                    projectLocal
+                ).toSet()
+            Display.getDefault().syncExec {
+                applyTransformationsTo(projectLocal, transLocal)
+            }
+
         } catch (ex: Exception) {
             error(
                 "Apply Changes Error",
@@ -314,6 +327,9 @@ class Client(
                 ex
             )
         }
+        propagationEvent(projectTrunk)
+        trunkDelta.updateTransformations()
     }
+
 }
 

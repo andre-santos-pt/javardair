@@ -52,18 +52,24 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
 
         addDebugView()
 
-        val columnTitles =
-            arrayOf("Transformation", "Incompatibility", "Reason")
-        for (title in columnTitles) {
-            val column = TableColumn(table, SWT.NONE)
-            column.text = title
-            column.width = 250
+        TableColumn(table, SWT.NONE).apply {
+            text = "Transformation"
+            width = 250
+        }
+        TableColumn(table, SWT.NONE).apply {
+            text = "Confliting"
+            width = 100
+        }
+        TableColumn(table, SWT.NONE).apply {
+            text = "Reason"
+            width = 250
         }
 
         createPopupMenu()
 
         trunkDelta.addObserver {
             updateTable(it)
+            println("update table: $it")
         }
         trunkDelta.addConflictObserver {
             updateConflicts()
@@ -72,10 +78,7 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
 
     private fun addDebugView() {
         if (ClientProperties.debug) {
-            val debugView = Composite(
-                editor.getPrivateField("shell") as Shell,
-                SWT.BORDER
-            ).apply {
+            val debugView = editor.createExtraComposite().apply {
                 layout = FillLayout()
                 Text(this, SWT.MULTI or SWT.V_SCROLL or SWT.H_SCROLL).apply {
                     text = "debug"
@@ -108,11 +111,10 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
         propagate.text = "Propagate"
         propagate.addListener(SWT.Selection) { e ->
             val selectedSet = table.selection
-//                .filter { it.checked }
-                .map { it.data as Transformation }
+                .map { it.data   as Transformation }
             try {
                 client.propagate(selectedSet)
-                trunkDelta.updateTransformations()
+
             } catch (ex: Exception) {
                 Display.getDefault().asyncExec {
                     MessageBox(
@@ -126,10 +128,15 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
             }
         }
 
-        MenuItem(popup, SWT.NONE).apply {
+        val accept = MenuItem(popup, SWT.NONE).apply {
             text = "Accept theirs"
             enabled = false
             addListener(SWT.Selection) { e ->
+                val conflicts =
+                    trunkDelta.getConflicts(table.selection.first().data as Transformation)
+                conflicts.forEach {
+                    client.acceptChanges(it)
+                }
 
             }
         }
@@ -157,6 +164,7 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
                     client.isConnected && selectedSet.isNotEmpty() && selectedSet.none {
                         trunkDelta.hasConflict(it)
                     }
+                accept.enabled = selectedSet.size == 1 && trunkDelta.getConflicts(selectedSet.first()).isNotEmpty()
                 //rollback.enabled = true // TODO: check if rollback is possible
             }
         }
