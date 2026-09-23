@@ -9,9 +9,7 @@
   <component name="ChangeListManager">
     <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="refactor fixes">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ConnectToServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ConnectToServer.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrackChangesView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrackChangesView.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/ConflictInfo.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/ConflictInfo.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/Server.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/Server.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -196,62 +194,62 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Gradle.Build javardair.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.TestTransformations.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.Upgrade Gradle wrapper.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair [:CheckBoxListWithIcons.main()].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair [:pt.iscte.javardair.ServerKt.main()].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair [:pt.iscte.javardair.server.ServerKt.main()].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair [build].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair [clean].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair [fatJarUniversal].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair [fatJar].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair [jar].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair [kotlinSourcesJar].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair [run].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair_client1 .executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair_client2.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair_client3.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair_clientA.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair_clientB.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.javardair_clientR.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.Whole project (1).executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.Whole project.executor&quot;: &quot;Run&quot;,
-    &quot;KEY_CHAT_IN_TOOLWINDOW&quot;: &quot;false&quot;,
-    &quot;Kotlin.Client1.executor&quot;: &quot;Run&quot;,
-    &quot;Kotlin.ServerKt.executor&quot;: &quot;Run&quot;,
-    &quot;RunOnceActivity.MCP Project settings loaded&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.typescript.service.memoryLimit.init&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;SONARLINT_PRECOMMIT_ANALYSIS&quot;: &quot;false&quot;,
-    &quot;Shell Script.cleanTest.sh.executor&quot;: &quot;Run&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;codeWithMe.voiceChat.enabledByDefault&quot;: &quot;false&quot;,
-    &quot;com.google.cloudcode.ide_session_index&quot;: &quot;20260915_0002&quot;,
-    &quot;copilot.chat.legacySessionMetadata.migrated&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;master&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/Users/andresantos/git/javardair/libs&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.jshint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.jshint&quot;: &quot;&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;nodejs_package_manager_path&quot;: &quot;npm&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.22727273&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Gradle.Build javardair.executor": "Run",
+    "Gradle.TestTransformations.executor": "Run",
+    "Gradle.Upgrade Gradle wrapper.executor": "Run",
+    "Gradle.javardair [:CheckBoxListWithIcons.main()].executor": "Run",
+    "Gradle.javardair [:pt.iscte.javardair.ServerKt.main()].executor": "Run",
+    "Gradle.javardair [:pt.iscte.javardair.server.ServerKt.main()].executor": "Run",
+    "Gradle.javardair [build].executor": "Run",
+    "Gradle.javardair [clean].executor": "Run",
+    "Gradle.javardair [fatJarUniversal].executor": "Run",
+    "Gradle.javardair [fatJar].executor": "Run",
+    "Gradle.javardair [jar].executor": "Run",
+    "Gradle.javardair [kotlinSourcesJar].executor": "Run",
+    "Gradle.javardair [run].executor": "Run",
+    "Gradle.javardair_client1 .executor": "Run",
+    "Gradle.javardair_client2.executor": "Run",
+    "Gradle.javardair_client3.executor": "Run",
+    "Gradle.javardair_clientA.executor": "Run",
+    "Gradle.javardair_clientB.executor": "Run",
+    "Gradle.javardair_clientR.executor": "Run",
+    "JUnit.Whole project (1).executor": "Run",
+    "JUnit.Whole project.executor": "Run",
+    "KEY_CHAT_IN_TOOLWINDOW": "false",
+    "Kotlin.Client1.executor": "Run",
+    "Kotlin.ServerKt.executor": "Run",
+    "RunOnceActivity.MCP Project settings loaded": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "RunOnceActivity.typescript.service.memoryLimit.init": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "SONARLINT_PRECOMMIT_ANALYSIS": "false",
+    "Shell Script.cleanTest.sh.executor": "Run",
+    "WebServerToolWindowFactoryState": "false",
+    "codeWithMe.voiceChat.enabledByDefault": "false",
+    "com.google.cloudcode.ide_session_index": "20260915_0002",
+    "copilot.chat.legacySessionMetadata.migrated": "true",
+    "git-widget-placeholder": "master",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/Users/andresantos/git/javardair/libs",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.jshint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.jshint": "",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "project.structure.last.edited": "Modules",
+    "project.structure.proportion": "0.15",
+    "project.structure.side.proportion": "0.22727273",
+    "settings.editor.selected.configurable": "reference.settingsdialog.project.gradle",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/libs" />
@@ -568,7 +566,7 @@
       <workItem from="1789999515592" duration="5162000" />
       <workItem from="1790006215056" duration="3940000" />
       <workItem from="1790063845047" duration="9734000" />
-      <workItem from="1790086445496" duration="3555000" />
+      <workItem from="1790086445496" duration="6016000" />
     </task>
     <task id="LOCAL-00001" summary="Cleaned up a bit Conflict View window">
       <option name="closed" value="true" />
@@ -762,7 +760,15 @@
       <option name="project" value="LOCAL" />
       <updated>1790075047828</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="refactor fixes">
+      <option name="closed" value="true" />
+      <created>1790090353916</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1790090353916</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -806,11 +812,6 @@
             <option name="lambda-ordinal" value="-1" />
           </properties>
           <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="kotlin-line">
-          <url>file://$PROJECT_DIR$/../Jaid/src/main/kotlin/model/transformations/CallableDeclarationTransformations.kt</url>
-          <line>249</line>
-          <option name="timeStamp" value="7" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="kotlin-line">
           <url>file://$PROJECT_DIR$/../Jaid/src/main/kotlin/model/conflictDetection/FileFile.kt</url>

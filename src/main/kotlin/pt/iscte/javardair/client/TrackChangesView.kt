@@ -5,6 +5,7 @@ import com.github.javaparser.ast.body.*
 import com.github.javaparser.ast.comments.LineComment
 import kotlinx.serialization.json.jsonPrimitive
 import model.transformations.*
+import org.checkerframework.checker.units.qual.m
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.MouseAdapter
 import org.eclipse.swt.events.MouseEvent
@@ -346,82 +347,87 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
         }
 
         val marks = mutableListOf<ICodeDecoration<*>>()
-        var popupShell: Shell? = null
+        val controlConflict: MutableMap<Control, ConflictInfo> = mutableMapOf()
+
+        Display.getDefault().addFilter(SWT.MouseDown) {
+            if(it.widget is Control && controlConflict.containsKey(it.widget)) {
+                val control = it.widget as Control
+                val c = controlConflict[control]!!
+
+                val popupShell = Shell(
+                    editor.display,
+                    SWT.SYSTEM_MODAL or SWT.TOOL or SWT.NO_FOCUS or SWT.NO_TRIM
+                )
+                popupShell.layout = RowLayout(SWT.VERTICAL)
+
+                Group(popupShell, SWT.NONE).apply {
+                    text =
+                        "Conflicting with ${c.collaborator}"
+                    layout = RowLayout(SWT.VERTICAL)
+
+                    Label(this, SWT.NONE).apply {
+                        text = c.conflictMessage
+                    }
+
+                    Text(this, SWT.BORDER).apply {
+                        text =
+                            when (c.conflictingTransformation["code"]?.jsonPrimitive?.content) {
+                                "BodyChangedCallable" -> c.conflictingTransformation["body"]?.jsonPrimitive?.content
+                                "SignatureChanged" -> c.conflictingTransformation["name"]?.jsonPrimitive?.content
+                                else -> ""
+                            }
+                        editable = false
+                    }
+
+                    Composite(this, SWT.NONE).apply {
+                        layout = RowLayout(SWT.HORIZONTAL)
+                        Button(this, SWT.PUSH).apply {
+                            text = "Accept theirs"
+                            addSelectionListener(object :
+                                SelectionAdapter() {
+                                override fun widgetSelected(e: SelectionEvent) {
+                                    client.acceptChanges(c)
+                                    popupShell.dispose()
+                                }
+                            })
+                        }
+                        Button(this, SWT.PUSH).apply {
+                            text = "Close"
+                            addSelectionListener(object :
+                                SelectionAdapter() {
+                                override fun widgetSelected(e: SelectionEvent) {
+                                    popupShell.dispose()
+                                }
+                            })
+                        }
+                    }
+                }
+                popupShell.location =
+                    control.toDisplay(0, control.size.y)
+                popupShell.pack()
+                popupShell.open()
+            }
+
+        }
         trunkDelta.addConflictObserver {
             Display.getDefault().asyncExec {
                 marks.forEach { it.delete() }
                 marks.clear()
+                controlConflict.clear()
                 it.values.forEach { list ->
                     list.forEach { c ->
                         val uuid = c.conflictUUID
                         val control =
                             editor.classOnFocus?.findChild { (it.data as? Node)?.getUuidFromComment() == uuid }
                         if (control != null) {
-                            val m = control.addMark(
+                            val m = control.addMark3(
                                 Display.getDefault()
                                     .getSystemColor(SWT.COLOR_RED),
                                 c.conflictMessage
                             )
                             marks.add(m)
                             m.show()
-                            m.control.onClick {
-                                popupShell?.dispose()
-                                popupShell = Shell(
-                                    editor.display,
-                                    SWT.SYSTEM_MODAL or SWT.TOOL or SWT.NO_FOCUS or SWT.NO_TRIM
-                                )
-                                popupShell?.layout = RowLayout(SWT.VERTICAL)
-
-                                Group(popupShell, SWT.NONE).apply {
-                                    text =
-                                        "Conflicting with ${c.collaborator}"
-                                    layout = RowLayout(SWT.VERTICAL)
-
-                                    Label(this, SWT.NONE).apply {
-                                        text = c.conflictMessage
-                                    }
-
-                                    Text(this, SWT.BORDER).apply {
-                                        text =
-                                            when (c.conflictingTransformation["code"]?.jsonPrimitive?.content) {
-                                                "BodyChangedCallable" -> c.conflictingTransformation["body"]?.jsonPrimitive?.content
-                                                "SignatureChanged" -> c.conflictingTransformation["name"]?.jsonPrimitive?.content
-                                                else -> ""
-                                            }
-                                        editable = false
-                                    }
-
-                                    Composite(this, SWT.NONE).apply {
-                                        layout = RowLayout(SWT.HORIZONTAL)
-                                        Button(this, SWT.PUSH).apply {
-                                            text = "Accept theirs"
-                                            addSelectionListener(object :
-                                                SelectionAdapter() {
-                                                override fun widgetSelected(e: SelectionEvent) {
-                                                    client.acceptChanges(c)
-                                                    popupShell?.dispose()
-                                                }
-                                            })
-                                        }
-                                        Button(this, SWT.PUSH).apply {
-                                            text = "Close"
-                                            addSelectionListener(object :
-                                                SelectionAdapter() {
-                                                override fun widgetSelected(e: SelectionEvent) {
-                                                    popupShell?.dispose()
-                                                }
-                                            })
-                                        }
-                                    }
-                                }
-                                popupShell?.location =
-                                    control.toDisplay(0, control.size.y)
-                                popupShell?.pack()
-                                popupShell?.open()
-                                m.control.addDisposeListener {
-                                    popupShell?.dispose()
-                                }
-                            }
+                            controlConflict[control] = c
                         }
                     }
                 }

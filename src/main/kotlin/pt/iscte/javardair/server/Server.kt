@@ -256,11 +256,12 @@ class Server(val port: Int, val trunkPath: String) {
         }
 
         private fun Conflict.userMessage(): String {
+            fun SignatureChanged.toText() = getNewParameters().joinToString(prefix = "(", postfix = ")") { it.nameAsString + " " + it.typeAsString  }
             return if(first is SignatureChanged && second is SignatureChanged) {
                 if((first as SignatureChanged).getNewName() != (second as SignatureChanged).getNewName())
-                    "Different rename: ${(second as SignatureChanged).getNewName()}"
+                    "Renames: ${(first as SignatureChanged).getNewName()} vs. ${(second as SignatureChanged).getNewName()}"
                 else
-                    "Different signatures"
+                    "Parameters: ${(first as SignatureChanged).toText()} vs. ${(second as SignatureChanged).toText()}"
             }
             else if(first is BodyChangedCallable && second is BodyChangedCallable)
                 "Different method body"
