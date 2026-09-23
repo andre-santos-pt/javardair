@@ -32,7 +32,13 @@ import pt.iscte.javardise.external.findChild
 import pt.iscte.javardise.external.getOrNull
 import pt.iscte.javardise.external.onClick
 import java.io.File
+import java.io.IOException
 import java.io.PrintWriter
+import java.nio.file.FileSystems
+import java.nio.file.Path
+import java.nio.file.StandardWatchEventKinds
+import java.nio.file.WatchEvent
+import kotlin.concurrent.thread
 import kotlin.io.path.Path
 
 
@@ -93,10 +99,8 @@ class ConnectToServer : Action {
         }
 
         trunkDelta.updateTransformations()
-//        editor.addCommandObserver { c, _, _ ->
-//            println("new command: $c")
-//            trunkDelta.updateTransformations()
-//        }
+
+        watchFolder(editor)
     }
 
     private fun createTrunkDir(rootPath: File): File {
@@ -216,6 +220,50 @@ class ConnectToServer : Action {
             client.connect()
         else
             client.disconnect()
+    }
+
+    private fun watchFolder(editor: CodeEditor) {
+        val directoryPath = Path.of(editor.folder.absolutePath)
+
+        thread {
+            try {
+                val watchService = FileSystems.getDefault().newWatchService()
+
+                directoryPath.register(
+                    watchService,
+                    StandardWatchEventKinds.ENTRY_CREATE,
+                    StandardWatchEventKinds.ENTRY_DELETE,
+                    StandardWatchEventKinds.ENTRY_MODIFY
+                )
+
+                println("Watching directory: " + directoryPath)
+
+                // Start an infinite loop to listen for events
+                while (true) {
+                    val key = watchService.take() // This call is blocking
+
+                    for (event in key.pollEvents()) {
+                        val kind: WatchEvent.Kind<*>? = event.kind()
+                        val eventPath = event.context() as Path
+
+                        val file =  File(editor.folder, eventPath.fileName.toString())
+                        Display.getDefault().syncExec {
+                            if (kind === StandardWatchEventKinds.ENTRY_CREATE) {
+
+                            } else if (kind === StandardWatchEventKinds.ENTRY_DELETE) {
+                                editor.closeTab(file)
+                            }
+                        }
+                    }
+
+                    key.reset() // Reset the key to receive further events
+                }
+            } catch (e: IOException) {
+                e.printStackTrace()
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+        }
     }
 
 }

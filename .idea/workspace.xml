@@ -7,10 +7,13 @@
     <option name="selectedModelId" value="auto" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="refactor fixes">
+    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="confliting window">
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/Client.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/Client.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ConnectToServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ConnectToServer.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrackChangesView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrackChangesView.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/Server.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/server/Server.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -253,8 +256,8 @@
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$/libs" />
-      <recent name="$PROJECT_DIR$/TEST-workspaceA" />
       <recent name="$PROJECT_DIR$/build/dist" />
+      <recent name="$PROJECT_DIR$/TEST-workspaceA" />
       <recent name="$PROJECT_DIR$" />
       <recent name="$PROJECT_DIR$/TEST-workspaceB" />
     </key>
@@ -278,7 +281,7 @@
       <recent name="pt.iscte.javardair" />
     </key>
   </component>
-  <component name="RunManager" selected="Compound.runDemo">
+  <component name="RunManager" selected="Gradle.javardair_clientB">
     <configuration name="TestTransformations" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -566,7 +569,9 @@
       <workItem from="1789999515592" duration="5162000" />
       <workItem from="1790006215056" duration="3940000" />
       <workItem from="1790063845047" duration="9734000" />
-      <workItem from="1790086445496" duration="6016000" />
+      <workItem from="1790086445496" duration="11534000" />
+      <workItem from="1790166600927" duration="2362000" />
+      <workItem from="1790169981124" duration="1921000" />
     </task>
     <task id="LOCAL-00001" summary="Cleaned up a bit Conflict View window">
       <option name="closed" value="true" />
@@ -768,14 +773,21 @@
       <option name="project" value="LOCAL" />
       <updated>1790090353916</updated>
     </task>
-    <option name="localTasksCounter" value="26" />
+    <task id="LOCAL-00026" summary="confliting window">
+      <option name="closed" value="true" />
+      <created>1790151901538</created>
+      <option name="number" value="00026" />
+      <option name="presentableId" value="LOCAL-00026" />
+      <option name="project" value="LOCAL" />
+      <updated>1790151901538</updated>
+    </task>
+    <option name="localTasksCounter" value="27" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="Cleaned up Conflict and Transformation Visualization" />
     <MESSAGE value="added popup window to alert user of conflicts" />
     <MESSAGE value="fixes popup window" />
     <MESSAGE value="AddField transformation serialization added" />
@@ -800,7 +812,8 @@
     <MESSAGE value="- AddCallable on existing method&#10;- Files with same name but different conflict" />
     <MESSAGE value="singletons refactoring" />
     <MESSAGE value="refactor fixes" />
-    <option name="LAST_COMMIT_MESSAGE" value="refactor fixes" />
+    <MESSAGE value="confliting window" />
+    <option name="LAST_COMMIT_MESSAGE" value="confliting window" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -188,6 +188,14 @@ class Client(
         // reinitialize the projectTrunk to reflect the updated files
         projectTrunk = Project(projectTrunk.getProjectRoot().root.toString())
 
+        projectTrunk.getSetOfCompilationUnit().toList().forEach {
+            val filePath = "${projectLocal.path}${File.separator}${it.storage.getOrNull?.fileName}"
+            if(!File(filePath).exists()) {
+                val w = PrintWriter(filePath)
+                w.write(it.toString())
+                w.close()
+            }
+        }
         // trigger comparison of transformations between projectLocal and projectTrunk
         trunkDelta.updateTransformations()
     }

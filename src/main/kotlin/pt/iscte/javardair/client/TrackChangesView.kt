@@ -1,11 +1,13 @@
 package pt.iscte.javardair.client
 
 import com.github.javaparser.ast.Node
-import com.github.javaparser.ast.body.*
+import com.github.javaparser.ast.body.CallableDeclaration
+import com.github.javaparser.ast.body.ConstructorDeclaration
+import com.github.javaparser.ast.body.MethodDeclaration
+import com.github.javaparser.ast.body.TypeDeclaration
 import com.github.javaparser.ast.comments.LineComment
 import kotlinx.serialization.json.jsonPrimitive
 import model.transformations.*
-import org.checkerframework.checker.units.qual.m
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.MouseAdapter
 import org.eclipse.swt.events.MouseEvent
@@ -16,24 +18,17 @@ import org.eclipse.swt.layout.FillLayout
 import org.eclipse.swt.layout.GridData
 import org.eclipse.swt.layout.RowLayout
 import org.eclipse.swt.widgets.*
-import org.eclipse.swt.widgets.Event
 import pt.iscte.javardair.JsonPretty
 import pt.iscte.javardair.getPrivateField
 import pt.iscte.javardair.server.ConflictInfo
 import pt.iscte.javardair.toJson
-import pt.iscte.javardair.toTransformation
 import pt.iscte.javardise.basewidgets.ICodeDecoration
-import pt.iscte.javardise.basewidgets.addMark
 import pt.iscte.javardise.basewidgets.addMark3
 import pt.iscte.javardise.editor.CodeEditor
 import pt.iscte.javardise.external.findChild
 import pt.iscte.javardise.external.getOrNull
-import pt.iscte.javardise.external.onClick
 import pt.iscte.javardise.findChild
 import java.io.File
-import kotlin.reflect.KClass
-
-
 
 
 class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelta: TrunkDelta) {
