@@ -18,8 +18,10 @@ import model.setUUIDTo
 import org.eclipse.swt.SWT
 import org.eclipse.swt.events.SelectionAdapter
 import org.eclipse.swt.events.SelectionEvent
+import org.eclipse.swt.graphics.Point
 import org.eclipse.swt.layout.RowLayout
 import org.eclipse.swt.widgets.*
+import pt.iscte.javardair.getPrivateField
 import pt.iscte.javardair.server.ConflictInfo
 import pt.iscte.javardise.*
 import pt.iscte.javardise.basewidgets.ICodeDecoration
@@ -66,7 +68,10 @@ class ConnectToServer : Action {
         addObserverInjectUUIDsOnClassMembers(editor)
         addObserverInjectUUIDsOnFiles(editor)
 
-        client.propagationEvent = { projTrunk ->
+        client.trunkUpdateEvent = { projTrunk ->
+            trunkDelta.projectTrunk = projTrunk
+        }
+        client.propagationEvent = {
             Display.getDefault().asyncExec {
                 projectLocal.getSetOfCompilationUnit().toList().forEach {
                     editor.saveAndSyncRanges(
@@ -75,7 +80,6 @@ class ConnectToServer : Action {
                     )
                 }
             }
-            trunkDelta.projectTrunk = projTrunk
         }
         client.newFileEvent = {
             Display.getDefault().asyncExec {
@@ -101,6 +105,7 @@ class ConnectToServer : Action {
         trunkDelta.updateTransformations()
 
         watchFolder(editor)
+        (editor.getPrivateField("shell") as Shell).size = Point(1500, 500)
     }
 
     private fun createTrunkDir(rootPath: File): File {

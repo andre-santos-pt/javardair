@@ -59,7 +59,7 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
 
         TableColumn(table, SWT.NONE).apply {
             text = "Transformation"
-            width = 250
+            width = 350
         }
         TableColumn(table, SWT.NONE).apply {
             text = "Confliting"

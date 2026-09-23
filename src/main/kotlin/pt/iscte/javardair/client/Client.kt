@@ -1,5 +1,6 @@
 package pt.iscte.javardair.client
 
+import com.github.javaparser.StaticJavaParser
 import com.github.javaparser.ast.CompilationUnit
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonArray
@@ -45,7 +46,9 @@ class Client(
 
     var errorHandler: (ClientError) -> Unit = {}
 
-    var propagationEvent: (Project) -> Unit = { _ -> }
+    var trunkUpdateEvent: (Project) -> Unit = {}
+
+    var propagationEvent: () -> Unit = {}
 
     var newFileEvent: (CompilationUnit) -> Unit = {}
 
@@ -153,7 +156,7 @@ class Client(
                             Json.decodeFromString(message.content),
                             message.sender
                         )
-                        propagationEvent(projectTrunk)
+                        propagationEvent()
                         trunkDelta.updateTransformations()
                     }
 
@@ -187,6 +190,7 @@ class Client(
         }
         // reinitialize the projectTrunk to reflect the updated files
         projectTrunk = Project(projectTrunk.getProjectRoot().root.toString())
+        trunkUpdateEvent(projectTrunk)
 
         projectTrunk.getSetOfCompilationUnit().toList().forEach {
             val filePath = "${projectLocal.path}${File.separator}${it.storage.getOrNull?.fileName}"
@@ -194,6 +198,9 @@ class Client(
                 val w = PrintWriter(filePath)
                 w.write(it.toString())
                 w.close()
+                val unit = StaticJavaParser.parse(File(filePath))
+                addLocalJavaFile(unit)
+                newFileEvent(unit)
             }
         }
         // trigger comparison of transformations between projectLocal and projectTrunk
@@ -335,7 +342,8 @@ class Client(
                 ex
             )
         }
-        propagationEvent(projectTrunk)
+        trunkUpdateEvent(projectTrunk)
+        propagationEvent()
         trunkDelta.updateTransformations()
     }
 
