@@ -36,7 +36,7 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
     private val icons = listOf("plus","minus","rename","edit").associateWith { loadIcon(it) }
 
     private fun loadIcon(name: String) = TrackChangesView::class.java.getClassLoader()
-        .getResourceAsStream("icons${File.separator}$name.png")?.let {
+        .getResourceAsStream("icons/$name.png")?.let {
             Image(Display.getDefault(), it)
         }
 
