@@ -104,8 +104,8 @@ class ConnectToServer : Action {
 
         trunkDelta.updateTransformations()
 
-        watchFolder(editor)
-        (editor.getPrivateField("shell") as Shell).size = Point(1500, 500)
+//        watchFolder(editor)
+//        (editor.getPrivateField("shell") as Shell).size = Point(1500, 500)
     }
 
     private fun createTrunkDir(rootPath: File): File {
@@ -263,10 +263,8 @@ class ConnectToServer : Action {
 
                     key.reset() // Reset the key to receive further events
                 }
-            } catch (e: IOException) {
-                e.printStackTrace()
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
+            } catch (ex: Exception) {
+
             }
         }
     }

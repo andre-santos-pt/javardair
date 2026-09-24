@@ -7,9 +7,9 @@
     <option name="selectedModelId" value="auto" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="fixes on new files">
+    <list default="true" id="ca84bb55-7d07-4fd5-bd96-1b07dee93a73" name="Changes" comment="new trunk files fix">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/Client.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/Client.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ConnectToServer.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/ConnectToServer.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrackChangesView.kt" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/kotlin/pt/iscte/javardair/client/TrackChangesView.kt" afterDir="false" />
     </list>
@@ -571,7 +571,7 @@
       <workItem from="1790166600927" duration="2362000" />
       <workItem from="1790169981124" duration="2642000" />
       <workItem from="1790172741956" duration="254000" />
-      <workItem from="1790173078744" duration="3399000" />
+      <workItem from="1790173078744" duration="7621000" />
     </task>
     <task id="LOCAL-00001" summary="Cleaned up a bit Conflict View window">
       <option name="closed" value="true" />
@@ -789,14 +789,21 @@
       <option name="project" value="LOCAL" />
       <updated>1790171958361</updated>
     </task>
-    <option name="localTasksCounter" value="28" />
+    <task id="LOCAL-00028" summary="new trunk files fix">
+      <option name="closed" value="true" />
+      <created>1790176530374</created>
+      <option name="number" value="00028" />
+      <option name="presentableId" value="LOCAL-00028" />
+      <option name="project" value="LOCAL" />
+      <updated>1790176530374</updated>
+    </task>
+    <option name="localTasksCounter" value="29" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
   <component name="VcsManagerConfiguration">
-    <MESSAGE value="fixes popup window" />
     <MESSAGE value="AddField transformation serialization added" />
     <MESSAGE value="list of tracked transformations is now centralized" />
     <MESSAGE value="setup file for debugging added" />
@@ -821,7 +828,8 @@
     <MESSAGE value="refactor fixes" />
     <MESSAGE value="confliting window" />
     <MESSAGE value="fixes on new files" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixes on new files" />
+    <MESSAGE value="new trunk files fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="new trunk files fix" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
