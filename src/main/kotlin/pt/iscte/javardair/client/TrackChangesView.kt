@@ -364,7 +364,7 @@ class TrackChangesView(val editor: CodeEditor, val client: Client, val trunkDelt
                         text = c.conflictMessage
                     }
 
-                    Text(this, SWT.BORDER).apply {
+                    Text(this, SWT.BORDER or SWT.MULTI or SWT.V_SCROLL).apply {
                         text =
                             when (c.conflictingTransformation["code"]?.jsonPrimitive?.content) {
                                 "BodyChangedCallable" -> c.conflictingTransformation["body"]?.jsonPrimitive?.content
