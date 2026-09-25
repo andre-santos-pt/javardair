@@ -111,7 +111,7 @@ fun Transformation.toJson(project: Project): JsonObject {
 
 
 // deserialize a transformation from a json object
-fun JsonObject.toTransformation(project: Project): Transformation? {
+fun JsonObject.toTransformation(projectTrunk: Project, projectLocalPath: String): Transformation? {
     fun JsonObject.field(name: String): String =
         this[name]?.jsonPrimitive?.content
             ?: throw Exception("Field $name not found")
@@ -122,14 +122,14 @@ fun JsonObject.toTransformation(project: Project): Transformation? {
 
         AddFile::class.java.simpleName ->
             AddFile(StaticJavaParser.parse(field("content")).apply {
-                setStorage(Path.of(project.path).resolve(Path.of(field("path"))))
+                setStorage(Path.of(projectLocalPath).resolve(Path.of(field("path"))))
                 println("AddFile: ${storage.get().path}")
             })
 
         SignatureChanged::class.java.simpleName ->
             SignatureChanged(
-                project,
-                project.getMethodByUUID(UUID(field("uuid")))!!,
+                projectTrunk,
+                projectTrunk.getMethodByUUID(UUID(field("uuid")))!!,
                 NodeList(this["parameters"]?.jsonArray?.map {
                     it as JsonObject
                     Parameter(
@@ -142,31 +142,31 @@ fun JsonObject.toTransformation(project: Project): Transformation? {
 
         AddCallable::class.java.simpleName ->
             AddCallable(
-                project,
-                project.getTypeByUUID(UUID(field("owner-uuid")))!!,
+                projectTrunk,
+                projectTrunk.getTypeByUUID(UUID(field("owner-uuid")))!!,
                 StaticJavaParser.parseMethodDeclaration(field("body")),
                 field("index").toInt()
             )
 
         ReturnTypeChangedMethod::class.java.simpleName ->
             ReturnTypeChangedMethod(
-                project,
-                project.getMethodByUUID(UUID(field("uuid")))!!,
+                projectTrunk,
+                projectTrunk.getMethodByUUID(UUID(field("uuid")))!!,
                 StaticJavaParser.parseType(field("returnType"))
 
             )
 
         BodyChangedCallable::class.java.simpleName ->
             BodyChangedCallable(
-                project,
-                project.getMethodByUUID(UUID(field("uuid")))!!,
+                projectTrunk,
+                projectTrunk.getMethodByUUID(UUID(field("uuid")))!!,
                 StaticJavaParser.parseBlock(field("body"))
             )
 
         RemoveCallable::class.java.simpleName ->
             RemoveCallable(
-                project.getTypeByUUID(UUID(field("owner-uuid")))!!,
-                project.getMethodByUUID(UUID(field("uuid")))!!,
+                projectTrunk.getTypeByUUID(UUID(field("owner-uuid")))!!,
+                projectTrunk.getMethodByUUID(UUID(field("uuid")))!!,
             )
 
 
@@ -176,8 +176,8 @@ fun JsonObject.toTransformation(project: Project): Transformation? {
             val uuidComment = field("uuid-comment")
             fieldDeclaration.setComment(LineComment(uuidComment))
             AddField(
-                project,
-                project.getTypeByUUID(UUID(field("owner-uuid")))!!,
+                projectTrunk,
+                projectTrunk.getTypeByUUID(UUID(field("owner-uuid")))!!,
                 fieldDeclaration,
                 field("index").toInt()
             )
@@ -185,27 +185,27 @@ fun JsonObject.toTransformation(project: Project): Transformation? {
 
         RemoveField::class.java.simpleName ->
             RemoveField(
-                project.getTypeByUUID(UUID(field("owner-uuid")))!!,
-                project.getFieldByUUID(UUID(field("uuid")))!!
+                projectTrunk.getTypeByUUID(UUID(field("owner-uuid")))!!,
+                projectTrunk.getFieldByUUID(UUID(field("uuid")))!!
             )
 
         RenameField::class.java.simpleName ->
             RenameField(
-                project.getFieldByUUID(UUID(field("uuid")))!!,
+                projectTrunk.getFieldByUUID(UUID(field("uuid")))!!,
                 SimpleName(field("name"))
             )
 
         TypeChangedField::class.java.simpleName ->
             TypeChangedField(
-                project,
-                project.getFieldByUUID(UUID(field("uuid")))!!,
+                projectTrunk,
+                projectTrunk.getFieldByUUID(UUID(field("uuid")))!!,
                 StaticJavaParser.parseType(field("type"))
             )
 
         InitializerChangedField::class.java.simpleName ->
             InitializerChangedField(
-                project,
-                project.getFieldByUUID(UUID(field("uuid")))!!,
+                projectTrunk,
+                projectTrunk.getFieldByUUID(UUID(field("uuid")))!!,
                 StaticJavaParser.parseExpression(field("initializer"))
             )
 
@@ -224,7 +224,7 @@ fun JsonObject.toTransformation(project: Project): Transformation? {
     }
 }
 
-fun JsonArray.decodeTransformations(project: Project) =
+fun JsonArray.decodeTransformations(projectTrunk: Project, projectLocalPath:String) =
     mapNotNull { json ->
-        (json as JsonObject).toTransformation(project)
+        (json as JsonObject).toTransformation(projectTrunk, projectLocalPath)
     }

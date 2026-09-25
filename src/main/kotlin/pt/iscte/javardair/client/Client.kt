@@ -239,7 +239,7 @@ class Client(
 
         // check if conflicts exist between current changes and trans being forced into
         val forcedTransSerialized =
-            forcedTrans.decodeTransformations(projectTrunk).toMutableSet()
+            forcedTrans.decodeTransformations(projectTrunk, projectLocal.path).toMutableSet()
 
         applyChanges(forcedTrans, sender)
         trunkDelta.updateTransformations()
@@ -276,7 +276,7 @@ class Client(
             if (sender != clientID.toString()) {
                 projectLocal.initializeAllIndexes()
                 val transLocal =
-                    serializedTransformations.decodeTransformations(projectLocal)
+                    serializedTransformations.decodeTransformations(projectTrunk, projectLocal.path)
                 Display.getDefault().syncExec {
                     applyTransformationsTo(projectLocal, transLocal.toSet())
 
@@ -293,7 +293,7 @@ class Client(
             }
 
             val transRoot =
-                serializedTransformations.decodeTransformations(projectTrunk)
+                serializedTransformations.decodeTransformations(projectTrunk, projectTrunk.path)
             applyTransformationsTo(projectTrunk, transRoot.toSet())
             projectTrunk.saveProjectTo(Path(projectTrunk.path))
 
@@ -329,7 +329,7 @@ class Client(
             projectLocal.initializeAllIndexes()
             val transLocal =
                 JsonArray(listOf(conflict.conflictingTransformation)).decodeTransformations(
-                    projectLocal
+                    projectTrunk, projectLocal.path
                 ).toSet()
             Display.getDefault().syncExec {
                 applyTransformationsTo(projectLocal, transLocal)

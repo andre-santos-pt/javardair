@@ -308,8 +308,8 @@ class Server(val port: Int, val trunkPath: String) {
         transA: JsonArray,
         transB: JsonArray
     ): Set<Conflict> {
-        val transASerialized = transA.decodeTransformations(project).toMutableSet()
-        val transBSerialized = transB.decodeTransformations(project).toMutableSet()
+        val transASerialized = transA.decodeTransformations(project, project.path).toMutableSet()
+        val transBSerialized = transB.decodeTransformations(project, project.path).toMutableSet()
 
         val redundancyFreeSetOfTransformations =
             RedundancyFreeSetOfTransformations(
@@ -321,7 +321,7 @@ class Server(val port: Int, val trunkPath: String) {
 
     private fun applyChanges(transformations: JsonArray) {
         try {
-            val trans = transformations.decodeTransformations(project).toSet()
+            val trans = transformations.decodeTransformations(project, project.path).toSet()
             applyTransformationsTo(project, trans)
             project.saveProjectTo(Path(project.path))
 
